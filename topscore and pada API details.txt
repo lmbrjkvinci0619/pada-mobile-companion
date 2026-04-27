@@ -1,0 +1,100 @@
+﻿Based on the provided TopScore API specification, the data available for Pada.org is structured around a series of core models. While the API is self-documenting via the /api/help endpoint for real-time field details, the following categories and specific data points can be retrieved.
+1. The Core Data Models
+The API allows you to pull information for several primary models, often in a single request by using the fields parameter to embed related data.
+* User & Identity (Person):
+   * Profile Data: Personal details for authenticated users, retrieved via /api/persons/me.
+   * Authentication Status: Specific identifiers like person_id and CSRF validation status.
+   * Permissions: Access to "non-public user information" based on authentication level.
+* Registrations:
+   * A list of all registrations for a person or event, which serves as the "connective tissue" between users, teams, and events.
+* Teams:
+   * Information about specific teams, which can be embedded within registration or event queries.
+* Events & Leagues:
+   * Schedules: Public league schedules and game times.
+   * Hidden Events: Access to private or unlisted events (requires authentication).
+   * Locations: Physical venues or field addresses associated with events.
+* Commerce & Finance:
+   * Purchases & Transactions: History of payments and financial records associated with a user.
+   * Products: Store items or registration fees listed on the site.
+* Communication:
+   * Messages: While the spec highlights POSTing messages, the ability to "edit schedules" and "send messages" implies that these objects are retrievable for display within an application.
+2. Deep-Dive Metadata & Discovery
+To get the granular fields for any of the models above (e.g., a player's jersey number or a game's field number), you can query the self-documentation endpoint:
+* /api/help: Provides a full list of all available endpoints and the specific fields each one accepts and returns.
+* /api/help?endpoint=ENDPOINT: Returns requirements and field definitions for a specific model, such as "Event" or "Person".
+3. API Response Structure
+Every piece of information pulled from Pada.org will arrive in a standardized JSON object containing the following metadata:
+Field
+	Description
+	status
+	The HTTP status code (e.g., 200 for success, 404 for not found).
+	count
+	The total number of results found (useful for pagination).
+	result
+	An array containing the actual data (Person objects, Event lists, etc.).
+	errors
+	A detailed list of human-readable messages and specific fields if a request fails.
+	4. Advanced Data Retrieval (Embedding)
+The API supports an "associative array" for the fields parameter, allowing you to pull deeply nested information. For example, a single pull from the registrations endpoint can include:
+* The Person registered.
+* The Team they are on.
+* The Event (League) name.
+* The Location of that event.
+* The Purchase and Transaction details for their registration fee.
+
+
+The TopScore API (which powers Pada.org) is a model-driven RESTful system. While the specific fields available for each model can vary slightly based on the organization's configuration, the API is designed to expose the entire underlying database schema for the following entities.
+Here is the exhaustive breakdown of the data types, models, and metadata accessible through the API.
+1. Core Data Entities (Models)
+The following models are the primary objects you can query. Each model contains specific attributes (like names, IDs, and timestamps) and can be cross-referenced using the fields parameter.
+* Person:
+   * Public Data: Name, profile image, and public-facing bio.
+   * Private Data (Authenticated): Email address, phone number, mailing address, gender, birthdate, and custom demographic fields (e.g., "Years of experience" or "College attended").
+   * System Data: person_id, account creation date, and last login.
+* Event (Leagues, Tournaments, Clinics):
+   * Details: Event name, description, start/end dates, and status (draft, open, closed, archived).
+   * Rules: Registration deadlines, age requirements, and gender ratios.
+   * Visibility: Whether the event is public or "hidden."
+* Registration:
+   * Status: Payment status (paid, pending, waived), registration date, and specific "survey" answers provided during sign-up.
+   * Links: The unique ID connecting a Person to an Event and, if applicable, a Team.
+* Team:
+   * Roster: List of persons registered to the team.
+   * Metadata: Team name, colors, "vibe" or competitiveness level, and captain status.
+   * Performance: Record (wins/losses/ties) and spirit scores (if applicable to the specific league).
+* Location:
+   * Mapping: Venue name, physical address, GPS coordinates, and specific field numbers or sub-location details.
+* Commerce (Purchases, Products, Transactions):
+   * Products: Item names, descriptions, and prices (e.g., "Disc," "Jersey," or "League Fee").
+   * Transactions: Payment method, timestamp, amount, and gateway transaction IDs.
+   * Purchases: The link between a specific Person and a Product or Registration.
+2. The fields Parameter: Relational Data
+The most powerful aspect of the API is the ability to pull nested relational data. You can "walk" the database tree to pull everything associated with a record.
+Available Relational Paths:
+* Person → Registrations → Teams
+* Event → Teams → Schedule
+* Registration → Purchase → Transaction
+* Event → Location
+You can use associative arrays to drill down multiple levels. For example, pulling a Registration can simultaneously return the Event it belongs to, the Location of that event, and the Transaction used to pay for it.
+3. Messaging and Metadata
+* Messages: You can pull message headers, content, and recipient lists (though reading private messages generally requires the OAuth2 token of the specific recipient or an admin).
+* Schedules (Games):
+   * Game times, dates, and durations.
+   * Matchups (Team A vs. Team B).
+   * Scores and game-specific notes or spirit results.
+* Help Metadata: Using /api/help returns a JSON map of every single endpoint currently active on Pada.org. If you pass a specific endpoint (e.g., /api/help?endpoint=Person), it returns:
+   * A list of all valid field names.
+   * The data type for each field (String, Integer, Boolean, etc.).
+   * Whether the field is "Required" for POST requests.
+4. Technical Response Headers
+Every API call returns the following metadata, which is essential for building a robust mobile app:
+* status: Exact HTTP status (200, 401, 404, 500).
+* count: The total number of records matching your query in the database (regardless of pagination limits).
+* result: The actual data payload (the "meat" of the response).
+* errors: If a call fails, this provides a human-readable message, the specific field that caused the error, and a data object for troubleshooting.
+5. Access Control (The "Visibility" Filter)
+What you can pull depends entirely on your authentication level:
+1. Unauthenticated (Public GET): You can see league names, public schedules, team names, and public rosters.
+2. Basic/OAuth2 (User GET): You can see the user's private info (email, phone), their specific registrations, their team's private contact info, and "hidden" events they are invited to.
+3. Admin (Elevated GET): You can see all financial transactions across the organization, all private user data, and draft events not yet visible to the public.
+To see the absolute current list of fields for Pada.org specifically, the first step for your coding agent should be to run: GET https://pada.org/api/help
