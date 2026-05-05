@@ -69,6 +69,9 @@ export interface Team {
   roster?: TeamMember[];
   captainId?: string;
   supabaseTeamId?: string;
+  wins?: number;
+  losses?: number;
+  ties?: number;
 }
 
 // ─── Events / Schedule ───────────────────────────────────────────────────────
@@ -117,42 +120,25 @@ export interface Event {
   score?: GameScore;
 }
 
-// ─── Chat ────────────────────────────────────────────────────────────────────
-
-export type MessageType = "text" | "image" | "location";
-
-export interface ChatMessage {
-  id: string;
-  teamId: string;
-  senderId: string;
-  senderName: string;
-  senderAvatarUrl?: string;
-  content: string;
-  messageType: MessageType;
-  attachmentUrl?: string;
-  reactions?: MessageReaction[];
-  isPinned?: boolean;
-  createdAt: string;
-  updatedAt?: string;
-}
-
-export interface MessageReaction {
-  emoji: string;
-  userId: string;
-  count?: number;
-}
-
-export interface ChatConversation {
-  teamId: string;
-  teamName: string;
-  lastMessage?: ChatMessage;
-  unreadCount: number;
-}
-
 // ─── Announcements ───────────────────────────────────────────────────────────
 
 export type AnnouncementTargetType = "league" | "division" | "team";
 export type AnnouncementAuthorRole = "league_admin" | "team_captain";
+
+export interface PaginationParams {
+  limit?: number; // Default: 50, max: 100
+  offset?: number; // For cursor-based pagination
+}
+
+export interface FetchAnnouncementsResult<T> {
+  data: T[];
+  pagination?: {
+    total: number;
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+  };
+}
 
 export interface Announcement {
   id: string;
@@ -169,32 +155,15 @@ export interface Announcement {
   expiresAt?: string;
 }
 
-// ─── Scores ──────────────────────────────────────────────────────────────────
-
-export type GameStatus =
-  | "scheduled"
-  | "in_progress"
-  | "completed"
-  | "cancelled";
-
-export interface ScoreReport {
-  topscoreEventId: string;
-  eventName: string;
-  teamId: string;
-  homeTeamName: string;
-  awayTeamName: string;
-  homeScore: number;
-  awayScore: number;
-  gameStatus: GameStatus;
-  reportedBy: string;
-  reporterName: string;
-}
+export type FetchAnnouncementsOptions = PaginationParams & {
+  userId: string;
+  teamIds?: string[]; // Optional filter for specific teams
+};
 
 // ─── Notifications ───────────────────────────────────────────────────────────
 
 export interface NotificationPreferences {
   pushEnabled: boolean;
-  teamChatEnabled: boolean;
   announcementsEnabled: boolean;
   scoreNotificationsEnabled: boolean;
   scheduleRemindersEnabled: boolean;

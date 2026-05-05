@@ -8,8 +8,6 @@ import type {
   Event,
   Registration,
   Announcement,
-  ChatMessage,
-  ChatConversation,
 } from "@/types";
 
 export const USE_MOCK_DATA = process.env.EXPO_PUBLIC_USE_MOCK_DATA === "true";
@@ -351,56 +349,4 @@ export const MOCK_ANNOUNCEMENTS: Announcement[] = [
   },
 ];
 
-// ─── Chat ─────────────────────────────────────────────────────────────────────
-
-export const MOCK_CHAT_MESSAGES: ChatMessage[] = [
-  {
-    id: "msg-001", teamId: "team-001",
-    senderId: "person-002", senderName: "Alex Chen",
-    senderAvatarUrl: "https://i.pravatar.cc/150?u=person-002",
-    content: "Great win last night everyone! That layout D in the endzone was 🔥",
-    messageType: "text", createdAt: addDays(now, -4),
-  },
-  {
-    id: "msg-002", teamId: "team-001",
-    senderId: "person-003", senderName: "Morgan Lee",
-    senderAvatarUrl: "https://i.pravatar.cc/150?u=person-003",
-    content: "Who's bringing discs to Tuesday practice? I only have 2.",
-    messageType: "text", createdAt: addDays(now, -2),
-  },
-  {
-    id: "msg-003", teamId: "team-001",
-    senderId: "person-001", senderName: "Jamie Rivera",
-    senderAvatarUrl: "https://i.pravatar.cc/150?u=person-001",
-    content: "I'll bring 4 discs + cones. Reminder: practice starts at 6pm sharp at Grant Park East Field.",
-    messageType: "text", createdAt: addDays(now, -1),
-    isPinned: true,
-  },
-  {
-    id: "msg-004", teamId: "team-001",
-    senderId: "person-004", senderName: "Sam Patel",
-    senderAvatarUrl: "https://i.pravatar.cc/150?u=person-004",
-    content: "Running 10 mins late today, start without me!",
-    messageType: "text", createdAt: new Date(new Date().getTime() - 3600000).toISOString(),
-  },
-];
-
-export const MOCK_CONVERSATIONS: ChatConversation[] = [
-  {
-    teamId: "team-001",
-    teamName: "Disc Jockeys",
-    lastMessage: MOCK_CHAT_MESSAGES[3],
-    unreadCount: 2,
-  },
-  {
-    teamId: "team-002",
-    teamName: "Sky Hammers",
-    lastMessage: {
-      id: "msg-010", teamId: "team-002",
-      senderId: "person-009", senderName: "Drew Weston",
-      content: "Warm-up at 5:45 for Saturday's game.",
-      messageType: "text", createdAt: addDays(now, -1),
-    },
-    unreadCount: 1,
-  },
-];
+// ─── Announcements ─────────────────────────────────────────────────────────────

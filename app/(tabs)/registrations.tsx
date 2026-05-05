@@ -1,31 +1,31 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
-  ScrollView, View, Text, TouchableOpacity, RefreshControl, SectionList,
+  ScrollView, View, Text, TouchableOpacity, RefreshControl, ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { format, parseISO } from "date-fns";
-import { fetchRegistrations } from "@/services/topscore";
+import { useRegistrations } from "@/hooks/useApi";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { ReadOnlyBanner } from "@/components/ui/ReadOnlyBanner";
 import type { Registration, RegistrationStatus, RegistrationType } from "@/types";
 
 function statusBadge(status: RegistrationStatus) {
-  const map: Record<RegistrationStatus, { label: string; variant: any }> = {
+  const map: Record<RegistrationStatus, { label: string; variant: "success" | "warning" | "danger" | "ghost" }> = {
     active:      { label: "Active",      variant: "success" },
-    pending:     { label: "Pending",     variant: "warning" },
-    waitlisted:  { label: "Waitlisted", variant: "warning" },
-    cancelled:   { label: "Cancelled",  variant: "danger" },
-    completed:   { label: "Completed",  variant: "ghost" },
+    pending:    { label: "Pending",    variant: "warning" },
+    waitlisted: { label: "Waitlisted", variant: "warning" },
+    cancelled:  { label: "Cancelled",   variant: "danger" },
+    completed:  { label: "Completed",  variant: "ghost" },
   };
   const { label, variant } = map[status];
   return <Badge label={label} variant={variant} />;
 }
 
-function typeIcon(type: RegistrationType) {
-  const icons: Record<RegistrationType, any> = {
+function typeIcon(type: RegistrationType): keyof typeof Ionicons.glyphMap {
+  const icons: Record<RegistrationType, keyof typeof Ionicons.glyphMap> = {
     team:   "people",
     league: "trophy",
     event:  "flag",
@@ -33,7 +33,7 @@ function typeIcon(type: RegistrationType) {
   return icons[type];
 }
 
-function typeColor(type: RegistrationType) {
+function typeColor(type: RegistrationType): string {
   const colors: Record<RegistrationType, string> = {
     team:   "#1E88E5",
     league: "#FFA000",
@@ -42,7 +42,7 @@ function typeColor(type: RegistrationType) {
   return colors[type];
 }
 
-function RegistrationCard({ reg }: { reg: Registration }) {
+const RegistrationCard = React.memo(function RegistrationCard({ reg }: { reg: Registration }) {
   return (
     <TouchableOpacity
       onPress={() => router.push(`/registrations/${reg.id}`)}
@@ -85,32 +85,35 @@ function RegistrationCard({ reg }: { reg: Registration }) {
       </Card>
     </TouchableOpacity>
   );
-}
+});
 
 export default function RegistrationsScreen() {
-  const [regs, setRegs]         = useState<Registration[]>([]);
+  const { data: regs = [], isLoading, refetch } = useRegistrations();
   const [refreshing, setRefreshing] = useState(false);
 
-  const load = async () => {
-    const data = await fetchRegistrations();
-    setRegs(data);
-  };
-
-  useEffect(() => { load(); }, []);
-
-  const onRefresh = async () => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await load();
+    await refetch();
     setRefreshing(false);
-  };
+  }, [refetch]);
 
-  const current    = regs.filter((r) => r.status === "active" || r.status === "pending" || r.status === "waitlisted");
-  const historical = regs.filter((r) => r.status === "completed" || r.status === "cancelled");
+  const sections = useMemo(() => {
+    const current    = regs.filter((r) => r.status === "active" || r.status === "pending" || r.status === "waitlisted");
+    const historical = regs.filter((r) => r.status === "completed" || r.status === "cancelled");
 
-  const sections = [
-    { title: "Current", data: current },
-    { title: "Past Seasons", data: historical },
-  ].filter((s) => s.data.length > 0);
+    return [
+      { title: "Current", data: current },
+      { title: "Past Seasons", data: historical },
+    ].filter((s) => s.data.length > 0);
+  }, [regs]);
+
+  if (isLoading && !refreshing) {
+    return (
+      <SafeAreaView className="flex-1 bg-bg items-center justify-center">
+        <ActivityIndicator size="large" color="#1E88E5" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>

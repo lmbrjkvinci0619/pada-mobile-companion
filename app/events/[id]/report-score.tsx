@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
 import { fetchEvent } from "@/services/topscore";
-import type { Event, GameStatus } from "@/types";
+import type { Event, EventStatus } from "@/types";
 import { Button } from "@/components/ui/Button";
 
 function ScoreAdjuster({ 
@@ -45,7 +45,7 @@ export default function ReportScoreScreen() {
   
   const [homeScore, setHomeScore] = useState(0);
   const [awayScore, setAwayScore] = useState(0);
-  const [status, setStatus] = useState<GameStatus>("in_progress");
+  const [status, setStatus] = useState<EventStatus>("in_progress");
 
   useEffect(() => {
     if (id) {
@@ -57,7 +57,7 @@ export default function ReportScoreScreen() {
                 setAwayScore(e.score.awayScore);
              }
              if (e.status === "completed" || e.status === "cancelled") {
-                setStatus(e.status as GameStatus);
+                setStatus(e.status as EventStatus);
              }
           }
        });

@@ -1,0 +1,12 @@
+appId: com.pada.companion
+---
+- clearState
+- launchApp
+- assertVisible: "Welcome to PadaHub"
+- tapOn: "Login"
+- assertVisible: "Email"
+- inputText: "test@pada.org"
+- tapOn: "Password"
+- inputText: "password123"
+- tapOn: "Sign In"
+- assertVisible: "Leagues"

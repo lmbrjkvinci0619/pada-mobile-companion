@@ -1,24 +1,23 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useMemo, useCallback } from "react";
 import {
   ScrollView,
   View,
   Text,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router, useFocusEffect } from "expo-router";
+import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
 import { useAuthStore } from "@/store/authStore";
-import { fetchEvents } from "@/services/topscore";
-import { fetchAnnouncements } from "@/services/announcements";
+import { useEvents, useAnnouncements } from "@/hooks/useApi";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
-import type { Event, Announcement } from "@/types";
-import { APP_NAME, SPORT_EMOJI } from "@/constants/config";
+import type { Event } from "@/types";
+import { SPORT_EMOJI } from "@/constants/config";
 
 function eventDateLabel(dateStr: string): string {
   const d = parseISO(dateStr);
@@ -28,77 +27,103 @@ function eventDateLabel(dateStr: string): string {
 }
 
 function EventStatusBadge({ status }: { status: Event["status"] }) {
-  const map: Record<string, { label: string; variant: any }> = {
-    scheduled:   { label: "Upcoming",    variant: "primary" },
-    in_progress: { label: "LIVE",        variant: "danger" },
-    completed:   { label: "Final",       variant: "ghost" },
-    cancelled:   { label: "Cancelled",   variant: "warning" },
-    postponed:   { label: "Postponed",   variant: "warning" },
+  const map: Record<string, { label: string; variant: "primary" | "danger" | "ghost" | "warning" }> = {
+    scheduled: { label: "Upcoming", variant: "primary" },
+    in_progress: { label: "LIVE", variant: "danger" },
+    completed: { label: "Final", variant: "ghost" },
+    cancelled: { label: "Cancelled", variant: "warning" },
+    postponed: { label: "Postponed", variant: "warning" },
   };
   const { label, variant } = map[status] ?? { label: status, variant: "ghost" };
   return <Badge label={label} variant={variant} />;
 }
 
-function UpcomingEventCard({ event }: { event: Event }) {
+const UpcomingEventCard = React.memo(function UpcomingEventCard({ event }: { event: Event }) {
   const isLive = event.status === "in_progress";
   return (
     <TouchableOpacity
       onPress={() => router.push(`/events/${event.id}`)}
       className="mr-4"
-      style={{ width: 240 }}
+      activeOpacity={0.8}
+      style={{ width: 260 }}
     >
       <Card
-        elevated
-        className={`gap-3 ${isLive ? "border border-danger/40" : ""}`}
+        className={`p-0 overflow-hidden border border-surface-border/50 ${
+          isLive ? "border-danger/40" : ""
+        }`}
       >
-        {isLive && (
-          <View className="flex-row items-center gap-1.5">
-            <View className="w-2 h-2 rounded-full bg-danger" />
-            <Text className="text-danger text-xs font-bold tracking-widest">LIVE NOW</Text>
+        <LinearGradient
+          colors={isLive ? ["#F85149", "#DA3633"] : ["#21262D", "#161B22"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          className="p-4"
+        >
+          <View className="flex-row items-center justify-between mb-4">
+            <Badge
+              label={isLive ? "LIVE" : eventDateLabel(event.startDate)}
+              variant={isLive ? "ghost" : "primary"}
+              className={isLive ? "bg-white/20 border-white/40" : ""}
+            />
+            {!isLive && (
+              <Text className="text-txt-secondary text-[10px] font-bold uppercase tracking-widest">
+                {format(parseISO(event.startDate), "h:mm a")}
+              </Text>
+            )}
           </View>
-        )}
-        <View className="flex-row items-center justify-between">
-          <EventStatusBadge status={event.status} />
-          <Text className="text-txt-muted text-xs font-mid">
-            {eventDateLabel(event.startDate)}
-          </Text>
-        </View>
 
-        <View>
-          <Text className="text-txt-primary text-base font-bold" numberOfLines={1}>
-            {event.title}
-          </Text>
-          <Text className="text-txt-secondary text-sm font-mid mt-0.5" numberOfLines={1}>
-            {event.teamName}
-          </Text>
-        </View>
-
-        {event.location && (
-          <View className="flex-row items-center gap-1.5">
-            <Ionicons name="location-outline" size={13} color="#8B949E" />
-            <Text className="text-txt-muted text-xs font-mid flex-1" numberOfLines={1}>
-              {event.location.name}
+          <View className="mb-4">
+            <Text
+              className={`text-lg font-black leading-tight ${
+                isLive ? "text-white" : "text-txt-primary"
+              }`}
+              numberOfLines={2}
+            >
+              {event.title}
+            </Text>
+            <Text
+              className={`text-sm font-semi mt-1 ${
+                isLive ? "text-white/80" : "text-primary-300"
+              }`}
+              numberOfLines={1}
+            >
+              {event.teamName}
             </Text>
           </View>
-        )}
 
-        {event.score && (
-          <View className="bg-surface-overlay rounded-xl px-3 py-2 flex-row justify-center gap-4">
-            <Text className="text-txt-primary font-black text-lg">
-              {event.score.homeScore}
-            </Text>
-            <Text className="text-txt-muted font-mid text-lg">—</Text>
-            <Text className="text-txt-primary font-black text-lg">
-              {event.score.awayScore}
-            </Text>
+          <View className="flex-row items-center justify-between mt-auto pt-4 border-t border-white/10">
+            {event.location ? (
+              <View className="flex-row items-center gap-1.5 flex-1 mr-2">
+                <Ionicons
+                  name="location"
+                  size={12}
+                  color={isLive ? "#fff" : "#8B949E"}
+                />
+                <Text
+                  className={`text-[10px] font-bold uppercase tracking-wider ${
+                    isLive ? "text-white/70" : "text-txt-muted"
+                  }`}
+                  numberOfLines={1}
+                >
+                  {event.location.name}
+                </Text>
+              </View>
+            ) : (
+              <View className="flex-1" />
+            )}
+
+            <Ionicons
+              name="chevron-forward-circle"
+              size={20}
+              color={isLive ? "#fff" : "#30363D"}
+            />
           </View>
-        )}
+        </LinearGradient>
       </Card>
     </TouchableOpacity>
   );
-}
+});
 
-function AnnouncementRow({ ann }: { ann: Announcement }) {
+const AnnouncementRow = React.memo(function AnnouncementRow({ ann }: { ann: { id: string; title: string; content: string; isUrgent: boolean; isRead?: boolean; createdAt: string } }) {
   return (
     <TouchableOpacity
       onPress={() => router.push(`/announcements/${ann.id}`)}
@@ -117,16 +142,16 @@ function AnnouncementRow({ ann }: { ann: Announcement }) {
       </View>
       <View className="flex-1">
         <View className="flex-row items-center gap-2 mb-0.5">
-          {!ann.isRead && (
-            <View className="w-2 h-2 rounded-full bg-primary-500" />
-          )}
+          {!ann.isRead && <View className="w-2 h-2 rounded-full bg-primary-500" />}
           {ann.isUrgent && <Badge label="Urgent" variant="danger" />}
           <Text className="text-txt-secondary text-xs font-mid">
             {format(new Date(ann.createdAt), "MMM d")}
           </Text>
         </View>
         <Text
-          className={`text-sm font-semi ${ann.isRead ? "text-txt-secondary" : "text-txt-primary"}`}
+          className={`text-sm font-semi ${
+            ann.isRead ? "text-txt-secondary" : "text-txt-primary"
+          }`}
           numberOfLines={1}
         >
           {ann.title}
@@ -137,40 +162,44 @@ function AnnouncementRow({ ann }: { ann: Announcement }) {
       </View>
     </TouchableOpacity>
   );
-}
+});
 
 export default function HomeScreen() {
   const { user } = useAuthStore();
-  const [events, setEvents]       = useState<Event[]>([]);
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
+  const { data: events = [], isLoading: eventsLoading, refetch: refetchEvents } = useEvents();
+  const { data: announcements = [], isLoading: announcementsLoading } = useAnnouncements(user?.id || "");
+  const [refreshing, setRefreshing] = React.useState(false);
 
-  const upcoming = events
-    .filter((e) => e.status === "scheduled" || e.status === "in_progress")
-    .sort((a, b) => a.startDate.localeCompare(b.startDate))
-    .slice(0, 6);
-
-  const load = async () => {
-    const eventData = await fetchEvents();
-    setEvents(eventData);
-
-    if (user?.id) {
-      const annData = await fetchAnnouncements(user.id);
-      setAnnouncements(annData);
-    }
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [user?.id])
+  const upcoming = useMemo(
+    () =>
+      events
+        .filter((e) => e.status === "scheduled" || e.status === "in_progress")
+        .sort((a, b) => a.startDate.localeCompare(b.startDate))
+        .slice(0, 6),
+    [events]
   );
 
-  const onRefresh = async () => {
+  const liveEvent = useMemo(
+    () => events.find((e) => e.status === "in_progress"),
+    [events]
+  );
+
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await load();
+    await refetchEvents();
     setRefreshing(false);
-  };
+  }, [refetchEvents]);
+
+  const isLoading = eventsLoading || announcementsLoading;
+
+  if (isLoading && !refreshing) {
+    return (
+      <SafeAreaView className="flex-1 bg-bg items-center justify-center">
+        {/* @ts-ignore */}
+        <Ionicons name="sync" size={32} color="#1E88E5" className="animate-spin" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
@@ -178,47 +207,62 @@ export default function HomeScreen() {
         className="flex-1"
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1E88E5" />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#1E88E5"
+          />
         }
       >
-        {/* Header */}
-        <View className="px-5 pt-4 pb-6 flex-row items-center justify-between">
-          <View>
-            <Text className="text-txt-muted text-sm font-mid">
-              {format(new Date(), "EEEE, MMMM d")}
-            </Text>
-            <Text className="text-txt-primary text-2xl font-black mt-0.5">
-              Hey, {user?.firstName ?? "Player"} {SPORT_EMOJI}
-            </Text>
-          </View>
-          <Avatar
-            uri={user?.avatarUrl}
-            name={`${user?.firstName} ${user?.lastName}`}
-            size="md"
-          />
-        </View>
-
-        {/* Live game callout */}
-        {events.some((e) => e.status === "in_progress") && (
-          <TouchableOpacity
-            className="mx-5 mb-5 bg-danger/10 border border-danger/30 rounded-2xl px-4 py-3 flex-row items-center gap-3"
-            onPress={() => {
-              const live = events.find((e) => e.status === "in_progress");
-              if (live) router.push(`/events/${live.id}`);
-            }}
-          >
-            <View className="w-3 h-3 rounded-full bg-danger" />
-            <View className="flex-1">
-              <Text className="text-danger font-bold text-sm">Game in progress!</Text>
-              <Text className="text-txt-secondary text-xs font-mid">
-                {events.find((e) => e.status === "in_progress")?.title}
+        <LinearGradient
+          colors={["#161B22", "#0D1117"]}
+          className="px-5 pt-6 pb-8 rounded-b-[40px] shadow-2xl"
+        >
+          <View className="flex-row items-center justify-between">
+            <View>
+              <Text className="text-primary-300 text-xs font-bold tracking-[2px] uppercase mb-1">
+                {format(new Date(), "EEEE, MMMM d")}
+              </Text>
+              <Text className="text-txt-primary text-3xl font-black">
+                Hey, {user?.firstName ?? "Player"} {SPORT_EMOJI}
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={16} color="#E53935" />
+            <TouchableOpacity onPress={() => router.push("/(tabs)/profile")}>
+              <Avatar
+                uri={user?.avatarUrl}
+                name={`${user?.firstName} ${user?.lastName}`}
+                size="md"
+                className="border-2 border-primary-500/30"
+              />
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
+
+        {liveEvent && (
+          <TouchableOpacity
+            className="mx-5 -mt-4 mb-6 bg-danger/10 border border-danger/30 rounded-2xl overflow-hidden"
+            onPress={() => router.push(`/events/${liveEvent.id}`)}
+          >
+            <LinearGradient
+              colors={["rgba(248, 81, 73, 0.15)", "rgba(248, 81, 73, 0.05)"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className="px-4 py-3 flex-row items-center gap-3"
+            >
+              <View className="w-3 h-3 rounded-full bg-danger shadow-[0_0_8px_rgba(248,81,73,0.8)]" />
+              <View className="flex-1">
+                <Text className="text-danger font-black text-sm uppercase tracking-wider">
+                  Game in progress!
+                </Text>
+                <Text className="text-txt-primary text-xs font-bold mt-0.5">
+                  {liveEvent.title}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color="#F85149" />
+            </LinearGradient>
           </TouchableOpacity>
         )}
 
-        {/* Upcoming Events */}
         <View className="mb-6">
           <View className="px-5 flex-row items-center justify-between mb-3">
             <Text className="text-txt-primary text-lg font-bold">Upcoming</Text>
@@ -247,7 +291,6 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* Announcements */}
         <View className="mx-5 mb-8">
           <View className="flex-row items-center justify-between mb-3">
             <Text className="text-txt-primary text-lg font-bold">Announcements</Text>
@@ -256,45 +299,46 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
           {announcements.length === 0 ? (
-             <Card className="items-center py-6">
-                <Ionicons name="megaphone-outline" size={32} color="#484F58" />
-                <Text className="text-txt-muted text-sm font-mid mt-2 text-center">
-                  No new announcements.
-                </Text>
-             </Card>
+            <Card className="items-center py-6">
+              <Ionicons name="megaphone-outline" size={32} color="#484F58" />
+              <Text className="text-txt-muted text-sm font-mid mt-2 text-center">
+                No new announcements.
+              </Text>
+            </Card>
           ) : (
-             <Card className="gap-0 divide-y divide-surface-overlay">
-               {announcements.slice(0, 3).map((ann) => (
-                 <AnnouncementRow key={ann.id} ann={ann} />
-               ))}
-             </Card>
+            <Card className="gap-0 divide-y divide-surface-overlay">
+              {announcements.slice(0, 3).map((ann) => (
+                <AnnouncementRow key={ann.id} ann={ann} />
+              ))}
+            </Card>
           )}
         </View>
 
-        {/* Quick Actions */}
-        <View className="mx-5 mb-8">
-          <Text className="text-txt-primary text-lg font-bold mb-3">Quick Actions</Text>
-          <View className="flex-row gap-3">
+        <View className="mx-5 mb-12">
+          <Text className="text-txt-primary text-lg font-black mb-4">Quick Links</Text>
+          <View className="flex-row gap-4">
             <TouchableOpacity
-              className="flex-1 bg-primary-500/10 border border-primary-500/20 rounded-2xl p-4 items-center gap-2"
-              onPress={() => router.push("/(tabs)/chat")}
-            >
-              <Ionicons name="chatbubbles" size={26} color="#64B5F6" />
-              <Text className="text-primary-200 text-xs font-semi text-center">Team Chat</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="flex-1 bg-disc/10 border border-disc/20 rounded-2xl p-4 items-center gap-2"
+              className="flex-1 bg-accent/10 border border-accent/20 rounded-3xl p-5 items-center gap-3 shadow-sm"
               onPress={() => router.push("/(tabs)/schedule")}
             >
-              <Ionicons name="calendar" size={26} color="#56D364" />
-              <Text className="text-disc-light text-xs font-semi text-center">Schedule</Text>
+              <View className="w-12 h-12 rounded-2xl bg-accent items-center justify-center shadow-lg shadow-accent/50">
+                <Ionicons name="calendar" size={24} color="#fff" />
+              </View>
+              <Text className="text-txt-primary text-xs font-bold text-center tracking-wide">
+                Schedule
+              </Text>
             </TouchableOpacity>
+
             <TouchableOpacity
-              className="flex-1 bg-warning/10 border border-warning/20 rounded-2xl p-4 items-center gap-2"
+              className="flex-1 bg-warning/10 border border-warning/20 rounded-3xl p-5 items-center gap-3 shadow-sm"
               onPress={() => router.push("/(tabs)/teams")}
             >
-              <Ionicons name="people" size={26} color="#FFA000" />
-              <Text className="text-warning text-xs font-semi text-center">My Teams</Text>
+              <View className="w-12 h-12 rounded-2xl bg-warning items-center justify-center shadow-lg shadow-warning/50">
+                <Ionicons name="people" size={24} color="#fff" />
+              </View>
+              <Text className="text-txt-primary text-xs font-bold text-center tracking-wide">
+                My Teams
+              </Text>
             </TouchableOpacity>
           </View>
         </View>

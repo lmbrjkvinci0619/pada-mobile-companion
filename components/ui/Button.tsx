@@ -8,11 +8,12 @@ import {
 import { cn } from "@/utils/cn";
 
 interface ButtonProps extends TouchableOpacityProps {
-  variant?: "primary" | "secondary" | "ghost" | "danger" | "success";
+  variant?: "primary" | "secondary" | "ghost" | "danger" | "success" | "outline";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
   label: string;
   icon?: React.ReactNode;
+  activeOpacity?: number;
 }
 
 const variantClass: Record<string, string> = {
@@ -21,6 +22,7 @@ const variantClass: Record<string, string> = {
   ghost: "bg-transparent active:bg-surface-raised",
   danger: "bg-danger active:bg-danger-dark",
   success: "bg-accent active:bg-accent-dark",
+  outline: "bg-transparent border border-primary-500/40 active:bg-primary-500/10",
 };
 
 const textClass: Record<string, string> = {
@@ -29,6 +31,7 @@ const textClass: Record<string, string> = {
   ghost: "text-primary font-semi",
   danger: "text-white font-semi",
   success: "text-white font-semi",
+  outline: "text-primary-300 font-semi",
 };
 
 const sizeClass: Record<string, string> = {
@@ -43,7 +46,7 @@ const textSizeClass: Record<string, string> = {
   lg: "text-lg",
 };
 
-export function Button({
+export const Button = React.memo(function Button({
   variant = "primary",
   size = "md",
   loading = false,
@@ -68,7 +71,7 @@ export function Button({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === "ghost" || variant === "secondary" ? "#1E88E5" : "#fff"}
+          color={variant === "ghost" || variant === "secondary" || variant === "outline" ? "#1E88E5" : "#fff"}
         />
       ) : (
         icon
@@ -76,4 +79,4 @@ export function Button({
       <Text className={cn(textClass[variant], textSizeClass[size])}>{label}</Text>
     </TouchableOpacity>
   );
-}
+});

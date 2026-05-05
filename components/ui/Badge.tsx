@@ -38,7 +38,7 @@ const textClass: Record<BadgeVariant, string> = {
   disc:    "text-disc-light",
 };
 
-export function Badge({ label, variant = "default", size = "sm", className }: BadgeProps) {
+export const Badge = React.memo(function Badge({ label, variant = "default", size = "sm", className }: BadgeProps) {
   return (
     <View
       className={cn(
@@ -59,4 +59,4 @@ export function Badge({ label, variant = "default", size = "sm", className }: Ba
       </Text>
     </View>
   );
-}
+});

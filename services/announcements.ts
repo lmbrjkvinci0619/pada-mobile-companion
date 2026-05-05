@@ -1,26 +1,26 @@
 import { supabase } from "./supabase";
-import { Announcement, AnnouncementTargetType } from "@/types";
+import type { Announcement, AnnouncementTargetType, FetchAnnouncementsResult, FetchAnnouncementsOptions } from "@/types";
 import { getValidAccessToken } from "./auth";
 
-export async function fetchAnnouncements(userId: string): Promise<Announcement[]> {
-  // First, get the user's teams to filter team-level announcements
+export async function fetchAnnouncements(
+  userId: string,
+  _options?: Partial<FetchAnnouncementsOptions>
+): Promise<FetchAnnouncementsResult<Announcement>> {
   const { data: memberData } = await supabase
     .from("team_members")
     .select("team_id, teams!inner(id, topscore_id)")
     .eq("topscore_person_id", userId);
 
-  const teamIds = memberData ? memberData.map(m => (m.teams as any).topscore_id) : [];
+  const teamIds = memberData?.map(m => (m.teams as { topscore_id?: string }).topscore_id).filter(Boolean) ?? [];
 
-  // Fetch announcements:
-  // target_type = 'league' OR (target_type = 'team' AND target_id IN teamIds)
-  // For division we could do the same if we have division data, but falling back to league/team for now.
   let query = supabase
     .from("announcements")
     .select("*, announcement_reads(user_id)")
     .order("created_at", { ascending: false });
 
   if (teamIds.length > 0) {
-    query = query.or(`target_type.eq.league,target_type.eq.division,and(target_type.eq.team,target_id.in.(${teamIds.join(',')}))`);
+    const teamIdFilter = teamIds.join(',');
+    query = query.or(`target_type.eq.league,target_type.eq.division,and(target_type.eq.team,target_id.in.(${teamIdFilter}))`);
   } else {
     query = query.or("target_type.eq.league,target_type.eq.division");
   }
@@ -29,19 +29,18 @@ export async function fetchAnnouncements(userId: string): Promise<Announcement[]
 
   if (error) {
     console.error("Error fetching announcements:", error);
-    return [];
+    return { data: [], pagination: { total: 0, limit: 50, offset: 0, hasMore: false } };
   }
 
-  return (data || []).map(ann => {
-    // Check if current user is in the announcement_reads array
-    const isRead = ann.announcement_reads?.some((read: any) => read.user_id === userId) ?? false;
+  const announcements: Announcement[] = (data || []).map(ann => {
+    const isRead = ann.announcement_reads?.some((read: { user_id: string }) => read.user_id === userId) ?? false;
 
     return {
       id: ann.id,
       authorId: ann.author_id,
       authorName: ann.author_name,
-      authorRole: ann.author_role as any,
-      targetType: ann.target_type as any,
+      authorRole: ann.author_role as Announcement["authorRole"],
+      targetType: ann.target_type as Announcement["targetType"],
       targetId: ann.target_id,
       title: ann.title,
       content: ann.content,
@@ -51,6 +50,16 @@ export async function fetchAnnouncements(userId: string): Promise<Announcement[]
       expiresAt: ann.expires_at,
     };
   });
+
+  return {
+    data: announcements,
+    pagination: {
+      total: announcements.length,
+      limit: 50,
+      offset: 0,
+      hasMore: false,
+    },
+  };
 }
 
 export async function markAnnouncementAsRead(announcementId: string, userId: string): Promise<void> {
@@ -115,8 +124,8 @@ export async function fetchAnnouncementById(id: string): Promise<Announcement | 
     id: data.id,
     authorId: data.author_id,
     authorName: data.author_name,
-    authorRole: data.author_role as any,
-    targetType: data.target_type as any,
+    authorRole: data.author_role as Announcement["authorRole"],
+    targetType: data.target_type as Announcement["targetType"],
     targetId: data.target_id,
     title: data.title,
     content: data.content,

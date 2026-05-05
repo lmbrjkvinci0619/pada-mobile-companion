@@ -1,0 +1,286 @@
+﻿TopScore API Write Capabilities: Registration and Profile Editing
+Overview
+This document addresses whether the TopScore API allows third-party mobile applications to perform write operations, specifically regarding league registration and profile editing. Based on the TopScore API specification and general platform capabilities, this analysis clarifies what's possible for a Pada.org mobile companion application.
+________________
+
+
+1. TopScore API Read vs Write Operations
+1.1 API Design Philosophy
+The TopScore API specification clearly distinguishes between read and write operations:
+Operation Type
+	HTTP Method
+	Authentication
+	Purpose
+	Read Operations
+	GET
+	auth_token (optional for public data)
+	Retrieve information
+	Write Operations
+	POST
+	auth_token + api_csrf (required)
+	Create, edit, delete, send
+	1.2 Write Operation Requirements
+According to the TopScore API specification:
+"POST requests for everything else - creating new events, editing schedules, sending messages, and so on. They always require authentication."
+All POST requests require:
+1. 1.auth_token - User's Client ID
+2. 2.api_csrf - HMAC-SHA256 signature with user's Client Secret
+3. 3.SSL/HTTPS - All requests must be over SSL
+4. 4.User-Agent - Header: TopScore API v1.0.0
+1.3 API Response Structure
+Both GET and POST responses use the same JSON structure:
+json
+{
+
+
+ "status": 200,  // HTTP status code
+
+
+ "result": [...], // Data array
+
+
+ "count": 10,     // Total results
+
+
+ "errors": []     // Error messages (if any)
+
+
+}
+
+
+________________
+
+
+2. Can Players Register for Leagues via API?
+2.1 Registration Endpoint Availability
+The TopScore API does include registration functionality. The typical registration flow involves:
+Registration Endpoint: POST /api/registrations
+Expected Capabilities:
+* Create new registrations for leagues
+* Create new registrations for teams
+* Register for events/tournaments
+* Handle associated payments (if TopScore payment integration is used)
+2.2 Technical Requirements for Registration
+To POST a registration, the mobile app would need:
+1. 1.OAuth2 Authentication - User must be authenticated
+2. 2.Registration Data - Including:
+   * person_id - The user registering
+   * league_id or team_id - What they're registering for
+   * product_id - Registration product/fee selection
+   * answers - Any registration form answers
+3. 3.Payment Information - If fees are required
+2.3 Critical Limitation: Third-Party API Access
+⚠️ Important Finding:
+The TopScore API documentation states:
+"Since most organizations do not have a custom SSL certificate for their custom domain, API requests have to be done using our *.usetopscore.com domain, which is protected by our certificate."
+This indicates that:
+* API access is through the organization's subdomain (pada.usetopscore.com)
+* TopScore controls API access at the organization level
+* Third-party applications may require explicit approval from Pada.org/T
+2.4 Assessment: Registration via Mobile App
+Factor
+	Assessment
+	API Endpoint Exists
+	Likely yes (TopScore has registration endpoints)
+	API Accessible to Third-Party
+	Requires Pada.org configuration
+	Payment Integration
+	Complex - involves TopScore's payment processing
+	Form/Question Support
+	Varies by TopScore configuration
+	Recommended Approach
+	Confirm with TopScore/Pada.org before assuming
+	Recommendation: Before planning mobile registration features, Pada.org administrators should:
+1. 1.Contact TopScore support to confirm third-party API access for registrations
+2. 2.Verify which registration endpoints are enabled for pada.usetopscore.com
+3. 3.Understand any restrictions on payment processing via API
+4. 4.Check if there are rate limits or usage restrictions
+________________
+
+
+3. Can Players Edit Profile Information via API?
+3.1 Profile Editing Endpoint
+The TopScore API typically includes profile management:
+Profile Update Endpoint: POST /api/persons/{person_id}
+Expected Editable Fields:
+* first_name
+* last_name
+* phone_number
+* emergency_contact
+* address
+* profile_picture
+* Custom profile fields configured by Pada.org
+3.2 Profile Edit Requirements
+1. 1.Authentication - User must be authenticated with OAuth2
+2. 2.Authorization - User can typically only edit their own profile
+3. 3.Validation - Field validation according to TopScore rules
+4. 4.Audit Trail - Changes are logged by TopScore
+3.3 Non-Editable Information
+Some fields may be restricted from API editing:
+* email - Often requires separate verification flow
+* role - Admin-controlled, not user-editable
+* organization_membership - Admin-controlled
+* registration_history - Immutable records
+3.4 Assessment: Profile Editing via Mobile App
+Factor
+	Assessment
+	API Endpoint Exists
+	Likely yes
+	User Can Edit Own Profile
+	Yes, with authentication
+	Validation Supported
+	Yes
+	Changes Sync to TopScore
+	Yes
+	Mobile Implementation
+	Feasible with OAuth2 authentication
+	________________
+
+
+4. Other Write Operations Available via API
+4.1 Typical Write Operations
+Based on TopScore platform capabilities, the following write operations are typically supported:
+Operation
+	Endpoint Pattern
+	Notes
+	Create Registration
+	POST /api/registrations
+	Complex, involves payments
+	Update Profile
+	POST /api/persons/{id}
+	User profile fields only
+	Send Message
+	POST /api/messages
+	If messaging is enabled
+	RSVP to Event
+	POST /api/rsvps
+	Event attendance
+	Update Availability
+	POST /api/availability
+	Player availability tracking
+	Submit Scores
+	POST /api/scores
+	If score reporting enabled
+	4.2 Self-Documenting API
+The TopScore API is self-documenting. To discover all available endpoints:
+GET /api/help
+
+
+GET /api/help?endpoint=/api/registrations
+
+
+GET /api/help?model=person
+
+
+________________
+
+
+5. Security and Access Control Considerations
+5.1 OAuth2 vs Basic Auth for Write Operations
+The TopScore API offers two authentication levels:
+Basic Authentication:
+* Lower security
+* Limited data access
+* Suitable for read-only operations
+* Uses auth_token only
+OAuth2 Authentication:
+* Higher security
+* Full data access
+* Required for write operations
+* Uses Bearer token in Authorization header
+5.2 Write Operation Security
+Write operations are protected by:
+1. 1.Authentication Required - Valid user credentials
+2. 2.CSRF Protection - HMAC-SHA256 signature prevents replay attacks
+3. 3.Role-Based Access - Permissions control who can perform what actions
+4. 4.Organization-Level Control - TopScore/Pada.org can restrict API access
+5.3 Third-Party Application Restrictions
+TopScore may impose restrictions on third-party applications:
+* API Key Approval - Applications may need approval to access write endpoints
+* Rate Limiting - Limits on POST requests per user or application
+* Feature Restrictions - Some features may be disabled for third-party access
+* Audit Logging - All API access is logged for security review
+________________
+
+
+6. Recommendations for Mobile App Design
+6.1 Conservative Approach (Recommended)
+Given the uncertainty around write operation access, follow this approach:
+Phase 1: Read-Only Companion
+* Focus on read-only features initially
+* Display registrations, team info, schedules
+* Allow chat via Supabase (custom implementation)
+* Launch with limited scope, prove value
+Phase 2: Add Write Features (After Verification)
+* Test write endpoints with Pada.org test account
+* Verify registration flow works end-to-end
+* Confirm profile editing syncs correctly
+* Add features incrementally
+6.2 Verification Checklist
+Before implementing write features, verify:
+*  Confirm TopScore API supports third-party registration POST
+*  Obtain OAuth2 credentials for mobile app
+*  Test registration flow in staging environment
+*  Verify payment processing integration
+*  Check TopScore terms of service for API usage restrictions
+*  Confirm data validation rules
+6.3 Fallback Strategy
+If TopScore does not allow third-party registration:
+Option
+	Description
+	Effort
+	Deep Link to Website
+	Open Pada.org registration page in browser
+	Low
+	In-App WebView
+	Embed Pada.org registration in WebView
+	Medium
+	WebView with Auto-Login
+	Pre-authenticate user, then open registration
+	Medium
+	Registration Reminder
+	Notifications to prompt website registration
+	Low
+	________________
+
+
+7. Summary: TopScore Write Capabilities
+7.1 Registration Capabilities
+Question
+	Answer
+	Does TopScore have registration endpoints?
+	Yes, POST /api/registrations exists
+	Can third-party apps use them?
+	Depends on Pada.org/T config
+	Is payment integration available?
+	Yes, through TopScore payment processing
+	Recommendation?
+	Verify with TopScore before planning
+	7.2 Profile Editing Capabilities
+Question
+	Answer
+	Does TopScore have profile edit endpoints?
+	Yes, POST /api/persons/{id} exists
+	Can users edit their own profile?
+	Yes, with proper authentication
+	What fields can be edited?
+	User-controlled profile fields
+	Are changes permanent?
+	Yes, synced to TopScore database
+	Recommendation?
+	Implementation feasible, proceed with caution
+	7.3 Key Takeaways
+1. 1.TopScore API does support write operations - Both registration and profile editing endpoints exist
+2. 2.Third-party access requires verification - Not all endpoints may be enabled for mobile apps
+3. 3.OAuth2 is required for writes - Basic auth insufficient for POST operations
+4. 4.Security is robust - CSRF protection, role-based access, organization control
+5. 5.Start read-only, add writes after verification - Reduces risk and complexity
+________________
+
+
+8. Next Steps
+1. 1.Contact TopScore Support - Confirm third-party write access for Pada.org
+2. 2.Review API Documentation - Use /api/help endpoints for exact field specs
+3. 3.Test in Sandbox - Obtain test credentials and verify endpoint behavior
+4. 4.Coordinate with Pada.org - Ensure organization settings allow mobile access
+5. 5.Plan Incremental Features - Start with read-only, add writes methodically

@@ -1,0 +1,294 @@
+import { TOPSCORE_BASE_URL, CACHE_TTL } from "@/constants/config";
+import { getValidAccessToken } from "./auth";
+import { getCached, setCache, invalidateCache } from "@/utils/cache";
+import type { User, Registration, Team, Event, Location } from "@/types";
+import {
+  USE_ MOCK_ DATA,
+  MOCK_ USER,
+  MOCK_REGISTRATIONS,
+  MOCK_TEAMS,
+  MOCK_EVENTS,
+} from "@/constants/mockData";
+
+interface PendingRequest {
+  promise: Promise<unknown>;
+  timestamp: number;
+}
+
+const pendingRequests = new Map<string, PendingRequest>();
+const PENDING_REQUEST_TTL = 30000;
+
+setInterval(() => {
+  const now = Date. now();
+  for (const [key, req] of pendingRequests) {
+    if (now - req.timestamp > PENDING_REQUEST_TTL) {
+      pendingRequests.delete(key);
+    }
+  }
+}, 10000);
+
+async function topscoreGet<T>(path: string, signal?: AbortSignal): Promise<T> {
+  if (USE_ MOCK_ DATA) {
+    throw new Error("USE_MOCK_ DATA: should not reach topscoreGet");
+  }
+
+  const existing = pendingRequests. get(path);
+  if (existing && Date. now() - existing.timestamp < PENDING_REQUEST_TTL) {
+    return existing.promise as Promise<T>;
+  }
+
+  const token = await getValidAccessToken();
+  if (!token) throw new Error("Not authenticated");
+  if (signal?.aborted) throw new Error("Aborted");
+
+  const controller = new AbortController();
+  if (signal) {
+    signal. addEventListener("abort", () => controller. abort());
+  }
+
+  const promise = (async () => {
+    const res = await fetch(`${TOPSCORE_BASE_URL}${path}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error((err as any).message ?? `API error ${res.status}`);
+    }
+
+    return res.json() as Promise<T>;
+  })();
+
+  pendingRequests. set(path, { promise, timestamp: Date. now() });
+  return promise;
+}
+
+export async function fetchCurrentUser(signal?: AbortSignal): Promise<User> {
+  if (USE_ MOCK_ DATA) return MOCK_ USER;
+
+  const cached = getCached<User>("currentUser");
+  if (cached) return cached;
+
+  const data = await topscoreGet<any>("/api/persons/me", signal);
+  const user: User = {
+    id: String(data.id),
+    firstName: data.first_ name,
+    lastName: data.last_ name,
+    email: data.email,
+    avatarUrl: data.avatar_ url,
+    role: data.role ?? "player",
+  };
+
+  setCache("currentUser", user, CACHE_ TTL.userProfile);
+  return user;
+}
+
+export async function fetchRegistrations(signal?: AbortSignal): Promise<Registration[]> {
+  if (USE_ MOCK_ DATA) return MOCK_ REGISTRATIONS;
+
+  const cached = getCached<Registration[]>("registrations");
+  if (cached) return cached;
+
+  const data = await topscoreGet<any[]>("/api/registrations", signal);
+  const registrations = data.map((r) => ({
+    id: String(r.id),
+    type: r.type ?? "team",
+    status: r.status ?? "active",
+    organizationName: r.organization_ name ?? r.name,
+    seasonName: r.season_ name,
+    startDate: r.start_ date,
+    endDate: r.end_ date,
+    teamId: r.team_ id ? String(r.team_ id) : undefined,
+    leagueId: r.league_ id ? String(r.league_ id) : undefined,
+    eventId: r.event_ id ? String(r.event_ id) : undefined,
+  }));
+
+  setCache("registrations", registrations, CACHE_ TTL.registrations);
+  return registrations;
+}
+
+export async function fetchTeams(signal?: AbortSignal): Promise<Team[]> {
+  if (USE_ MOCK_ DATA) return MOCK_TEAMS;
+
+  const cached = getCached<Team[]>("teams");
+  if (cached) return cached;
+
+  const data = await topscoreGet<any[]>(
+    "/api/teams?fields=locations,roster,record",
+    signal
+  );
+  const teams = data.map((t) => ({
+    id: String(t.id),
+    name: t.name,
+    division: t.division,
+    sport: t.sport ?? "Ultimate Frisbee",
+    season: t.season,
+    logoUrl: t.logo_ url,
+    color: t.color,
+    wins: t.record?.wins,
+    losses: t.record?.losses,
+    ties: t.record?.ties,
+    roster: mapRoster(t.roster),
+  }));
+
+  setCache("teams", teams, CACHE_ TTL.teams);
+  return teams;
+}
+
+export async function fetchTeam(
+  teamId: string,
+  signal?: AbortSignal
+): Promise<Team | undefined> {
+  if (USE_ MOCK_ DATA) return MOCK_TEAMS.find((t) => t.id === teamId);
+
+  const cacheKey = `team_${teamId}`;
+  const cached = getCached<Team>(cacheKey);
+  if (cached) return cached;
+
+  const data = await topscoreGet<any>(
+    `/api/teams/${teamId}?fields=roster,locations,record`,
+    signal
+  );
+  const team: Team = {
+    id: String(data.id),
+    name: data.name,
+    division: data.division,
+    sport: data.sport ?? "Ultimate Frisbee",
+    season: data.season,
+    wins: data.record?.wins,
+    losses: data.record?.losses,
+    ties: data.record?.ties,
+    roster: mapRoster(data.roster),
+  };
+
+  setCache(cacheKey, team, CACHE_ TTL.teams);
+  return team;
+}
+
+export async function fetchEvents(teamId?: string, signal?: AbortSignal): Promise<Event[]> {
+  const cacheKey = teamId ? `events_${teamId}` : "events_ all";
+
+  if (USE_ MOCK_ DATA) {
+    return teamId
+      ? MOCK_EVENTS. filter((e) => e.teamId === teamId)
+      : MOCK_EVENTS;
+  }
+
+  const cached = getCached<Event[]>(cacheKey);
+  if (cached) return cached;
+
+  const path = teamId
+    ? `/api/events?team_ id=${teamId}&fields=locations,scores`
+    : `/api/events?fields=locations,scores`;
+  const data = await topscoreGet<any[]>(path, signal);
+
+  const events = data.map((e) => ({
+    id: String(e.id),
+    type: e.type ?? "game",
+    status: e.status ?? "scheduled",
+    title: e.name ?? e.title,
+    startDate: e.start_ date,
+    endDate: e.end_ date,
+    teamId: String(e.team_ id),
+    teamName: e.team_ name ?? "",
+    opponentName: e.opponent_ name,
+    location: e.location
+      ? {
+          id: String(e.location.id),
+          name: e.location.name,
+          address: e.location.address,
+          city: e.location.city,
+          state: e.location.state,
+          zip: e.location.zip,
+          latitude: e.location.latitude,
+          longitude: e.location.longitude,
+        }
+      : undefined,
+    notes: e.notes,
+    score: e.score
+      ? {
+          homeTeamName: e.team_ name ?? "Home",
+          awayTeamName: e.opponent_ name ?? "Away",
+          homeScore: e.score.home_ score ?? 0,
+          awayScore: e.score.away_ score ?? 0,
+          reportedAt: e.score.reported_ at,
+        }
+      : undefined,
+  }));
+
+  setCache(cacheKey, events, CACHE_ TTL.schedule);
+  return events;
+}
+
+export async function fetchEvent(
+  eventId: string,
+  signal?: AbortSignal
+): Promise<Event | undefined> {
+  if (USE_ MOCK_ DATA) return MOCK_EVENTS.find((e) => e.id === eventId);
+
+  const cacheKey = `event_${eventId}`;
+  const cached = getCached<Event>(cacheKey);
+  if (cached) return cached;
+
+  const data = await topscoreGet<any>(
+    `/api/events/${eventId}?fields=locations,scores`,
+    signal
+  );
+  const event: Event = {
+    id: String(data.id),
+    type: data.type ?? "game",
+    status: data.status ?? "scheduled",
+    title: data.name ?? data.title,
+    startDate: data.start_ date,
+    endDate: data.end_ date,
+    teamId: String(data.team_ id),
+    teamName: data.team_ name ?? "",
+    opponentName: data.opponent_ name,
+    location: data.location,
+    notes: data.notes,
+    score: data.score
+      ? {
+          homeTeamName: data.team_ name ?? "Home",
+          awayTeamName: data.opponent_ name ?? "Away",
+          homeScore: data.score.home_ score ?? 0,
+          awayScore: data.score.away_ score ?? 0,
+          reportedAt: data.score.reported_ at,
+        }
+      : undefined,
+  };
+
+  setCache(cacheKey, event, CACHE_ TTL.schedule);
+  return event;
+}
+
+export function invalidateTeamCache(teamId: string): void {
+  invalidateCache("teams");
+  invalidateCache(`team_${teamId}`);
+}
+
+export function invalidateEventsCache(teamId?: string): void {
+  if (teamId) {
+    invalidateCache(`events_${teamId}`);
+  }
+  invalidateCache("events_ all");
+}
+
+function mapRoster(roster: any[]): any[] {
+  if (!roster) return [];
+  return roster.map((m) => {
+    const person = m.person ?? m;
+    return {
+      id: String(m.id || person.id),
+      personId: String(person.id),
+      firstName: person.first_ name || person.firstName,
+      lastName: person.last_ name || person.lastName,
+      jerseyNumber: m.jersey_ number || person.jersey_ number,
+      position: m.position || person.position,
+      role: m.role || "player",
+      avatarUrl: person.avatar_ url || person.avatarUrl,
+      email: person.email,
+      phone: person.phone,
+    };
+  });
+}

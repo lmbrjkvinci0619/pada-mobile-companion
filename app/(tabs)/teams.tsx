@@ -1,137 +1,126 @@
-import React, { useEffect, useState } from "react";
-import { ScrollView, View, Text, TouchableOpacity, RefreshControl } from "react-native";
+import React, { useState, useCallback } from "react";
+import { FlatList, View, Text, TouchableOpacity, RefreshControl, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { fetchTeams } from "@/services/topscore";
+import { useTeams } from "@/hooks/useApi";
 import { Badge } from "@/components/ui/Badge";
 import { ReadOnlyBanner } from "@/components/ui/ReadOnlyBanner";
 import type { Team } from "@/types";
 
-function TeamCard({ team }: { team: Team }) {
-  const accentColor = team.color ?? "#1E88E5";
+const TeamCard = React.memo(function TeamCard({ team, onPress }: { team: Team; onPress: () => void }) {
+  const accentColor = team.color ?? "#1F6FEB";
   return (
     <TouchableOpacity
-      onPress={() => router.push(`/teams/${team.id}`)}
-      className="mb-4"
+      onPress={onPress}
+      className="mb-5 shadow-lg"
+      activeOpacity={0.9}
     >
-      <View
-        className="rounded-2xl overflow-hidden border border-surface-overlay"
-        style={{ borderLeftColor: accentColor, borderLeftWidth: 4 }}
-      >
-        <View className="bg-surface-raised px-4 py-4 gap-3">
-          {/* Header */}
-          <View className="flex-row items-start justify-between gap-3">
-            <View className="flex-1">
-              <Text className="text-txt-primary text-lg font-bold" numberOfLines={1}>
-                {team.name}
+      <View className="rounded-3xl overflow-hidden bg-surface-raised border border-surface-border/40">
+        <View className="p-5">
+          <View className="flex-row items-center justify-between mb-4">
+            <View
+              className="px-2 py-1 rounded-lg mr-3"
+              style={{ backgroundColor: `${accentColor}20` }}
+            >
+              <Text style={{ color: accentColor }} className="text-[10px] font-black uppercase tracking-widest">
+                {team.sport ?? "Ultimate"}
               </Text>
-              {team.division && (
-                <Text className="text-txt-secondary text-sm font-mid mt-0.5" numberOfLines={1}>
-                  {team.division}
-                </Text>
-              )}
             </View>
-            <Badge label="🥏 Ultimate" variant="disc" />
+            <Badge label={team.season ?? "Season"} variant="primary" />
           </View>
 
-          {/* Meta row */}
-          <View className="flex-row items-center gap-4">
-            {team.season && (
-              <View className="flex-row items-center gap-1.5">
-                <Ionicons name="leaf-outline" size={13} color="#8B949E" />
-                <Text className="text-txt-muted text-xs font-mid">{team.season}</Text>
-              </View>
-            )}
-            {team.roster && (
-              <View className="flex-row items-center gap-1.5">
-                <Ionicons name="people-outline" size={13} color="#8B949E" />
-                <Text className="text-txt-muted text-xs font-mid">
-                  {team.roster.length} members
-                </Text>
-              </View>
-            )}
-          </View>
+          <Text className="text-txt-primary text-2xl font-black mb-1" numberOfLines={1}>
+            {team.name}
+          </Text>
+          <Text className="text-txt-secondary text-sm font-semi mb-4" numberOfLines={1}>
+            {team.division ?? "Division Not Set"}
+          </Text>
 
-          {/* Action row */}
-          <View className="flex-row gap-2 pt-1">
-            <TouchableOpacity
-              onPress={() => router.push(`/teams/${team.id}?tab=roster`)}
-              className="flex-1 flex-row items-center justify-center gap-1.5 bg-surface-overlay rounded-xl py-2"
-            >
+          <View className="flex-row items-center gap-4 mb-5 pt-4 border-t border-surface-overlay">
+            <View className="flex-row items-center gap-1.5">
               <Ionicons name="people" size={14} color="#8B949E" />
-              <Text className="text-txt-secondary text-xs font-semi">Roster</Text>
-            </TouchableOpacity>
+              <Text className="text-txt-secondary text-xs font-bold">
+                {team.roster?.length || 0} Members
+              </Text>
+            </View>
+            <View className="flex-row items-center gap-1.5">
+              <Ionicons name="location" size={14} color="#8B949E" />
+              <Text className="text-txt-secondary text-xs font-bold">PADA Org</Text>
+            </View>
+          </View>
+
+          <View className="flex-row gap-3">
             <TouchableOpacity
-              onPress={() => router.push(`/teams/${team.id}?tab=schedule`)}
-              className="flex-1 flex-row items-center justify-center gap-1.5 bg-surface-overlay rounded-xl py-2"
+              onPress={onPress}
+              className="flex-1 bg-primary-500 rounded-2xl py-3 items-center justify-center shadow-md shadow-primary-500/20"
             >
-              <Ionicons name="calendar" size={14} color="#8B949E" />
-              <Text className="text-txt-secondary text-xs font-semi">Schedule</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => router.push(`/teams/${team.id}?tab=chat`)}
-              className="flex-1 flex-row items-center justify-center gap-1.5 bg-primary-500/20 rounded-xl py-2"
-            >
-              <Ionicons name="chatbubbles" size={14} color="#64B5F6" />
-              <Text className="text-primary-300 text-xs font-semi">Chat</Text>
+              <Text className="text-white text-xs font-black uppercase tracking-wider">View Details</Text>
             </TouchableOpacity>
           </View>
         </View>
       </View>
     </TouchableOpacity>
   );
-}
+});
 
 export default function TeamsScreen() {
-  const [teams, setTeams]           = useState<Team[]>([]);
+  const { data: teams = [], isLoading, refetch } = useTeams();
   const [refreshing, setRefreshing] = useState(false);
 
-  const load = async () => {
-    const data = await fetchTeams();
-    setTeams(data);
-  };
-
-  useEffect(() => { load(); }, []);
-
-  const onRefresh = async () => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await load();
+    await refetch();
     setRefreshing(false);
-  };
+  }, [refetch]);
+
+  if (isLoading && !refreshing) {
+    return (
+      <SafeAreaView className="flex-1 bg-bg items-center justify-center">
+        <ActivityIndicator size="large" color="#1E88E5" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
-      <View className="px-5 pt-4 pb-4">
-        <Text className="text-txt-primary text-2xl font-black">My Teams</Text>
-        <Text className="text-txt-secondary text-sm font-mid mt-1">
+      <View className="bg-gradient-to-b from-[#161B22] to-bg px-5 pt-6 pb-6 rounded-b-[40px]">
+        <Text className="text-primary-300 text-xs font-bold tracking-[2px] uppercase mb-1">PADA.org</Text>
+        <Text className="text-txt-primary text-3xl font-black">My Teams</Text>
+        <Text className="text-txt-secondary text-sm font-semi mt-1 opacity-80">
           All teams you're currently registered with
         </Text>
       </View>
 
       <ReadOnlyBanner />
 
-      <ScrollView
-        className="flex-1 px-5"
+      <FlatList
+        data={teams}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <TeamCard
+            team={item}
+            onPress={() => router.push(`/teams/${item.id}`)}
+          />
+        )}
+        contentContainerClassName="px-5 pb-8"
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1E88E5" />
         }
-      >
-        {teams.length === 0 ? (
+        initialNumToRender={5}
+        maxToRenderPerBatch={5}
+        windowSize={5}
+        removeClippedSubviews={true}
+        ListEmptyComponent={
           <View className="mt-20 items-center gap-3">
             <Ionicons name="people-outline" size={48} color="#484F58" />
             <Text className="text-txt-muted text-base font-mid text-center">
               No teams found.{"\n"}Register on the Pada.org website.
             </Text>
           </View>
-        ) : (
-          teams.map((team) => (
-            <TeamCard key={team.id} team={team} />
-          ))
-        )}
-        <View className="h-8" />
-      </ScrollView>
+        }
+      />
     </SafeAreaView>
   );
 }

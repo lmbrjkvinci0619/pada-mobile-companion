@@ -1,0 +1,801 @@
+﻿Maybe look into live scoring? Only show the option for live score once a game is scheduled to start. Only captains can change their own score? Keeps the scoring open for a while after the game ends.
+Need to allow for capital letter, no spaces, -, _
+There are 8 roles for a participant on a team: Player, Captain, Coach, Assistant Coach, Admin, Chaperone, Volunteer and Staff. 
+
+
+Role Descriptions
+
+
+Team Admin Roles:
+Four of these roles are considered "Team Admin" roles: Captain, Coach, Assistant Coach and Admin. These are people that can edit the team and edit the team's registrations.
+Player Roles:
+Two of these roles are considered "playing members" and are counted in the roster count: Player and Captain. People with other roles on the team are not counted against the roster limits.  
+Coach Roles:
+Two of these roles are considered "coaches" and are labeled as such on the team roster list: Coach and Assistant Coach. These people are not counted against the roster limits.
+No Special Permissions:
+These roles have no special permissions on the website: Chaperone, Volunteer and Staff.
+
+
+
+Each TopScore site has numerous permission levels for administrators, described below:
+* Account Holders have their email/password stored in the system but have no special privileges.  This is nearly everyone!
+* Editors can do everything Account Holders can do, but can also edit content on the site, such as blog post, pages, and images.  They CANNOT edit event pages unless they are marked as a coordinator of the event.
+* Score Reporters can view and report game results as if they are an event coordinator.
+* Coordinators have the ability to manage and edit all aspects of an event that they are specified as the Coordinator of.  They can also manage media that they uploaded.  They ARE NOT able to edit details of financial transactions and cannot issue refunds
+* Lite Admins can edit any content on pages, add new events, edit existing events, manage and view people, create mailing lists, and nearly anything else on a site.  Lite Admins ARE NOT able to edit details of financial transactions and cannot issue refunds, and are barred from other sensitive financial actions.
+* Admins can do all of the above, plus issue refunds. However, they are not able to update the financial settings of a site. 
+* Trusted Admins can do anything our site controls allow (including everything Admins, Coordinators, and Editors can do).  They are also the only permission level that can change, edit, and view all financial transactions and issue refunds, as well as update the financial settings of a site. 
+* Role and permissions will need to be checked on app load to make sure the user currently has access to features. Roles can change quickly.
+TopScore API User Information and Role-Based Access Control
+Overview
+This document describes the user information available through the TopScore API and how to implement role-based access control for features like sending announcements. The information is based on the TopScore API specification and standard TopScore data models.
+________________
+
+
+1. User Information from TopScore API
+1.1 Core User Endpoint
+Endpoint: GET /api/persons/me
+This endpoint returns the authenticated user's profile information. According to the TopScore API specification, this data is returned when authenticated with OAuth2 Bearer token.
+1.2 Expected User Profile Fields
+The /api/persons/me response typically includes the following fields:
+Basic Identity
+* person_id - Unique identifier for the person (used as the primary user identifier)
+* email - User's email address
+* first_name - User's first name
+* last_name - User's last name
+* full_name - Complete name display string
+* profile_picture - URL to user's profile image
+Role Information
+* role or user_role - Primary role within the organization
+* roles (array) - All roles assigned to the user
+* permissions - Array of permission flags indicating what actions the user can perform
+Organization Membership
+* organization_id - The Pada.org organization identifier
+* organization_name - Name of the organization
+Account Status
+* status - Account status (active, pending, suspended)
+* created_at - When the account was created
+* last_login - Last login timestamp
+1.3 Role Hierarchy in TopScore
+TopScore typically supports the following user roles within an organization:
+Role
+	Description
+	Typical Capabilities
+	player
+	Regular team member
+	View own registrations, teams, schedules; participate in team chat
+	coach
+	Team coach/instructor
+	All player capabilities plus team management views
+	captain
+	Team captain
+	All player capabilities plus team communication, score reporting
+	team_admin
+	Team-level administrator
+	Team management, roster visibility, team announcements
+	league_admin
+	League/organization administrator
+	Full organization access, all announcements, schedule management
+	site_admin
+	TopScore site administrator
+	Complete system access (rarely used by organizations)
+	1.4 Role Assignment Locations
+Roles can be assigned at multiple levels in TopScore:
+1. 1.Organization Level - Global role within Pada.org (e.g., league_admin)
+2. 2.League Level - Role specific to a particular league
+3. 3.Team Level - Role specific to a particular team (e.g., captain)
+4. 4.Event Level - Role for specific events only
+1.5 Permission-Based Access
+TopScore uses a permission system where roles grant specific permissions. Common permissions include:
+* registrations.view - View registrations
+* registrations.create - Create new registrations (admin)
+* teams.view - View team information
+* teams.manage - Manage team settings (admin)
+* events.view - View events
+* events.manage - Manage events schedule (admin)
+* announcements.create - Create announcements
+* announcements.manage - Manage all announcements
+* scores.report - Report game scores
+* chat.send - Send team chat messages
+________________
+
+
+2. Getting Team and League Roles
+2.1 Team Membership Endpoint
+Endpoint: GET /api/teams with related fields
+When fetching team information, the API returns membership data that includes the user's role on each specific team.
+Example Response Structure:
+json
+{
+
+
+ "result": [
+
+
+   {
+
+
+     "team_id": "12345",
+
+
+     "name": "Pada Sharks",
+
+
+     "division": "Adult Recreational",
+
+
+     "my_membership": {
+
+
+       "role": "captain",
+
+
+       "joined_at": "2024-01-15",
+
+
+       "status": "active"
+
+
+     }
+
+
+   },
+
+
+   {
+
+
+     "team_id": "67890",
+
+
+     "name": "Weekend Warriors",
+
+
+     "division": "Adult Competitive",
+
+
+     "my_membership": {
+
+
+       "role": "player",
+
+
+       "joined_at": "2024-03-01",
+
+
+       "status": "active"
+
+
+     }
+
+
+   }
+
+
+ ]
+
+
+}
+
+
+2.2 Registration Information
+Endpoint: GET /api/registrations
+Registrations include references to leagues and teams with the user's role context:
+json
+{
+
+
+ "result": [
+
+
+   {
+
+
+     "registration_id": "abc123",
+
+
+     "type": "league",
+
+
+     "league": {
+
+
+       "id": "league001",
+
+
+       "name": "Spring 2025 Season"
+
+
+     },
+
+
+     "status": "active"
+
+
+   },
+
+
+   {
+
+
+     "registration_id": "def456",
+
+
+     "type": "team",
+
+
+     "team": {
+
+
+       "id": "12345",
+
+
+       "name": "Pada Sharks"
+
+
+     },
+
+
+     "role": "captain"
+
+
+   }
+
+
+ ]
+
+
+}
+
+
+________________
+
+
+3. Role-Based Access Control Implementation
+3.1 User Role Detection Flow
+The mobile application should implement the following role detection logic:
+1. User authenticates via OAuth2
+
+
+2. App calls GET /api/persons/me
+
+
+3. App stores user profile including roles array
+
+
+4. App calls GET /api/registrations to get league affiliations
+
+
+5. App calls GET /api/teams with fields parameter to get team memberships
+
+
+6. App builds local role cache with:
+
+
+  - Global role (organization level)
+
+
+  - League-level roles (for each registered league)
+
+
+  - Team-level roles (for each team membership)
+
+
+7. UI updates based on computed permissions
+
+
+3.2 Role Data Structure
+The mobile app should maintain a role cache with the following structure:
+typescript
+interface UserRoleContext {
+
+
+ topscore_person_id: string;
+
+
+ global_role: 'player' | 'coach' | 'captain' | 'league_admin' | 'site_admin' | 'none';
+
+
+ league_roles: Map<string, 'player' | 'league_admin'>;
+
+
+ team_roles: Map<string, 'player' | 'captain' | 'coach' | 'team_admin'>;
+
+
+}
+
+
+
+
+
+
+interface ComputedPermissions {
+
+
+ canSendTeamAnnouncement: (teamId: string) => boolean;
+
+
+ canSendLeagueAnnouncement: (leagueId: string) => boolean;
+
+
+ canReportScores: (teamId: string) => boolean;
+
+
+ canManageTeam: (teamId: string) => boolean;
+
+
+ canCreateRegistrations: boolean;
+
+
+}
+
+
+3.3 Announcement Permission Logic
+Team Announcements:
+* User must have one of these roles on the specific team:
+   * captain
+   * coach
+   * team_admin
+* Permission check: team_roles.get(teamId) includes admin-capable role
+League Announcements:
+* User must have league_admin role for the specific league
+* OR have site_admin global role (all leagues)
+* Permission check: league_roles.get(leagueId) === 'league_admin' OR global_role === 'site_admin'
+3.4 Score Reporting Permission Logic
+* User must have captain role on the team
+* User must be authenticated with valid OAuth2 token
+* Permission check: team_roles.get(teamId) === 'captain'
+________________
+
+
+4. Implementation in Mobile App
+4.1 Authentication Context
+The app should store role information in the authentication context:
+typescript
+// AuthenticationContext.ts
+
+
+interface AuthState {
+
+
+ user: {
+
+
+   topscore_person_id: string;
+
+
+   email: string;
+
+
+   name: string;
+
+
+   global_role: string;
+
+
+   roles: {
+
+
+     leagues: Map<string, string>;
+
+
+     teams: Map<string, string>;
+
+
+   };
+
+
+ } | null;
+
+
+ isCaptain: (teamId: string) => boolean;
+
+
+ isLeagueAdmin: (leagueId: string) => boolean;
+
+
+ canSendTeamAnnouncement: (teamId: string) => boolean;
+
+
+ canSendLeagueAnnouncement: (leagueId: string) => boolean;
+
+
+}
+
+
+4.2 Role Loading on Login
+typescript
+async function loadUserRoles(accessToken: string): Promise<UserRoleContext> {
+
+
+ // 1. Get core user profile
+
+
+ const profile = await topScoreApi.get('/api/persons/me', accessToken);
+
+
+
+
+
+
+ // 2. Get registrations to identify league affiliations
+
+
+ const registrations = await topScoreApi.get('/api/registrations', accessToken);
+
+
+
+
+
+
+ // 3. Get teams with membership details
+
+
+ const teams = await topScoreApi.get('/api/teams', accessToken, {
+
+
+   params: { fields: ['my_membership'] }
+
+
+ });
+
+
+
+
+
+
+ // 4. Build role context
+
+
+ return {
+
+
+   topscore_person_id: profile.person_id,
+
+
+   global_role: determineGlobalRole(profile),
+
+
+   league_roles: extractLeagueRoles(registrations),
+
+
+   team_roles: extractTeamRoles(teams)
+
+
+ };
+
+
+}
+
+
+4.3 UI Conditional Rendering
+typescript
+// In Team Detail Screen
+
+
+function TeamDetailScreen({ teamId }) {
+
+
+ const { canSendTeamAnnouncement } = useAuth();
+
+
+
+
+
+
+ return (
+
+
+   <View>
+
+
+     <TeamHeader />
+
+
+     <RosterTab />
+
+
+     <ScheduleTab />
+
+
+     <ChatTab />
+
+
+
+
+
+
+     {canSendTeamAnnouncement(teamId) && (
+
+
+       <AnnouncementComposer type="team" targetId={teamId} />
+
+
+     )}
+
+
+   </View>
+
+
+ );
+
+
+}
+
+
+
+
+
+
+// In Announcements Screen
+
+
+function AnnouncementsScreen() {
+
+
+ const { isLeagueAdmin, isCaptain } = useAuth();
+
+
+
+
+
+
+ return (
+
+
+   <View>
+
+
+     <AnnouncementsList />
+
+
+
+
+
+
+     {isLeagueAdmin(currentLeagueId) && (
+
+
+       <LeagueAnnouncementComposer />
+
+
+     )}
+
+
+   </View>
+
+
+ );
+
+
+}
+
+
+________________
+
+
+5. Supabase Row Level Security for Announcements
+5.1 Announcement Table RLS Policies
+sql
+-- Team announcements: captains, coaches, and team admins only
+
+
+CREATE POLICY "team_announcements_insert" ON announcements
+
+
+FOR INSERT
+
+
+WITH CHECK (
+
+
+ target_type = 'team' AND (
+
+
+   EXISTS (
+
+
+     SELECT 1 FROM team_members
+
+
+     WHERE team_members.team_id = (SELECT topscore_id FROM teams WHERE id = target_id::uuid)
+
+
+     AND team_members.topscore_person_id = auth.jwt() ->> 'person_id'
+
+
+     AND team_members.role IN ('captain', 'coach', 'team_admin')
+
+
+   )
+
+
+ )
+
+
+);
+
+
+
+
+
+
+-- League announcements: league admins only
+
+
+CREATE POLICY "league_announcements_insert" ON announcements
+
+
+FOR INSERT
+
+
+WITH CHECK (
+
+
+ target_type = 'league' AND (
+
+
+   auth.jwt() ->> 'global_role' = 'league_admin'
+
+
+   OR EXISTS (
+
+
+     SELECT 1 FROM user_league_roles
+
+
+     WHERE user_league_roles.league_id = target_id
+
+
+     AND user_league_roles.topscore_person_id = auth.jwt() ->> 'person_id'
+
+
+     AND user_league_roles.role = 'league_admin'
+
+
+   )
+
+
+ )
+
+
+);
+
+
+5.2 Announcement Read Policies
+sql
+-- Read own announcements (authors can always see their own)
+
+
+CREATE POLICY "announcements_read_own" ON announcements
+
+
+FOR SELECT
+
+
+USING (author_id = auth.jwt() ->> 'person_id');
+
+
+
+
+
+
+-- Read team announcements (team members only)
+
+
+CREATE POLICY "announcements_read_team" ON announcements
+
+
+FOR SELECT
+
+
+USING (
+
+
+ target_type = 'team' AND
+
+
+ EXISTS (
+
+
+   SELECT 1 FROM team_members
+
+
+   WHERE team_members.topscore_id = target_id
+
+
+   AND team_members.topscore_person_id = auth.jwt() ->> 'person_id'
+
+
+ )
+
+
+);
+
+
+
+
+
+
+-- Read league announcements (league participants)
+
+
+CREATE POLICY "announcements_read_league" ON announcements
+
+
+FOR SELECT
+
+
+USING (
+
+
+ target_type = 'league' AND
+
+
+ EXISTS (
+
+
+   SELECT 1 FROM user_registrations
+
+
+   WHERE user_registrations.league_id = target_id
+
+
+   AND user_registrations.person_id = auth.jwt() ->> 'person_id'
+
+
+ )
+
+
+);
+
+
+________________
+
+
+6. Summary: Announcement Permission Matrix
+User Role
+	Can Send Team Announcement
+	Can Send League Announcement
+	Can Report Scores
+	Player
+	No
+	No
+	No
+	Coach
+	Yes (their team)
+	No
+	No
+	Captain
+	Yes (their team)
+	No
+	Yes (their team)
+	Team Admin
+	Yes (their team)
+	No
+	No
+	League Admin
+	Yes (their team)
+	Yes (their league)
+	No
+	Site Admin
+	Yes (any team)
+	Yes (any league)
+	Yes (any team)
+	________________
+
+
+7. Next Steps for Implementation
+1. 1.Obtain OAuth Credentials: Navigate to pada.org/u/oauth-key to get client_id and client_secret
+2. 2.Test API Responses: Call /api/persons/me to see exactly what fields and roles are returned for Pada.org specifically
+3. 3.Verify Role Data: Check whether roles are returned at organization level, team level, or both
+4. 4.Update Implementation Plan: Confirm the exact role structure before implementing RLS policies
+5. 5.Coordinate with Pada.org Admin: Ensure the organization has set up appropriate roles in TopScore for the mobile app to consume
+________________
+
+
+8. API Documentation Links
+For reference, the TopScore API includes self-documenting endpoints:
+* API Help: GET /api/help - Full API documentation
+* Endpoint Help: GET /api/help?endpoint=/api/persons/me - Specific endpoint docs
+* Model Help: GET /api/help?model=person - Person model documentation

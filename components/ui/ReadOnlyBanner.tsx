@@ -8,23 +8,28 @@ interface ReadOnlyBannerProps {
   showLink?: boolean;
 }
 
-export function ReadOnlyBanner({
+export const ReadOnlyBanner = React.memo(function ReadOnlyBanner({
   message = "This information is read-only. To make changes, visit Pada.org.",
   showLink = true,
 }: ReadOnlyBannerProps) {
   return (
-    <View className="flex-row items-start gap-3 bg-primary-500/10 border border-primary-500/20 rounded-xl px-4 py-3 mx-4 mb-3">
-      <Ionicons name="information-circle-outline" size={18} color="#64B5F6" />
+    <View className="flex-row items-center gap-3 bg-surface-raised border border-primary-500/30 rounded-2xl px-4 py-4 mx-4 mb-4 shadow-sm">
+      <View className="bg-primary-500/20 p-2 rounded-full">
+        <Ionicons name="information-circle" size={20} color="#388BFD" />
+      </View>
       <View className="flex-1">
-        <Text className="text-primary-200 text-sm font-mid leading-5">{message}</Text>
+        <Text className="text-txt-primary text-sm font-semi leading-5">{message}</Text>
         {showLink && (
-          <TouchableOpacity onPress={() => Linking.openURL(PADA_ORG_URL)}>
-            <Text className="text-primary-400 text-sm font-semi underline mt-1">
-              Open Pada.org →
+          <TouchableOpacity 
+            onPress={() => Linking.openURL(PADA_ORG_URL)}
+            activeOpacity={0.7}
+          >
+            <Text className="text-primary-300 text-xs font-bold uppercase tracking-wider mt-1.5">
+              Launch Pada.org →
             </Text>
           </TouchableOpacity>
         )}
       </View>
     </View>
   );
-}
+});

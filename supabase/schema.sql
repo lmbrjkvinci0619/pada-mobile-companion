@@ -112,10 +112,19 @@ DROP POLICY IF EXISTS "No direct inserts for announcements" ON announcements;
 CREATE POLICY "Anyone can read announcements" ON announcements FOR SELECT USING (true);
 CREATE POLICY "No direct inserts for announcements" ON announcements FOR INSERT WITH CHECK (false);
 
+-- Add indexes for better query performance
+CREATE INDEX IF NOT EXISTS idx_announcements_target_type_id ON announcements(target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_announcements_created_at ON announcements(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_announcements_expires_at ON announcements.expires_at;
+
 -- 5. Announcement Reads
 ALTER TABLE announcement_reads ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Anyone can manage their own reads" ON announcement_reads;
 CREATE POLICY "Anyone can manage their own reads" ON announcement_reads FOR ALL USING (true);
+
+-- Add indexes for read tracking queries
+CREATE INDEX IF NOT EXISTS idx_announcement_reads_user_id ON announcement_reads(user_id);
+CREATE INDEX IF NOT EXISTS idx_announcement_reads_announcement_id ON announcement_reads(announcement_id);
 
 -- 6. User Preferences
 ALTER TABLE user_preferences ENABLE ROW LEVEL SECURITY;

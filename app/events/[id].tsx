@@ -1,26 +1,40 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import React from "react";
+import { View, Text, ScrollView, TouchableOpacity, Linking, ActivityIndicator } from "react-native";
+import MapView, { Marker } from "react-native-maps";
 import { useLocalSearchParams, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { fetchEvent } from "@/services/topscore";
-import { useAuthStore } from "@/store/authStore";
-import type { Event } from "@/types";
+import { useEvent } from "@/hooks/useApi";
 import { Ionicons } from "@expo/vector-icons";
 import { Card } from "@/components/ui/Card";
 import { format, parseISO } from "date-fns";
 
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [event, setEvent] = useState<Event | null>(null);
-  const { user } = useAuthStore();
+  const { data: event, isLoading } = useEvent(id);
 
-  useEffect(() => {
-    if (id) {
-      fetchEvent(id).then(e => e && setEvent(e));
-    }
-  }, [id]);
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-bg items-center justify-center">
+        <ActivityIndicator size="large" color="#1E88E5" />
+      </SafeAreaView>
+    );
+  }
 
-  if (!event) return null;
+  if (!event) {
+    return (
+      <SafeAreaView className="flex-1 bg-bg" edges={["bottom"]}>
+        <View className="px-5 py-4 border-b border-surface-overlay flex-row items-center gap-3">
+          <TouchableOpacity onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={24} color="#E6EDF3" />
+          </TouchableOpacity>
+          <Text className="text-txt-primary text-xl font-bold flex-1" numberOfLines={1}>Event Details</Text>
+        </View>
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-txt-muted">Event not found</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["bottom"]}>
@@ -41,7 +55,46 @@ export default function EventDetailScreen() {
           <Text className="text-txt-secondary text-sm font-bold uppercase mb-2">Location</Text>
           <Text className="text-txt-primary text-base font-semi">{event.location?.name || "TBD"}</Text>
           {event.location?.address && (
-            <Text className="text-txt-muted text-sm">{event.location.address}</Text>
+            <Text className="text-txt-muted text-sm mb-3">{event.location.address}</Text>
+          )}
+
+          {event.location?.latitude && event.location?.longitude && (
+            <View className="rounded-xl overflow-hidden mb-3 border border-surface-overlay bg-surface-overlay">
+              <MapView
+                style={{ height: 150, width: '100%' }}
+                initialRegion={{
+                  latitude: event.location.latitude,
+                  longitude: event.location.longitude,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+                }}
+                scrollEnabled={false}
+                zoomEnabled={false}
+              >
+                <Marker
+                  coordinate={{
+                    latitude: event.location.latitude,
+                    longitude: event.location.longitude,
+                  }}
+                  title={event.location.name}
+                />
+              </MapView>
+            </View>
+          )}
+
+          {event.location && (event.location.latitude || event.location.address) && (
+            <TouchableOpacity 
+              className="bg-primary-500/10 border border-primary-500/20 rounded-xl py-3 items-center flex-row justify-center gap-2"
+              onPress={() => {
+                const destination = (event.location?.latitude && event.location?.longitude)
+                  ? `${event.location.latitude},${event.location.longitude}`
+                  : encodeURIComponent(event.location?.address || event.location?.name || "");
+                Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${destination}`);
+              }}
+            >
+              <Ionicons name="navigate" size={18} color="#388BFD" />
+              <Text className="text-primary-300 font-bold">Directions to Field</Text>
+            </TouchableOpacity>
           )}
         </Card>
 
@@ -66,7 +119,6 @@ export default function EventDetailScreen() {
           </Card>
         )}
 
-        {/* Add to Calendar */}
         <TouchableOpacity 
            className="bg-surface-raised border border-surface-overlay rounded-xl py-4 mb-8 flex-row items-center justify-center gap-2"
            onPress={() => alert("Calendar Event Exported (ICS generation simulated)")}

@@ -1,18 +1,18 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback, useMemo } from "react";
 import { Tabs, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { View, Text } from "react-native";
 import { useAuthStore } from "@/store/authStore";
 import { ActivityIndicator } from "react-native";
 
-function TabBarBadge({ count }: { count: number }) {
+const TabBarBadge = React.memo(function TabBarBadge({ count }: { count: number }) {
   if (count === 0) return null;
   return (
     <View className="absolute -top-1 -right-1 min-w-4 h-4 bg-danger rounded-full items-center justify-center px-1">
       <Text className="text-white text-xs font-bold">{count > 9 ? "9+" : count}</Text>
     </View>
   );
-}
+});
 
 export default function TabsLayout() {
   const { isAuthenticated, isLoading, initialize } = useAuthStore();
@@ -88,18 +88,6 @@ export default function TabsLayout() {
           title: "Schedule",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="chat"
-        options={{
-          title: "Chat",
-          tabBarIcon: ({ color, size }) => (
-            <View>
-              <Ionicons name="chatbubbles" size={size} color={color} />
-              <TabBarBadge count={3} />
-            </View>
           ),
         }}
       />
