@@ -19,6 +19,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import type { Event, Article } from "@/types";
 import { SPORT_EMOJI } from "@/constants/config";
+import { EXTERNAL_URLS, openUrl } from "@/lib/urlUtils";
 
 function eventDateLabel(dateStr: string): string {
   const d = parseISO(dateStr);
@@ -372,7 +373,7 @@ export default function HomeScreen() {
         {!isAuthenticated && (
           <View className="mx-5 mb-6">
             <TouchableOpacity
-              onPress={() => router.push("/(tabs)/about")}
+              onPress={() => openUrl(EXTERNAL_URLS.about)}
               activeOpacity={0.9}
             >
               <Card className="bg-accent/10 border-accent/20 p-5">

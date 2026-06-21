@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Switch, ActivityIndicator, Alert } from "react-native";
+import React, { useState, useEffect, useMemo } from "react";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Switch, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,24 +9,34 @@ import { createAnnouncement } from "@/services/announcements";
 import { fetchTeams } from "@/services/topscore";
 import { AnnouncementTargetType, AnnouncementType, Team } from "@/types";
 
+const TITLE_MAX_LENGTH = 100;
+const CONTENT_MAX_LENGTH = 2000;
+
 type ExpirationOption = {
   label: string;
   hours: number | null;
+  description: string;
 };
 
 const EXPIRATION_OPTIONS: ExpirationOption[] = [
-  { label: "1 Hour", hours: 1 },
-  { label: "24 Hours", hours: 24 },
-  { label: "3 Days", hours: 72 },
-  { label: "7 Days", hours: 168 },
-  { label: "30 Days", hours: 720 },
-  { label: "Never", hours: null },
+  { label: "1 Hour", hours: 1, description: "Quick updates" },
+  { label: "24 Hours", hours: 24, description: "Single day" },
+  { label: "3 Days", hours: 72, description: "Short term" },
+  { label: "7 Days", hours: 168, description: "One week" },
+  { label: "30 Days", hours: 720, description: "Long term" },
+  { label: "Never", hours: null, description: "No expiry" },
 ];
 
-const ANNOUNCEMENT_TYPE_OPTIONS: { type: AnnouncementType; label: string; description: string }[] = [
-  { type: "league_longterm", label: "League", description: "Long-term league updates and info" },
-  { type: "game", label: "Game", description: "Game-specific updates (weather, cancellations)" },
-  { type: "pada_org", label: "PADA Org", description: "Organization-wide announcements" },
+const ANNOUNCEMENT_TYPE_OPTIONS: { type: AnnouncementType; label: string; description: string; icon: string }[] = [
+  { type: "league_longterm", label: "League Update", description: "Long-term league announcements", icon: "trophy" },
+  { type: "game", label: "Game Alert", description: "Game-specific updates", icon: "flash" },
+  { type: "pada_org", label: "PADA Org", description: "Organization-wide announcements", icon: "business" },
+];
+
+const TARGET_OPTIONS: { type: AnnouncementTargetType; label: string; description: string; requiresLeagueAdmin: boolean }[] = [
+  { type: "team", label: "Team Only", description: "Your team members", requiresLeagueAdmin: false },
+  { type: "division", label: "Division", description: "All teams in division", requiresLeagueAdmin: true },
+  { type: "league", label: "League-wide", description: "Entire league", requiresLeagueAdmin: true },
 ];
 
 export default function CreateAnnouncementScreen() {
@@ -41,13 +51,23 @@ export default function CreateAnnouncementScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [teams, setTeams] = useState<Team[]>([]);
   const [isLoadingTeams, setIsLoadingTeams] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
 
-  const canPostLeague = user?.role === "league_admin";
-  const canPostPadaOrg = user?.role === "league_admin";
+  const isLeagueAdmin = user?.role === "league_admin";
+  const isCaptain = user?.role === "captain";
+  const canPost = isLeagueAdmin || isCaptain;
 
   useEffect(() => {
-    loadTeams();
-  }, []);
+    if (canPost) {
+      loadTeams();
+    }
+  }, [canPost]);
+
+  useEffect(() => {
+    if (!isLeagueAdmin && targetType !== "team") {
+      setTargetType("team");
+    }
+  }, [isLeagueAdmin]);
 
   const loadTeams = async () => {
     try {
@@ -70,37 +90,71 @@ export default function CreateAnnouncementScreen() {
     return date.toISOString();
   };
 
+  const selectedTeam = useMemo(() => {
+    return teams.find(t => t.id === targetId);
+  }, [teams, targetId]);
+
+  const getAvailableTargetOptions = () => {
+    if (isLeagueAdmin) {
+      return TARGET_OPTIONS;
+    }
+    return TARGET_OPTIONS.filter(opt => !opt.requiresLeagueAdmin);
+  };
+
+  const validateForm = (): string | null => {
+    if (!title.trim()) {
+      return "Please enter a title";
+    }
+    if (!content.trim()) {
+      return "Please enter a message";
+    }
+    if (targetType === "team" && !targetId) {
+      return "Please select a team";
+    }
+    if (announcementType === "pada_org" && !isLeagueAdmin) {
+      return "Only league admins can create PADA organization announcements";
+    }
+    return null;
+  };
+
   const handlePost = async () => {
+    const error = validateForm();
+    if (error) {
+      Alert.alert("Validation Error", error);
+      return;
+    }
+
+    Alert.alert(
+      "Post Announcement",
+      "Are you sure you want to post this announcement?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Post",
+          onPress: async () => {
+            await submitAnnouncement();
+          },
+        },
+      ]
+    );
+  };
+
+  const submitAnnouncement = async () => {
     if (!user) {
       Alert.alert("Error", "You must be logged in to post announcements");
       return;
     }
 
-    if (!title.trim() || !content.trim()) {
-      Alert.alert("Error", "Please fill in both title and message");
-      return;
-    }
-
-    if (announcementType === "pada_org" && !canPostPadaOrg) {
-      Alert.alert("Error", "Only league admins can create PADA organization announcements");
-      return;
-    }
-
-    const finalTargetId = targetType === "league"
-      ? canPostLeague ? "global-league" : ""
-      : targetId;
-
-    if (targetType === "team" && !finalTargetId) {
-      Alert.alert("Error", "Please select a team");
-      return;
-    }
-
     setIsSubmitting(true);
+
+    const finalTargetId = targetType === "league" || targetType === "division"
+      ? `${targetType}-all`
+      : targetId;
 
     const success = await createAnnouncement({
       authorId: user.id,
-      authorName: user.firstName + " " + user.lastName,
-      authorRole: user.role === "league_admin" ? "league_admin" : "team_captain",
+      authorName: `${user.firstName} ${user.lastName}`,
+      authorRole: isLeagueAdmin ? "league_admin" : "team_captain",
       targetType,
       targetId: finalTargetId,
       title: title.trim(),
@@ -111,186 +165,344 @@ export default function CreateAnnouncementScreen() {
     });
 
     setIsSubmitting(false);
+
     if (success) {
-      router.back();
+      Alert.alert("Success", "Announcement posted!", [
+        { text: "OK", onPress: () => router.back() }
+      ]);
     } else {
       Alert.alert("Error", "Failed to post announcement. Please try again.");
     }
   };
 
+  const titleCharCount = title.length;
+  const contentCharCount = content.length;
+  const isTitleOverLimit = titleCharCount > TITLE_MAX_LENGTH;
+  const isContentOverLimit = contentCharCount > CONTENT_MAX_LENGTH;
+  const canSubmit = !isTitleOverLimit && !isContentOverLimit && title.trim() && content.trim() && (targetType !== "team" || targetId);
+
+  if (!canPost) {
+    return (
+      <SafeAreaView className="flex-1 bg-bg items-center justify-center px-6">
+        <Ionicons name="lock-closed" size={48} color="#E53935" />
+        <Text className="text-txt-primary text-xl font-bold mt-4 text-center">Permission Required</Text>
+        <Text className="text-txt-muted text-center mt-2">
+          Only team captains and league admins can create announcements.
+        </Text>
+        <Button
+          label="Go Back"
+          variant="outline"
+          onPress={() => router.back()}
+          className="mt-6"
+        />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
-      <View className="px-5 py-4 border-b border-surface-overlay flex-row items-center justify-between">
-        <View className="flex-row items-center gap-3">
-          <TouchableOpacity onPress={() => router.back()} disabled={isSubmitting}>
-            <Ionicons name="close" size={24} color="#E6EDF3" />
-          </TouchableOpacity>
-          <Text className="text-txt-primary text-xl font-bold">New Announcement</Text>
-        </View>
-        {isSubmitting ? (
-          <ActivityIndicator color="#1E88E5" />
-        ) : (
-          <Button
-            label="Post"
-            size="sm"
-            onPress={handlePost}
-            disabled={!title.trim() || !content.trim() || (targetType === "team" && !targetId)}
-          />
-        )}
-      </View>
-
-      <ScrollView className="flex-1 px-5 pt-4">
-        <View className="mb-4">
-          <Text className="text-txt-secondary text-sm font-bold uppercase mb-2">Title</Text>
-          <TextInput
-            className="bg-surface-raised border border-surface-overlay text-txt-primary text-base px-4 py-3 rounded-xl"
-            placeholder="Announcement Title"
-            placeholderTextColor="#8B949E"
-            value={title}
-            onChangeText={setTitle}
-            editable={!isSubmitting}
-          />
-        </View>
-
-        <View className="mb-4">
-          <Text className="text-txt-secondary text-sm font-bold uppercase mb-2">Message</Text>
-          <TextInput
-            className="bg-surface-raised border border-surface-overlay text-txt-primary text-base px-4 py-3 rounded-xl min-h-[120px]"
-            placeholder="Write your message here..."
-            placeholderTextColor="#8B949E"
-            value={content}
-            onChangeText={setContent}
-            multiline
-            textAlignVertical="top"
-            editable={!isSubmitting}
-          />
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <View className="px-5 py-4 border-b border-surface-overlay flex-row items-center justify-between">
+          <View className="flex-row items-center gap-3">
+            <TouchableOpacity onPress={() => router.back()} disabled={isSubmitting}>
+              <Ionicons name="close" size={24} color="#E6EDF3" />
+            </TouchableOpacity>
+            <Text className="text-txt-primary text-xl font-bold">New Announcement</Text>
+          </View>
+          <View className="flex-row items-center gap-2">
+            <TouchableOpacity
+              onPress={() => setShowPreview(!showPreview)}
+              className="p-2"
+              disabled={isSubmitting}
+            >
+              <Ionicons
+                name={showPreview ? "eye-off" : "eye"}
+                size={22}
+                color={showPreview ? "#1E88E5" : "#8B949E"}
+              />
+            </TouchableOpacity>
+            {isSubmitting ? (
+              <ActivityIndicator color="#1E88E5" />
+            ) : (
+              <Button
+                label="Post"
+                size="sm"
+                variant={canSubmit ? "primary" : "secondary"}
+                onPress={handlePost}
+                disabled={!canSubmit}
+              />
+            )}
+          </View>
         </View>
 
-        {canPostLeague && (
+        <ScrollView className="flex-1 px-5 pt-4" keyboardShouldPersistTaps="handled">
+          {showPreview ? (
+            <View className="bg-surface-raised rounded-2xl p-4 mb-6 border border-primary-500/30">
+              <View className="flex-row items-center gap-2 mb-3">
+                <View className={`px-2 py-1 rounded-md ${
+                  announcementType === "pada_org" ? "bg-purple-600" :
+                  announcementType === "game" ? "bg-orange-500" : "bg-blue-500"
+                }`}>
+                  <Text className="text-white text-xs font-bold uppercase">
+                    {ANNOUNCEMENT_TYPE_OPTIONS.find(o => o.type === announcementType)?.label}
+                  </Text>
+                </View>
+                {isUrgent && (
+                  <View className="px-2 py-1 rounded-md bg-danger">
+                    <Text className="text-white text-xs font-bold">URGENT</Text>
+                  </View>
+                )}
+              </View>
+              <Text className="text-txt-primary text-lg font-bold mb-2">{title || "Untitled"}</Text>
+              <Text className="text-txt-secondary text-sm mb-3">{content || "No content"}</Text>
+              <View className="flex-row items-center gap-4 text-xs text-txt-muted">
+                <View className="flex-row items-center gap-1">
+                  <Ionicons name="people" size={12} />
+                  <Text>
+                    {targetType === "team" && selectedTeam ? selectedTeam.name :
+                     targetType === "division" ? "Division-wide" :
+                     "League-wide"}
+                  </Text>
+                </View>
+                <View className="flex-row items-center gap-1">
+                  <Ionicons name="time-outline" size={12} />
+                  <Text>
+                    {expirationHours === null ? "Never expires" :
+                     `Expires in ${expirationHours}h`}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          ) : null}
+
           <View className="mb-6">
-            <Text className="text-txt-secondary text-sm font-bold uppercase mb-2">Announcement Type</Text>
-            <View className="gap-2">
-              {ANNOUNCEMENT_TYPE_OPTIONS.map(option => (
-                <TouchableOpacity
-                  key={option.type}
-                  className={`p-4 rounded-xl border ${
-                    announcementType === option.type
-                      ? "bg-primary-500 border-primary-500"
-                      : "bg-surface-raised border-surface-overlay"
-                  }`}
-                  onPress={() => setAnnouncementType(option.type)}
-                  disabled={isSubmitting || (option.type === "pada_org" && !canPostPadaOrg)}
-                >
-                  <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center justify-between mb-2">
+              <Text className="text-txt-secondary text-sm font-bold uppercase">Title</Text>
+              <Text className={`text-xs ${isTitleOverLimit ? "text-danger" : "text-txt-muted"}`}>
+                {titleCharCount}/{TITLE_MAX_LENGTH}
+              </Text>
+            </View>
+            <TextInput
+              className={`bg-surface-raised border text-txt-primary text-base px-4 py-3 rounded-xl ${
+                isTitleOverLimit ? "border-danger" : "border-surface-overlay"
+              }`}
+              placeholder="Enter announcement title..."
+              placeholderTextColor="#8B949E"
+              value={title}
+              onChangeText={setTitle}
+              editable={!isSubmitting}
+              maxLength={TITLE_MAX_LENGTH + 20}
+            />
+            {isTitleOverLimit && (
+              <Text className="text-danger text-xs mt-1">Title exceeds maximum length</Text>
+            )}
+          </View>
+
+          <View className="mb-6">
+            <View className="flex-row items-center justify-between mb-2">
+              <Text className="text-txt-secondary text-sm font-bold uppercase">Message</Text>
+              <Text className={`text-xs ${isContentOverLimit ? "text-danger" : "text-txt-muted"}`}>
+                {contentCharCount}/{CONTENT_MAX_LENGTH}
+              </Text>
+            </View>
+            <TextInput
+              className={`bg-surface-raised border text-txt-primary text-base px-4 py-3 rounded-xl min-h-[150px] ${
+                isContentOverLimit ? "border-danger" : "border-surface-overlay"
+              }`}
+              placeholder="Write your announcement message..."
+              placeholderTextColor="#8B949E"
+              value={content}
+              onChangeText={setContent}
+              multiline
+              textAlignVertical="top"
+              editable={!isSubmitting}
+              maxLength={CONTENT_MAX_LENGTH + 100}
+            />
+            {isContentOverLimit && (
+              <Text className="text-danger text-xs mt-1">Content exceeds maximum length</Text>
+            )}
+          </View>
+
+          <View className="mb-6">
+            <Text className="text-txt-secondary text-sm font-bold uppercase mb-3">Announcement Type</Text>
+            <View className="gap-3">
+              {ANNOUNCEMENT_TYPE_OPTIONS.map(option => {
+                const isDisabled = option.type === "pada_org" && !isLeagueAdmin;
+                const isSelected = announcementType === option.type;
+                return (
+                  <TouchableOpacity
+                    key={option.type}
+                    className={`flex-row items-center p-4 rounded-xl border ${
+                      isSelected ? "bg-primary-500/10 border-primary-500" : "bg-surface-raised border-surface-overlay"
+                    } ${isDisabled ? "opacity-50" : ""}`}
+                    onPress={() => !isDisabled && setAnnouncementType(option.type)}
+                    disabled={isSubmitting || isDisabled}
+                  >
+                    <View className={`w-10 h-10 rounded-xl items-center justify-center mr-3 ${
+                      isSelected ? "bg-primary-500" : "bg-surface-overlay"
+                    }`}>
+                      <Ionicons
+                        name={option.icon as any}
+                        size={20}
+                        color={isSelected ? "#fff" : "#8B949E"}
+                      />
+                    </View>
                     <View className="flex-1">
-                      <Text className={`font-semi ${announcementType === option.type ? "text-white" : "text-txt-primary"}`}>
+                      <View className="flex-row items-center gap-2">
+                        <Text className={`font-semi ${isSelected ? "text-primary-400" : "text-txt-primary"}`}>
+                          {option.label}
+                        </Text>
+                        {isDisabled && (
+                          <View className="bg-surface-overlay px-2 py-0.5 rounded">
+                            <Text className="text-txt-muted text-xs">Admin only</Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text className="text-txt-muted text-xs mt-1">{option.description}</Text>
+                    </View>
+                    {isSelected && (
+                      <Ionicons name="checkmark-circle" size={22} color="#1E88E5" />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          <View className="mb-6">
+            <Text className="text-txt-secondary text-sm font-bold uppercase mb-3">Audience</Text>
+            <View className="gap-3">
+              {getAvailableTargetOptions().map(option => {
+                const isSelected = targetType === option.type;
+                return (
+                  <TouchableOpacity
+                    key={option.type}
+                    className={`flex-row items-center p-4 rounded-xl border ${
+                      isSelected ? "bg-primary-500/10 border-primary-500" : "bg-surface-raised border-surface-overlay"
+                    }`}
+                    onPress={() => setTargetType(option.type)}
+                    disabled={isSubmitting}
+                  >
+                    <View className="flex-1">
+                      <Text className={`font-semi ${isSelected ? "text-primary-400" : "text-txt-primary"}`}>
                         {option.label}
                       </Text>
-                      <Text className={`text-xs mt-1 ${announcementType === option.type ? "text-white/70" : "text-txt-muted"}`}>
-                        {option.description}
-                      </Text>
+                      <Text className="text-txt-muted text-xs mt-1">{option.description}</Text>
                     </View>
-                    {announcementType === option.type && (
-                      <Ionicons name="checkmark-circle" size={20} color="white" />
+                    {isSelected && (
+                      <Ionicons name="checkmark-circle" size={22} color="#1E88E5" />
                     )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {targetType === "team" && (
+            <View className="mb-6">
+              <Text className="text-txt-secondary text-sm font-bold uppercase mb-3">Select Team</Text>
+              {isLoadingTeams ? (
+                <View className="items-center py-6">
+                  <ActivityIndicator color="#1E88E5" />
+                </View>
+              ) : teams.length === 0 ? (
+                <View className="bg-surface-raised rounded-xl p-6 items-center">
+                  <Ionicons name="people-outline" size={32} color="#484F58" />
+                  <Text className="text-txt-muted text-sm mt-2">No teams available</Text>
+                </View>
+              ) : (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  className="-mx-5 px-5"
+                >
+                  <View className="flex-row gap-2">
+                    {teams.map(team => {
+                      const isSelected = targetId === team.id;
+                      return (
+                        <TouchableOpacity
+                          key={team.id}
+                          className={`px-4 py-3 rounded-xl border ${
+                            isSelected
+                              ? "bg-primary-500 border-primary-500"
+                              : "bg-surface-raised border-surface-overlay"
+                          }`}
+                          onPress={() => setTargetId(team.id)}
+                          disabled={isSubmitting}
+                        >
+                          <Text className={`font-semi ${
+                            isSelected ? "text-white" : "text-txt-secondary"
+                          }`}>
+                            {team.name}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
-                </TouchableOpacity>
-              ))}
+                </ScrollView>
+              )}
             </View>
-          </View>
-        )}
+          )}
 
-        {canPostLeague && (
           <View className="mb-6">
-            <Text className="text-txt-secondary text-sm font-bold uppercase mb-2">Audience</Text>
-            <View className="flex-row rounded-xl overflow-hidden border border-surface-overlay">
-              <TouchableOpacity
-                className={`flex-1 py-3 items-center ${targetType === "team" ? "bg-primary-500" : "bg-surface-raised"}`}
-                onPress={() => setTargetType("team")}
-                disabled={isSubmitting}
-              >
-                <Text className={`font-semi ${targetType === "team" ? "text-white" : "text-txt-secondary"}`}>Team Only</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                className={`flex-1 py-3 items-center border-l border-surface-overlay ${targetType === "league" ? "bg-primary-500" : "bg-surface-raised"}`}
-                onPress={() => setTargetType("league")}
-                disabled={isSubmitting}
-              >
-                <Text className={`font-semi ${targetType === "league" ? "text-white" : "text-txt-secondary"}`}>League-wide</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {targetType === "team" && (
-          <View className="mb-6">
-            <Text className="text-txt-secondary text-sm font-bold uppercase mb-2">Select Team</Text>
-            {isLoadingTeams ? (
-              <ActivityIndicator color="#1E88E5" />
-            ) : teams.length === 0 ? (
-              <Text className="text-txt-muted">No teams found</Text>
-            ) : (
-              <View className="flex-row flex-wrap gap-2">
-                {teams.map(team => (
+            <Text className="text-txt-secondary text-sm font-bold uppercase mb-3">Expiration</Text>
+            <View className="flex-row flex-wrap gap-2">
+              {EXPIRATION_OPTIONS.map(option => {
+                const isSelected = expirationHours === option.hours;
+                return (
                   <TouchableOpacity
-                    key={team.id}
-                    className={`px-4 py-2 rounded-xl border ${
-                      targetId === team.id
+                    key={option.label}
+                    className={`flex-1 min-w-[100px] p-3 rounded-xl border flex-col items-center ${
+                      isSelected
                         ? "bg-primary-500 border-primary-500"
                         : "bg-surface-raised border-surface-overlay"
                     }`}
-                    onPress={() => setTargetId(team.id)}
+                    onPress={() => setExpirationHours(option.hours)}
                     disabled={isSubmitting}
                   >
-                    <Text className={`font-semi ${
-                      targetId === team.id ? "text-white" : "text-txt-secondary"
+                    <Text className={`font-semi text-sm ${
+                      isSelected ? "text-white" : "text-txt-primary"
                     }`}>
-                      {team.name}
+                      {option.label}
+                    </Text>
+                    <Text className={`text-[10px] mt-1 ${
+                      isSelected ? "text-white/70" : "text-txt-muted"
+                    }`}>
+                      {option.description}
                     </Text>
                   </TouchableOpacity>
-                ))}
-              </View>
-            )}
+                );
+              })}
+            </View>
           </View>
-        )}
 
-        <View className="mb-6">
-          <Text className="text-txt-secondary text-sm font-bold uppercase mb-2">Expires After</Text>
-          <View className="flex-row flex-wrap gap-2">
-            {EXPIRATION_OPTIONS.map(option => (
-              <TouchableOpacity
-                key={option.label}
-                className={`px-4 py-2 rounded-xl border ${
-                  expirationHours === option.hours
-                    ? "bg-primary-500 border-primary-500"
-                    : "bg-surface-raised border-surface-overlay"
-                }`}
-                onPress={() => setExpirationHours(option.hours)}
-                disabled={isSubmitting}
-              >
-                <Text className={`font-semi ${
-                  expirationHours === option.hours ? "text-white" : "text-txt-secondary"
-                }`}>
-                  {option.label}
+          <View className={`rounded-2xl p-4 mb-8 ${isUrgent ? "bg-danger/10 border border-danger/30" : "bg-surface border border-surface-overlay"}`}>
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1 mr-4">
+                <View className="flex-row items-center gap-2">
+                  <Ionicons name="warning" size={18} color={isUrgent ? "#E53935" : "#8B949E"} />
+                  <Text className={`font-bold ${isUrgent ? "text-danger" : "text-txt-primary"}`}>
+                    Mark as Urgent
+                  </Text>
+                </View>
+                <Text className="text-txt-muted text-xs mt-1">
+                  Send immediate push notification. Use only for cancellations or emergencies.
                 </Text>
-              </TouchableOpacity>
-            ))}
+              </View>
+              <Switch
+                value={isUrgent}
+                onValueChange={setIsUrgent}
+                trackColor={{ false: "#30363D", true: "#E53935" }}
+                thumbColor="#F0F6FC"
+                disabled={isSubmitting}
+              />
+            </View>
           </View>
-        </View>
-
-        <View className="bg-surface rounded-2xl p-4 flex-row items-center justify-between mb-8">
-          <View className="flex-1 mr-4">
-            <Text className="text-danger font-bold text-base mb-1">Make Urgent</Text>
-            <Text className="text-txt-muted text-xs">Send immediate push notifications to all targets. Use only for cancellations or emergencies.</Text>
-          </View>
-          <Switch
-            value={isUrgent}
-            onValueChange={setIsUrgent}
-            trackColor={{ false: "#30363D", true: "#E53935" }}
-            disabled={isSubmitting}
-          />
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
