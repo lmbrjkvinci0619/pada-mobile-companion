@@ -24,7 +24,7 @@
 
 ## Running Locally
 
-By default, the app runs in **Mock Data Mode**. Real API calls are bypassed and fixtures from `constants/mockData.ts` are returned instead. This allows immediate testing of UI flows and routing.
+By default, the app runs in **Production Mode** using the real TopScore API. To use mock data instead, set `EXPO_PUBLIC_USE_MOCK_DATA=true` in `.env`.
 
 1. **Install Dependencies**
    ```bash
@@ -44,6 +44,12 @@ By default, the app runs in **Mock Data Mode**. Real API calls are bypassed and 
 ## Moving to Production
 
 1. Review and deploy the schema found in `supabase/schema.sql` to your Supabase project.
-2. Provide real credentials inside `.env` matching `.env.example`.
-3. Toggle `USE_MOCK_DATA = false` in `constants/config.ts`.
+2. Update `.env` with real credentials matching `.env.example`:
+   - `EXPO_PUBLIC_TOPSCORE_BASE_URL=https://pada.usetopscore.com`
+   - `EXPO_PUBLIC_TOPSCORE_CLIENT_ID=your_client_id`
+   - `EXPO_PUBLIC_TOPSCORE_CLIENT_SECRET=your_client_secret`
+   - `EXPO_PUBLIC_SUPABASE_URL=your_supabase_url`
+   - `EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key`
+3. Ensure `EXPO_PUBLIC_USE_MOCK_DATA` is **NOT** set to `"true"` in `.env` (defaults to `false`).
 4. Configure push notifications using your Expo EAS account.
+5. Run `npx expo prebuild` then `npx expo run:android` or `npx expo run:ios` to build.

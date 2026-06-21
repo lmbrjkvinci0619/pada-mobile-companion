@@ -8,6 +8,8 @@ import { useAuthStore } from "@/store/authStore";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { TOPSCORE_BASE_URL, SUPABASE_URL, SUPABASE_ANON_KEY } from "@/constants/config";
+import { registerForPushNotificationsAsync, setupNotificationListeners } from "@/services/notifications";
+import { router } from "expo-router";
 
 LogBox.ignoreLogs(["Warning: ..."]);
 
@@ -135,6 +137,26 @@ export default function RootLayout() {
   useEffect(() => {
     if (isReady && !authLoading) {
       SplashScreen.hideAsync();
+    }
+  }, [isReady, authLoading]);
+
+  useEffect(() => {
+    if (isReady && !authLoading) {
+      const user = useAuthStore.getState().user;
+      if (user?.id) {
+        registerForPushNotificationsAsync(user.id).catch(console.error);
+
+        setupNotificationListeners(
+          (notification) => {
+            console.log("Notification received in app:", notification);
+          },
+          (notification, data) => {
+            if (data?.announcementId) {
+              router.push(`/announcements/${data.announcementId}`);
+            }
+          }
+        );
+      }
     }
   }, [isReady, authLoading]);
 

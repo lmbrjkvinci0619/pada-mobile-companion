@@ -10,8 +10,13 @@ export async function saveTokens(tokens: AuthTokens): Promise<void> {
 }
 
 export async function loadTokens(): Promise<AuthTokens | null> {
-  const raw = await SecureStore.getItemAsync(TOKEN_KEY);
-  return raw ? (JSON.parse(raw) as AuthTokens) : null;
+  try {
+    const raw = await SecureStore.getItemAsync(TOKEN_KEY);
+    return raw ? (JSON.parse(raw) as AuthTokens) : null;
+  } catch {
+    await SecureStore.deleteItemAsync(TOKEN_KEY);
+    return null;
+  }
 }
 
 export async function clearTokens(): Promise<void> {
@@ -24,8 +29,13 @@ export async function saveUser(user: User): Promise<void> {
 }
 
 export async function loadUser(): Promise<User | null> {
-  const raw = await SecureStore.getItemAsync(USER_KEY);
-  return raw ? (JSON.parse(raw) as User) : null;
+  try {
+    const raw = await SecureStore.getItemAsync(USER_KEY);
+    return raw ? (JSON.parse(raw) as User) : null;
+  } catch {
+    await SecureStore.deleteItemAsync(USER_KEY);
+    return null;
+  }
 }
 
 export interface LoginResult {

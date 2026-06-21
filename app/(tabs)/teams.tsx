@@ -1,8 +1,9 @@
 import React, { useState, useCallback } from "react";
 import { FlatList, View, Text, TouchableOpacity, RefreshControl, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuthStore } from "@/store/authStore";
 import { useTeams } from "@/hooks/useApi";
 import { Badge } from "@/components/ui/Badge";
 import { ReadOnlyBanner } from "@/components/ui/ReadOnlyBanner";
@@ -65,8 +66,13 @@ const TeamCard = React.memo(function TeamCard({ team, onPress }: { team: Team; o
 });
 
 export default function TeamsScreen() {
+  const { isAuthenticated } = useAuthStore();
   const { data: teams = [], isLoading, refetch } = useTeams();
   const [refreshing, setRefreshing] = useState(false);
+
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

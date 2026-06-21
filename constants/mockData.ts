@@ -8,6 +8,7 @@ import type {
   Event,
   Registration,
   Announcement,
+  Article,
 } from "@/types";
 
 export const USE_MOCK_DATA = process.env.EXPO_PUBLIC_USE_MOCK_DATA === "true";
@@ -240,7 +241,7 @@ export const MOCK_REGISTRATIONS: Registration[] = [
   {
     id: "reg-001",
     type: "team",
-    status: "active",
+    status: "accepted",
     organizationName: "Pada.org - Portland Ultimate",
     seasonName: "Spring 2026",
     startDate: "2026-03-01",
@@ -250,7 +251,7 @@ export const MOCK_REGISTRATIONS: Registration[] = [
   {
     id: "reg-002",
     type: "league",
-    status: "active",
+    status: "accepted",
     organizationName: "Portland Ultimate League - Mixed Division A",
     seasonName: "Spring 2026",
     startDate: "2026-03-01",
@@ -260,7 +261,7 @@ export const MOCK_REGISTRATIONS: Registration[] = [
   {
     id: "reg-003",
     type: "team",
-    status: "active",
+    status: "accepted",
     organizationName: "Pada.org - Portland Ultimate",
     seasonName: "Spring 2026",
     startDate: "2026-03-01",
@@ -270,7 +271,7 @@ export const MOCK_REGISTRATIONS: Registration[] = [
   {
     id: "reg-004",
     type: "event",
-    status: "active",
+    status: "accepted",
     organizationName: "PDX Spring Classic 2026",
     startDate: addDays(now, 14),
     endDate: addDays(now, 15),
@@ -279,7 +280,7 @@ export const MOCK_REGISTRATIONS: Registration[] = [
   {
     id: "reg-005",
     type: "team",
-    status: "completed",
+    status: "inactive",
     organizationName: "Pada.org - Portland Ultimate",
     seasonName: "Fall 2025",
     startDate: "2025-09-01",
@@ -299,6 +300,7 @@ export const MOCK_ANNOUNCEMENTS: Announcement[] = [
     authorId: "admin-001",
     authorName: "Portland Ultimate League Admin",
     authorRole: "league_admin",
+    announcementType: "game",
     targetType: "league",
     targetId: "league-001",
     isUrgent: true,
@@ -313,6 +315,7 @@ export const MOCK_ANNOUNCEMENTS: Announcement[] = [
     authorId: "admin-001",
     authorName: "Portland Ultimate League Admin",
     authorRole: "league_admin",
+    announcementType: "league_longterm",
     targetType: "league",
     targetId: "league-001",
     isUrgent: false,
@@ -327,6 +330,7 @@ export const MOCK_ANNOUNCEMENTS: Announcement[] = [
     authorId: "person-001",
     authorName: "Jamie Rivera",
     authorRole: "team_captain",
+    announcementType: "league_longterm",
     targetType: "team",
     targetId: "team-001",
     isUrgent: false,
@@ -341,6 +345,7 @@ export const MOCK_ANNOUNCEMENTS: Announcement[] = [
     authorId: "admin-001",
     authorName: "Portland Ultimate League Admin",
     authorRole: "league_admin",
+    announcementType: "league_longterm",
     targetType: "league",
     targetId: "league-001",
     isUrgent: false,
@@ -349,4 +354,37 @@ export const MOCK_ANNOUNCEMENTS: Announcement[] = [
   },
 ];
 
-// ─── Announcements ─────────────────────────────────────────────────────────────
+// ─── Articles / News ───────────────────────────────────────────────────────────
+
+export const MOCK_ARTICLES: Article[] = [
+  {
+    id: "art-001",
+    title: "Spring 2026 Season Registration Now Open",
+    summary: "Sign up now for the upcoming spring season. Early bird pricing ends February 15th.",
+    slug: "spring-2026-registration",
+    publishedAt: addDays(now, -3),
+    category: "Registration",
+    imageUrl: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=800",
+    authorName: "PADA Admin",
+  },
+  {
+    id: "art-002",
+    title: "New Field Locations Announced for 2026",
+    summary: "We're excited to announce partnerships with three new field facilities across the Portland metro area.",
+    slug: "new-field-locations-2026",
+    publishedAt: addDays(now, -7),
+    category: "Facilities",
+    imageUrl: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800",
+    authorName: "PADA Admin",
+  },
+  {
+    id: "art-003",
+    title: "Volunteer Coaches Wanted",
+    summary: "Help grow ultimate frisbee in our community. No experience necessary - we provide training.",
+    slug: "volunteer-coaches-wanted",
+    publishedAt: addDays(now, -10),
+    category: "Community",
+    imageUrl: "https://images.unsplash.com/photo-1526676037777-05a232554f77?w=800",
+    authorName: "PADA Admin",
+  },
+];

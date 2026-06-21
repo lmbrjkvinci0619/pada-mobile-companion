@@ -1,9 +1,8 @@
-import React, { useEffect, useCallback, useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import { Tabs, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { View, Text } from "react-native";
+import { View, Text, ActivityIndicator } from "react-native";
 import { useAuthStore } from "@/store/authStore";
-import { ActivityIndicator } from "react-native";
 
 const TabBarBadge = React.memo(function TabBarBadge({ count }: { count: number }) {
   if (count === 0) return null;
@@ -14,19 +13,19 @@ const TabBarBadge = React.memo(function TabBarBadge({ count }: { count: number }
   );
 });
 
-export default function TabsLayout() {
-  const { isAuthenticated, isLoading, initialize } = useAuthStore();
+function TabsLoading() {
+  return (
+    <View className="flex-1 items-center justify-center bg-bg">
+      <ActivityIndicator size="large" color="#1E88E5" />
+    </View>
+  );
+}
 
-  useEffect(() => {
-    initialize();
-  }, []);
+export default function TabsLayout() {
+  const { isAuthenticated, isLoading } = useAuthStore();
 
   if (isLoading) {
-    return (
-      <View className="flex-1 bg-bg items-center justify-center">
-        <ActivityIndicator size="large" color="#1E88E5" />
-      </View>
-    );
+    return <TabsLoading />;
   }
 
   if (!isAuthenticated) {

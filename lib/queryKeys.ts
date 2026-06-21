@@ -23,6 +23,10 @@ export const queryKeys = {
     all: (userId: string) => ["announcements", "all", userId] as const,
     byId: (id: string) => ["announcements", "id", id] as const,
   },
+  articles: {
+    all: ["articles", "all"] as const,
+    bySlug: (slug: string) => ["articles", "slug", slug] as const,
+  },
 } as const;
 
 export type QueryKey = typeof queryKeys;

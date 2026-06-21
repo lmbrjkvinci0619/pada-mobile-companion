@@ -1,29 +1,97 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
-import { format } from "date-fns";
+import { format, formatDistanceToNow, isPast } from "date-fns";
 import { Ionicons } from "@expo/vector-icons";
 import { Badge } from "@/components/ui/Badge";
 import { useAuthStore } from "@/store/authStore";
-import { fetchAnnouncements } from "@/services/announcements";
-import { Announcement } from "@/types";
+import { fetchAnnouncements, hideAnnouncement } from "@/services/announcements";
+import { Announcement, AnnouncementType } from "@/types";
 
 const PAGE_SIZE = 20;
 
 const keyExtractor = (item: Announcement) => item.id;
 
-const AnnouncementItem = React.memo(function AnnouncementItem({ item }: { item: Announcement }) {
+const TYPE_COLORS: Record<AnnouncementType, { bg: string; text: string; label: string }> = {
+  pada_org: { bg: "#7C3AED", text: "white", label: "PADA Org" },
+  league_longterm: { bg: "#1E88E5", text: "white", label: "League" },
+  game: { bg: "#F57C00", text: "white", label: "Game" },
+};
+
+const AnnouncementItem = React.memo(function AnnouncementItem({
+  item,
+  onDismiss
+}: {
+  item: Announcement;
+  onDismiss: (id: string) => void;
+}) {
+  const typeInfo = TYPE_COLORS[item.announcementType] || TYPE_COLORS.league_longterm;
+  const isExpired = item.expiresAt && isPast(new Date(item.expiresAt));
+  const [showDismiss, setShowDismiss] = useState(false);
+
+  const handleLongPress = () => {
+    setShowDismiss(true);
+  };
+
+  const handleDismiss = () => {
+    Alert.alert(
+      "Hide Announcement",
+      "This announcement will be hidden from your feed. You can unhide it from settings.",
+      [
+        { text: "Cancel", style: "cancel", onPress: () => setShowDismiss(false) },
+        {
+          text: "Hide",
+          style: "destructive",
+          onPress: () => {
+            onDismiss(item.id);
+            setShowDismiss(false);
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <TouchableOpacity
-      className="bg-surface rounded-2xl p-4 gap-2"
-      onPress={() => router.push(`/announcements/${item.id}`)}
+      className={`bg-surface rounded-2xl p-4 gap-2 ${isExpired ? "opacity-50" : ""}`}
+      onLongPress={handleLongPress}
+      onPress={() => {
+        if (showDismiss) {
+          setShowDismiss(false);
+        } else {
+          router.push(`/announcements/${item.id}`);
+        }
+      }}
+      delayLongPress={300}
     >
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center gap-2">
           {!item.isRead && <View className="w-2 h-2 rounded-full bg-primary-500" />}
+          <View className="px-2 py-1 rounded-md" style={{ backgroundColor: typeInfo.bg }}>
+            <Text className="text-white text-xs font-bold">{typeInfo.label}</Text>
+          </View>
           {item.isUrgent && <Badge label="Urgent" variant="danger" />}
           <Text className="text-txt-secondary text-xs">{format(new Date(item.createdAt), "MMM d, yyyy")}</Text>
+        </View>
+        <View className="flex-row items-center gap-2">
+          {item.expiresAt && (
+            <View className="flex-row items-center gap-1">
+              <Ionicons name="time-outline" size={12} color="#8B949E" />
+              <Text className="text-txt-muted text-xs">
+                {isExpired ? "Expired" : `Expires ${formatDistanceToNow(new Date(item.expiresAt), { addSuffix: true })}`}
+              </Text>
+            </View>
+          )}
+          {showDismiss && (
+            <TouchableOpacity
+              onPress={handleDismiss}
+              className="w-7 h-7 rounded-full bg-danger/20 items-center justify-center"
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="close" size={14} color="#E53935" />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
       <Text className="text-txt-primary font-bold text-base">{item.title}</Text>
@@ -106,6 +174,11 @@ export default function AnnouncementsListScreen() {
     );
   };
 
+  const handleDismiss = async (id: string) => {
+    await hideAnnouncement(id);
+    setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
       <View className="px-5 py-4 border-b border-surface-overlay flex-row items-center justify-between">
@@ -121,7 +194,7 @@ export default function AnnouncementsListScreen() {
           </TouchableOpacity>
         )}
       </View>
-      
+
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#1E88E5" />
@@ -130,7 +203,7 @@ export default function AnnouncementsListScreen() {
         <View className="flex-1 justify-center items-center px-5">
           <Ionicons name="alert-circle-outline" size={48} color="#E53935" />
           <Text className="text-txt-primary text-center mt-2">{error}</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             className="mt-4 bg-primary-500 px-4 py-2 rounded-lg"
             onPress={load}
           >
@@ -142,7 +215,7 @@ export default function AnnouncementsListScreen() {
           data={announcements}
           contentContainerClassName="px-5 py-4 gap-4"
           keyExtractor={keyExtractor}
-          renderItem={AnnouncementItem as any}
+          renderItem={({ item }) => <AnnouncementItem item={item} onDismiss={handleDismiss} />}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1E88E5" />}
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}

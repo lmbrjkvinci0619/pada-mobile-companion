@@ -6,6 +6,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 const ANNOUNCEMENT_TARGET_TYPES: readonly string[] = ["league", "division", "team"];
+const ANNOUNCEMENT_TYPES: readonly string[] = ["pada_org", "league_longterm", "game"];
 const VALID_AUTH_ROLES: readonly string[] = ["league_admin", "team_captain", "member"];
 
 const corsHeaders = {
@@ -19,7 +20,7 @@ serve(async (req) => {
   }
 
   try {
-    const { topscoreToken, targetType, targetId, title, content, isUrgent } = await req.json();
+    const { topscoreToken, targetType, targetId, title, content, isUrgent, announcementType, expiresAt } = await req.json();
 
     if (!topscoreToken || !targetType || !targetId || !title || !content) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -28,9 +29,9 @@ serve(async (req) => {
       });
     }
 
-    // Validate target type
-    if (!ANNOUNCEMENT_TARGET_TYPES.includes(targetType)) {
-      return new Response(JSON.stringify({ error: `Invalid target_type. Must be one of: ${ANNOUNCEMENT_TARGET_TYPES.join(", ")}` }), {
+    const finalAnnouncementType = announcementType || "league_longterm";
+    if (!ANNOUNCEMENT_TYPES.includes(finalAnnouncementType)) {
+      return new Response(JSON.stringify({ error: `Invalid announcement_type. Must be one of: ${ANNOUNCEMENT_TYPES.join(", ")}` }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -60,26 +61,40 @@ serve(async (req) => {
     const person = tsData.result[0];
     const personId = person.id.toString();
     const personName = `${person.first_name} ${person.last_name}`;
+
+    // PADA org announcements require league_admin role and are always global
+    let finalTargetType = targetType;
+    let finalTargetId = targetId;
+    if (finalAnnouncementType === "pada_org") {
+      if (person.role !== "admin" && !person.is_admin) {
+        return new Response(JSON.stringify({ error: "Only league admins can create PADA organization announcements" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      finalTargetType = "league";
+      finalTargetId = "pada-global";
+    }
     
     // 2. Check permissions
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     let canCreate = false;
     let authorRole: string = "member";
 
-    if (targetType === "team") {
+    if (finalTargetType === "team") {
       // Check if user is a captain of this team in our DB
       const { data: memberData } = await supabase
         .from("team_members")
         .select("role, teams!inner(id, topscore_id)")
         .eq("topscore_person_id", personId)
-        .eq("teams.topscore_id", targetId)
+        .eq("teams.topscore_id", finalTargetId)
         .single();
 
       if (memberData && VALID_AUTH_ROLES.includes(memberData.role)) {
         canCreate = true;
         authorRole = memberData.role;
       }
-    } else if (targetType === "league" || targetType === "division") {
+    } else if (finalTargetType === "league" || finalTargetType === "division") {
       // For league/division, check if user has global admin role in our DB or TopScore
       if (person.role === "admin" || person.is_admin) {
         canCreate = true;
@@ -102,11 +117,13 @@ serve(async (req) => {
           author_id: personId,
           author_name: personName,
           author_role: authorRole,
-          target_type: targetType,
-          target_id: targetId,
+          announcement_type: finalAnnouncementType,
+          target_type: finalTargetType,
+          target_id: finalTargetId,
           title: title,
           content: content,
           is_urgent: isUrgent || false,
+          expires_at: expiresAt || null,
         },
       ])
       .select()

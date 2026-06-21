@@ -12,11 +12,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
 import { useAuthStore } from "@/store/authStore";
-import { useEvents, useAnnouncements } from "@/hooks/useApi";
+import { useEvents, useAnnouncements, useRegistrations, useArticles } from "@/hooks/useApi";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
-import type { Event } from "@/types";
+import { Button } from "@/components/ui/Button";
+import type { Event, Article } from "@/types";
 import { SPORT_EMOJI } from "@/constants/config";
 
 function eventDateLabel(dateStr: string): string {
@@ -26,98 +27,125 @@ function eventDateLabel(dateStr: string): string {
   return format(d, "EEE, MMM d");
 }
 
-function EventStatusBadge({ status }: { status: Event["status"] }) {
-  const map: Record<string, { label: string; variant: "primary" | "danger" | "ghost" | "warning" }> = {
-    scheduled: { label: "Upcoming", variant: "primary" },
-    in_progress: { label: "LIVE", variant: "danger" },
-    completed: { label: "Final", variant: "ghost" },
-    cancelled: { label: "Cancelled", variant: "warning" },
-    postponed: { label: "Postponed", variant: "warning" },
-  };
-  const { label, variant } = map[status] ?? { label: status, variant: "ghost" };
-  return <Badge label={label} variant={variant} />;
-}
+const MyNextGameCard = React.memo(function MyNextGameCard({ event }: { event: Event }) {
+  const eventDate = parseISO(event.startDate);
+  const dateLabel = eventDateLabel(event.startDate);
+  const timeLabel = format(eventDate, "h:mm a");
 
-const UpcomingEventCard = React.memo(function UpcomingEventCard({ event }: { event: Event }) {
-  const isLive = event.status === "in_progress";
+  return (
+    <Card className="p-0 overflow-hidden border border-primary-500/30">
+      <LinearGradient
+        colors={["#1E88E5", "#1565C0"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        className="p-5"
+      >
+        <View className="flex-row items-center justify-between mb-3">
+          <Text className="text-white/70 text-xs font-bold uppercase tracking-widest">
+            My Next Game
+          </Text>
+          <Badge label={dateLabel} variant="ghost" className="bg-white/20 border-white/40" />
+        </View>
+
+        <View className="mb-3">
+          <Text className="text-white text-xl font-black leading-tight mb-1">
+            {event.opponentName ? `vs. ${event.opponentName}` : event.title}
+          </Text>
+          <Text className="text-white/70 text-sm font-semi">
+            {event.teamName}
+          </Text>
+        </View>
+
+        <View className="flex-row gap-4">
+          <View className="flex-row items-center gap-1.5">
+            <Ionicons name="time-outline" size={14} color="#fff" />
+            <Text className="text-white text-sm font-semi">{timeLabel}</Text>
+          </View>
+
+          {event.location && (
+            <View className="flex-row items-center gap-1.5">
+              <Ionicons name="location-outline" size={14} color="#fff" />
+              <Text className="text-white text-sm font-semi" numberOfLines={1}>
+                {event.location.name}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {event.attendance !== undefined && (
+          <View className="flex-row items-center gap-1.5 mt-2">
+            <Ionicons name="people-outline" size={14} color="#fff" />
+            <Text className="text-white/70 text-xs font-mid">
+              {event.attendance} players attending
+            </Text>
+          </View>
+        )}
+      </LinearGradient>
+    </Card>
+  );
+});
+
+const PublicEventCard = React.memo(function PublicEventCard({ event }: { event: Event }) {
+  const eventDate = parseISO(event.startDate);
+  const dateLabel = eventDateLabel(event.startDate);
+
   return (
     <TouchableOpacity
       onPress={() => router.push(`/events/${event.id}`)}
+      activeOpacity={0.8}
+    >
+      <Card className="p-4 mr-4 bg-surface-raised border border-surface-border/30" style={{ width: 180 }}>
+        <View className="mb-2">
+          <Badge label={dateLabel} variant="primary" />
+        </View>
+        <Text className="text-txt-primary text-base font-black leading-tight mb-1" numberOfLines={2}>
+          {event.title}
+        </Text>
+        {event.location && (
+          <View className="flex-row items-center gap-1 mt-1">
+            <Ionicons name="location-outline" size={10} color="#8B949E" />
+            <Text className="text-txt-muted text-xs" numberOfLines={1}>
+              {event.location.name}
+            </Text>
+          </View>
+        )}
+      </Card>
+    </TouchableOpacity>
+  );
+});
+
+const ArticleCard = React.memo(function ArticleCard({ article }: { article: Article }) {
+  return (
+    <TouchableOpacity
+      onPress={() => router.push(`/p/${article.slug || article.id}`)}
       className="mr-4"
       activeOpacity={0.8}
-      style={{ width: 260 }}
+      style={{ width: 280 }}
     >
-      <Card
-        className={`p-0 overflow-hidden border border-surface-border/50 ${
-          isLive ? "border-danger/40" : ""
-        }`}
-      >
-        <LinearGradient
-          colors={isLive ? ["#F85149", "#DA3633"] : ["#21262D", "#161B22"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          className="p-4"
-        >
-          <View className="flex-row items-center justify-between mb-4">
-            <Badge
-              label={isLive ? "LIVE" : eventDateLabel(event.startDate)}
-              variant={isLive ? "ghost" : "primary"}
-              className={isLive ? "bg-white/20 border-white/40" : ""}
-            />
-            {!isLive && (
-              <Text className="text-txt-secondary text-[10px] font-bold uppercase tracking-widest">
-                {format(parseISO(event.startDate), "h:mm a")}
-              </Text>
-            )}
+      <Card className="p-0 overflow-hidden border border-surface-border/30">
+        {article.imageUrl && (
+          <View className="h-32 bg-surface-raised">
+            <Text className="text-txt-muted text-xs p-2">Image: {article.imageUrl}</Text>
           </View>
-
-          <View className="mb-4">
-            <Text
-              className={`text-lg font-black leading-tight ${
-                isLive ? "text-white" : "text-txt-primary"
-              }`}
-              numberOfLines={2}
-            >
-              {event.title}
+        )}
+        <View className="p-4">
+          {article.category && (
+            <Badge label={article.category} variant="primary" className="mb-2 self-start" />
+          )}
+          <Text className="text-txt-primary text-base font-black leading-tight mb-1" numberOfLines={2}>
+            {article.title}
+          </Text>
+          {article.summary && (
+            <Text className="text-txt-secondary text-sm font-mid mt-1" numberOfLines={2}>
+              {article.summary}
             </Text>
-            <Text
-              className={`text-sm font-semi mt-1 ${
-                isLive ? "text-white/80" : "text-primary-300"
-              }`}
-              numberOfLines={1}
-            >
-              {event.teamName}
+          )}
+          {article.publishedAt && (
+            <Text className="text-txt-muted text-xs font-mid mt-2">
+              {format(parseISO(article.publishedAt), "MMM d, yyyy")}
             </Text>
-          </View>
-
-          <View className="flex-row items-center justify-between mt-auto pt-4 border-t border-white/10">
-            {event.location ? (
-              <View className="flex-row items-center gap-1.5 flex-1 mr-2">
-                <Ionicons
-                  name="location"
-                  size={12}
-                  color={isLive ? "#fff" : "#8B949E"}
-                />
-                <Text
-                  className={`text-[10px] font-bold uppercase tracking-wider ${
-                    isLive ? "text-white/70" : "text-txt-muted"
-                  }`}
-                  numberOfLines={1}
-                >
-                  {event.location.name}
-                </Text>
-              </View>
-            ) : (
-              <View className="flex-1" />
-            )}
-
-            <Ionicons
-              name="chevron-forward-circle"
-              size={20}
-              color={isLive ? "#fff" : "#30363D"}
-            />
-          </View>
-        </LinearGradient>
+          )}
+        </View>
       </Card>
     </TouchableOpacity>
   );
@@ -165,19 +193,62 @@ const AnnouncementRow = React.memo(function AnnouncementRow({ ann }: { ann: { id
 });
 
 export default function HomeScreen() {
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const { data: events = [], isLoading: eventsLoading, refetch: refetchEvents } = useEvents();
+  const { data: registrations = [] } = useRegistrations();
   const { data: announcements = [], isLoading: announcementsLoading } = useAnnouncements(user?.id || "");
+  const { data: articles = [] } = useArticles();
   const [refreshing, setRefreshing] = React.useState(false);
 
-  const upcoming = useMemo(
+  const upcomingGames = useMemo(
     () =>
       events
-        .filter((e) => e.status === "scheduled" || e.status === "in_progress")
+        .filter((e) => e.type === "game" && (e.status === "scheduled" || e.status === "in_progress"))
         .sort((a, b) => a.startDate.localeCompare(b.startDate))
         .slice(0, 6),
     [events]
   );
+
+  const publicEvents = useMemo(
+    () =>
+      events
+        .filter((e) => e.status === "scheduled")
+        .sort((a, b) => a.startDate.localeCompare(b.startDate))
+        .slice(0, 6),
+    [events]
+  );
+
+  const recentArticles = useMemo(
+    () =>
+      [...articles]
+        .sort((a, b) => {
+          const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+          const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+          return dateB - dateA;
+        })
+        .slice(0, 6),
+    [articles]
+  );
+
+  const myNextGame = useMemo(() => {
+    if (!isAuthenticated || registrations.length === 0) return null;
+
+    const userTeamIds = registrations
+      .filter(r => r.status === "accepted" && r.teamId)
+      .map(r => r.teamId);
+
+    if (userTeamIds.length === 0) return null;
+
+    const myGames = events.filter(
+      e => e.type === "game" &&
+           userTeamIds.includes(e.teamId) &&
+           e.status === "scheduled"
+    );
+
+    if (myGames.length === 0) return null;
+
+    return myGames.sort((a, b) => a.startDate.localeCompare(b.startDate))[0];
+  }, [events, registrations, isAuthenticated]);
 
   const liveEvent = useMemo(
     () => events.find((e) => e.status === "in_progress"),
@@ -200,6 +271,10 @@ export default function HomeScreen() {
       </SafeAreaView>
     );
   }
+
+  const greeting = isAuthenticated
+    ? `Hey, ${user?.firstName ?? "Player"} ${SPORT_EMOJI}`
+    : `Welcome to PadaHub ${SPORT_EMOJI}`;
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
@@ -224,19 +299,44 @@ export default function HomeScreen() {
                 {format(new Date(), "EEEE, MMMM d")}
               </Text>
               <Text className="text-txt-primary text-3xl font-black">
-                Hey, {user?.firstName ?? "Player"} {SPORT_EMOJI}
+                {greeting}
               </Text>
             </View>
             <TouchableOpacity onPress={() => router.push("/(tabs)/profile")}>
               <Avatar
                 uri={user?.avatarUrl}
-                name={`${user?.firstName} ${user?.lastName}`}
+                name={user ? `${user.firstName} ${user.lastName}` : "Guest"}
                 size="md"
                 className="border-2 border-primary-500/30"
               />
             </TouchableOpacity>
           </View>
         </LinearGradient>
+
+        {!isAuthenticated && (
+          <View className="mx-5 -mt-4 mb-6">
+            <Card className="bg-primary-500/10 border-primary-500/30 p-4">
+              <View className="flex-row items-center gap-3">
+                <View className="w-10 h-10 rounded-full bg-primary-500/20 items-center justify-center">
+                  <Ionicons name="log-in-outline" size={20} color="#388BFD" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-txt-primary text-sm font-bold">
+                    Sign in to see your games
+                  </Text>
+                  <Text className="text-txt-secondary text-xs font-mid">
+                    View your schedule, team details, and more
+                  </Text>
+                </View>
+              </View>
+              <Button
+                label="Sign In"
+                onPress={() => router.push("/(auth)/login")}
+                className="mt-3"
+              />
+            </Card>
+          </View>
+        )}
 
         {liveEvent && (
           <TouchableOpacity
@@ -263,85 +363,248 @@ export default function HomeScreen() {
           </TouchableOpacity>
         )}
 
-        <View className="mb-6">
-          <View className="px-5 flex-row items-center justify-between mb-3">
-            <Text className="text-txt-primary text-lg font-bold">Upcoming</Text>
-            <TouchableOpacity onPress={() => router.push("/(tabs)/schedule")}>
-              <Text className="text-primary-400 text-sm font-semi">See all</Text>
+        {isAuthenticated && myNextGame && (
+          <View className="mx-5 -mt-4 mb-6">
+            <MyNextGameCard event={myNextGame} />
+          </View>
+        )}
+
+        {!isAuthenticated && (
+          <View className="mx-5 mb-6">
+            <TouchableOpacity
+              onPress={() => router.push("/(tabs)/about")}
+              activeOpacity={0.9}
+            >
+              <Card className="bg-accent/10 border-accent/20 p-5">
+                <View className="flex-row items-center gap-4">
+                  <View className="w-14 h-14 rounded-2xl bg-accent items-center justify-center">
+                    <Ionicons name="information-circle" size={28} color="#fff" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-txt-primary text-lg font-black mb-1">
+                      About PADA
+                    </Text>
+                    <Text className="text-txt-secondary text-sm font-mid" numberOfLines={2}>
+                      Portland Ultimate Frisbee Association - Building community through spirit of the game since 1985.
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#8B949E" />
+                </View>
+              </Card>
             </TouchableOpacity>
           </View>
+        )}
 
-          {upcoming.length === 0 ? (
-            <View className="mx-5 bg-surface rounded-2xl p-6 items-center gap-2">
-              <Ionicons name="calendar-outline" size={32} color="#484F58" />
-              <Text className="text-txt-muted text-sm font-mid text-center">
-                No upcoming events. Check back later!
-              </Text>
+        {!isAuthenticated && (
+          <View className="mb-6">
+            <View className="px-5 flex-row items-center justify-between mb-3">
+              <Text className="text-txt-primary text-lg font-bold">Upcoming Event Dates</Text>
             </View>
-          ) : (
+
+            {publicEvents.length === 0 ? (
+              <View className="mx-5 bg-surface rounded-2xl p-6 items-center gap-2">
+                <Ionicons name="calendar-outline" size={32} color="#484F58" />
+                <Text className="text-txt-muted text-sm font-mid text-center">
+                  No upcoming events. Check back later!
+                </Text>
+              </View>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerClassName="px-5"
+              >
+                {publicEvents.map((ev) => (
+                  <PublicEventCard key={ev.id} event={ev} />
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        )}
+
+        {!isAuthenticated && recentArticles.length > 0 && (
+          <View className="mb-6">
+            <View className="px-5 flex-row items-center justify-between mb-3">
+              <Text className="text-txt-primary text-lg font-bold">Recent News</Text>
+              <TouchableOpacity onPress={() => router.push("/p")}>
+                <Text className="text-primary-400 text-sm font-semi">See all</Text>
+              </TouchableOpacity>
+            </View>
+
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerClassName="px-5"
             >
-              {upcoming.map((ev) => (
-                <UpcomingEventCard key={ev.id} event={ev} />
+              {recentArticles.map((article) => (
+                <ArticleCard key={article.id} article={article} />
               ))}
             </ScrollView>
-          )}
-        </View>
-
-        <View className="mx-5 mb-8">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-txt-primary text-lg font-bold">Announcements</Text>
-            <TouchableOpacity onPress={() => router.push("/announcements")}>
-              <Text className="text-primary-400 text-sm font-semi">See all</Text>
-            </TouchableOpacity>
           </View>
-          {announcements.length === 0 ? (
-            <Card className="items-center py-6">
-              <Ionicons name="megaphone-outline" size={32} color="#484F58" />
-              <Text className="text-txt-muted text-sm font-mid mt-2 text-center">
-                No new announcements.
-              </Text>
-            </Card>
-          ) : (
-            <Card className="gap-0 divide-y divide-surface-overlay">
-              {announcements.slice(0, 3).map((ann) => (
-                <AnnouncementRow key={ann.id} ann={ann} />
-              ))}
-            </Card>
-          )}
-        </View>
+        )}
 
-        <View className="mx-5 mb-12">
-          <Text className="text-txt-primary text-lg font-black mb-4">Quick Links</Text>
-          <View className="flex-row gap-4">
-            <TouchableOpacity
-              className="flex-1 bg-accent/10 border border-accent/20 rounded-3xl p-5 items-center gap-3 shadow-sm"
-              onPress={() => router.push("/(tabs)/schedule")}
-            >
-              <View className="w-12 h-12 rounded-2xl bg-accent items-center justify-center shadow-lg shadow-accent/50">
-                <Ionicons name="calendar" size={24} color="#fff" />
+        {isAuthenticated && (
+          <>
+            <View className="mb-6">
+              <View className="px-5 flex-row items-center justify-between mb-3">
+                <Text className="text-txt-primary text-lg font-bold">Upcoming Games</Text>
+                <TouchableOpacity onPress={() => router.push("/(tabs)/schedule")}>
+                  <Text className="text-primary-400 text-sm font-semi">See all</Text>
+                </TouchableOpacity>
               </View>
-              <Text className="text-txt-primary text-xs font-bold text-center tracking-wide">
-                Schedule
-              </Text>
-            </TouchableOpacity>
 
-            <TouchableOpacity
-              className="flex-1 bg-warning/10 border border-warning/20 rounded-3xl p-5 items-center gap-3 shadow-sm"
-              onPress={() => router.push("/(tabs)/teams")}
-            >
-              <View className="w-12 h-12 rounded-2xl bg-warning items-center justify-center shadow-lg shadow-warning/50">
-                <Ionicons name="people" size={24} color="#fff" />
+              {upcomingGames.length === 0 ? (
+                <View className="mx-5 bg-surface rounded-2xl p-6 items-center gap-2">
+                  <Ionicons name="calendar-outline" size={32} color="#484F58" />
+                  <Text className="text-txt-muted text-sm font-mid text-center">
+                    No upcoming games. Check back later!
+                  </Text>
+                </View>
+              ) : (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerClassName="px-5"
+                >
+                  {upcomingGames.map((ev) => (
+                    <TouchableOpacity
+                      key={ev.id}
+                      onPress={() => router.push(`/events/${ev.id}`)}
+                      className="mr-4"
+                      activeOpacity={0.8}
+                      style={{ width: 260 }}
+                    >
+                      <Card
+                        className={`p-0 overflow-hidden border border-surface-border/50 ${
+                          ev.status === "in_progress" ? "border-danger/40" : ""
+                        }`}
+                      >
+                        <LinearGradient
+                          colors={ev.status === "in_progress" ? ["#F85149", "#DA3633"] : ["#21262D", "#161B22"]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          className="p-4"
+                        >
+                          <View className="flex-row items-center justify-between mb-4">
+                            <Badge
+                              label={ev.status === "in_progress" ? "LIVE" : eventDateLabel(ev.startDate)}
+                              variant={ev.status === "in_progress" ? "ghost" : "primary"}
+                              className={ev.status === "in_progress" ? "bg-white/20 border-white/40" : ""}
+                            />
+                            {ev.status !== "in_progress" && (
+                              <Text className="text-txt-secondary text-[10px] font-bold uppercase tracking-widest">
+                                {format(parseISO(ev.startDate), "h:mm a")}
+                              </Text>
+                            )}
+                          </View>
+
+                          <View className="mb-4">
+                            <Text
+                              className={`text-lg font-black leading-tight ${
+                                ev.status === "in_progress" ? "text-white" : "text-txt-primary"
+                              }`}
+                              numberOfLines={2}
+                            >
+                              {ev.title}
+                            </Text>
+                            <Text
+                              className={`text-sm font-semi mt-1 ${
+                                ev.status === "in_progress" ? "text-white/80" : "text-primary-300"
+                              }`}
+                              numberOfLines={1}
+                            >
+                              {ev.teamName}
+                            </Text>
+                          </View>
+
+                          <View className="flex-row items-center justify-between mt-auto pt-4 border-t border-white/10">
+                            {ev.location ? (
+                              <View className="flex-row items-center gap-1.5 flex-1 mr-2">
+                                <Ionicons
+                                  name="location"
+                                  size={12}
+                                  color={ev.status === "in_progress" ? "#fff" : "#8B949E"}
+                                />
+                                <Text
+                                  className={`text-[10px] font-bold uppercase tracking-wider ${
+                                    ev.status === "in_progress" ? "text-white/70" : "text-txt-muted"
+                                  }`}
+                                  numberOfLines={1}
+                                >
+                                  {ev.location.name}
+                                </Text>
+                              </View>
+                            ) : (
+                              <View className="flex-1" />
+                            )}
+
+                            <Ionicons
+                              name="chevron-forward-circle"
+                              size={20}
+                              color={ev.status === "in_progress" ? "#fff" : "#30363D"}
+                            />
+                          </View>
+                        </LinearGradient>
+                      </Card>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
+            </View>
+
+            <View className="mx-5 mb-8">
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-txt-primary text-lg font-bold">Announcements</Text>
+                <TouchableOpacity onPress={() => router.push("/announcements")}>
+                  <Text className="text-primary-400 text-sm font-semi">See all</Text>
+                </TouchableOpacity>
               </View>
-              <Text className="text-txt-primary text-xs font-bold text-center tracking-wide">
-                My Teams
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+              {announcements.length === 0 ? (
+                <Card className="items-center py-6">
+                  <Ionicons name="megaphone-outline" size={32} color="#484F58" />
+                  <Text className="text-txt-muted text-sm font-mid mt-2 text-center">
+                    No new announcements.
+                  </Text>
+                </Card>
+              ) : (
+                <Card className="gap-0 divide-y divide-surface-overlay">
+                  {announcements.slice(0, 3).map((ann) => (
+                    <AnnouncementRow key={ann.id} ann={ann} />
+                  ))}
+                </Card>
+              )}
+            </View>
+
+            <View className="mx-5 mb-12">
+              <Text className="text-txt-primary text-lg font-black mb-4">Quick Links</Text>
+              <View className="flex-row gap-4">
+                <TouchableOpacity
+                  className="flex-1 bg-accent/10 border border-accent/20 rounded-3xl p-5 items-center gap-3 shadow-sm"
+                  onPress={() => router.push("/(tabs)/schedule")}
+                >
+                  <View className="w-12 h-12 rounded-2xl bg-accent items-center justify-center shadow-lg shadow-accent/50">
+                    <Ionicons name="calendar" size={24} color="#fff" />
+                  </View>
+                  <Text className="text-txt-primary text-xs font-bold text-center tracking-wide">
+                    Schedule
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  className="flex-1 bg-warning/10 border border-warning/20 rounded-3xl p-5 items-center gap-3 shadow-sm"
+                  onPress={() => router.push("/(tabs)/teams")}
+                >
+                  <View className="w-12 h-12 rounded-2xl bg-warning items-center justify-center shadow-lg shadow-warning/50">
+                    <Ionicons name="people" size={24} color="#fff" />
+                  </View>
+                  <Text className="text-txt-primary text-xs font-bold text-center tracking-wide">
+                    My Teams
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

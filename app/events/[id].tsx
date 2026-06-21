@@ -58,7 +58,7 @@ export default function EventDetailScreen() {
             <Text className="text-txt-muted text-sm mb-3">{event.location.address}</Text>
           )}
 
-          {event.location?.latitude && event.location?.longitude && (
+          {event.location?.latitude != null && event.location?.longitude != null && (
             <View className="rounded-xl overflow-hidden mb-3 border border-surface-overlay bg-surface-overlay">
               <MapView
                 style={{ height: 150, width: '100%' }}
@@ -82,11 +82,11 @@ export default function EventDetailScreen() {
             </View>
           )}
 
-          {event.location && (event.location.latitude || event.location.address) && (
+          {event.location && (event.location.latitude != null || event.location.address) && (
             <TouchableOpacity 
               className="bg-primary-500/10 border border-primary-500/20 rounded-xl py-3 items-center flex-row justify-center gap-2"
               onPress={() => {
-                const destination = (event.location?.latitude && event.location?.longitude)
+                const destination = (event.location?.latitude != null && event.location?.longitude != null)
                   ? `${event.location.latitude},${event.location.longitude}`
                   : encodeURIComponent(event.location?.address || event.location?.name || "");
                 Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${destination}`);

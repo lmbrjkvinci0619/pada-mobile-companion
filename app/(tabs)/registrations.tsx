@@ -3,22 +3,25 @@ import {
   ScrollView, View, Text, TouchableOpacity, RefreshControl, ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { format, parseISO } from "date-fns";
+import { useAuthStore } from "@/store/authStore";
 import { useRegistrations } from "@/hooks/useApi";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { ReadOnlyBanner } from "@/components/ui/ReadOnlyBanner";
+import { openRegistrationInBrowser } from "@/lib/urlUtils";
 import type { Registration, RegistrationStatus, RegistrationType } from "@/types";
 
 function statusBadge(status: RegistrationStatus) {
   const map: Record<RegistrationStatus, { label: string; variant: "success" | "warning" | "danger" | "ghost" }> = {
-    active:      { label: "Active",      variant: "success" },
+    accepted:    { label: "Active",      variant: "success" },
     pending:    { label: "Pending",    variant: "warning" },
     waitlisted: { label: "Waitlisted", variant: "warning" },
-    cancelled:  { label: "Cancelled",   variant: "danger" },
-    completed:  { label: "Completed",  variant: "ghost" },
+    incomplete: { label: "Incomplete", variant: "danger" },
+    inactive:   { label: "Inactive",  variant: "ghost" },
+    interested: { label: "Interested", variant: "ghost" },
   };
   const { label, variant } = map[status];
   return <Badge label={label} variant={variant} />;
@@ -43,9 +46,13 @@ function typeColor(type: RegistrationType): string {
 }
 
 const RegistrationCard = React.memo(function RegistrationCard({ reg }: { reg: Registration }) {
+  const handlePress = () => {
+    openRegistrationInBrowser(reg.id, reg.eventId, reg.teamId);
+  };
+
   return (
     <TouchableOpacity
-      onPress={() => router.push(`/registrations/${reg.id}`)}
+      onPress={handlePress}
       className="mb-3"
     >
       <Card elevated className="gap-3">
@@ -67,6 +74,7 @@ const RegistrationCard = React.memo(function RegistrationCard({ reg }: { reg: Re
             )}
           </View>
           {statusBadge(reg.status)}
+          <Ionicons name="open-outline" size={18} color="#8B949E" />
         </View>
 
         <View className="flex-row items-center gap-4 border-t border-surface-overlay pt-2">
@@ -88,8 +96,13 @@ const RegistrationCard = React.memo(function RegistrationCard({ reg }: { reg: Re
 });
 
 export default function RegistrationsScreen() {
+  const { isAuthenticated } = useAuthStore();
   const { data: regs = [], isLoading, refetch } = useRegistrations();
   const [refreshing, setRefreshing] = useState(false);
+
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -98,8 +111,8 @@ export default function RegistrationsScreen() {
   }, [refetch]);
 
   const sections = useMemo(() => {
-    const current    = regs.filter((r) => r.status === "active" || r.status === "pending" || r.status === "waitlisted");
-    const historical = regs.filter((r) => r.status === "completed" || r.status === "cancelled");
+    const current    = regs.filter((r) => r.status === "accepted" || r.status === "pending" || r.status === "waitlisted" || r.status === "interested");
+    const historical = regs.filter((r) => r.status === "inactive" || r.status === "incomplete");
 
     return [
       { title: "Current", data: current },

@@ -40,7 +40,7 @@ export const PAGE_SIZE = 20;
 export const APP_NAME = "PadaHub";
 export const APP_VERSION = "1.0.0";
 export const PADA_ORG_URL = "https://pada.org";
-export const PADA_REGISTER_URL = "https://pada.org/register";
+export const PADA_REGISTER_URL = "https://pada.org/e";
 
 // ─── Sport ───────────────────────────────────────────────────────────────────
 

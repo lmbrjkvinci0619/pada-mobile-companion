@@ -35,20 +35,23 @@ export function useOffline(): UseOfflineResult {
 
     const interval = setInterval(() => {
       checkConnectivity().then((connected) => {
-        const wasOffline = !isConnected;
-        setIsConnected(connected);
-        setIsOffline(!connected);
-        
-        if (wasOffline && connected) {
-          console.log("Network restored");
-        } else if (!wasOffline && !connected) {
-          console.log("Network lost");
-        }
+        setIsConnected((prev) => {
+          const wasOffline = prev === false;
+          setIsOffline(!connected);
+          
+          if (wasOffline && connected) {
+            console.log("Network restored");
+          } else if (!wasOffline && !connected) {
+            console.log("Network lost");
+          }
+          
+          return connected;
+        });
       });
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [isConnected]);
+  }, []);
 
   const retry = useCallback(() => {
     checkConnectivity().then((connected) => {
@@ -66,5 +69,5 @@ export function useOffline(): UseOfflineResult {
 
 export function useOnline(): boolean {
   const { isConnected } = useOffline();
-  return isConnected ?? true;
+  return isConnected === true;
 }

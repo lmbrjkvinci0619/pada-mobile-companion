@@ -1,4 +1,4 @@
-import type { Announcement, AnnouncementTargetType, AnnouncementAuthorRole } from "@/types";
+import type { Announcement, AnnouncementTargetType, AnnouncementAuthorRole, AnnouncementType } from "@/types";
 import type { ApiAnnouncement } from "@/types/api";
 
 interface RawAnnouncementWithReads {
@@ -8,6 +8,7 @@ interface RawAnnouncementWithReads {
   author_id: string;
   author_name: string;
   author_role: string;
+  announcement_type?: string;
   target_type: string;
   target_id: string;
   is_urgent: boolean;
@@ -31,6 +32,7 @@ export function mapAnnouncement(
     authorId: data.author_id,
     authorName: data.author_name,
     authorRole: data.author_role as AnnouncementAuthorRole,
+    announcementType: (data.announcement_type || "league_longterm") as AnnouncementType,
     targetType: data.target_type as AnnouncementTargetType,
     targetId: data.target_id,
     isUrgent: data.is_urgent,
@@ -48,6 +50,7 @@ export function mapAnnouncementDetail(data: ApiAnnouncement): Announcement {
     authorId: data.author_id,
     authorName: data.author_name,
     authorRole: data.author_role,
+    announcementType: (data.announcement_type || "league_longterm") as AnnouncementType,
     targetType: data.target_type,
     targetId: data.target_id,
     isUrgent: data.is_urgent,

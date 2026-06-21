@@ -50,9 +50,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         if (cachedUser) {
           set({ user: cachedUser, isAuthenticated: true, isLoading: false });
         } else {
-          const freshUser = await fetchCurrentUser();
-          await saveUser(freshUser);
-          set({ user: freshUser, isAuthenticated: true, isLoading: false });
+          try {
+            const freshUser = await fetchCurrentUser();
+            await saveUser(freshUser);
+            set({ user: freshUser, isAuthenticated: true, isLoading: false });
+          } catch {
+            set({ isAuthenticated: false, isLoading: false });
+          }
         }
       } else {
         set({ isAuthenticated: false, isLoading: false });

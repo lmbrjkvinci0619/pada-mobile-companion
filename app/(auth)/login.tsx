@@ -13,7 +13,7 @@ import {
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
-import { PADA_REGISTER_URL, APP_NAME, SPORT_EMOJI } from "@/constants/config";
+import { APP_NAME, SPORT_EMOJI } from "@/constants/config";
 import { Button } from "@/components/ui/Button";
 
 export default function LoginScreen() {
@@ -150,18 +150,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Register Link */}
-        <View className="mt-8 items-center gap-1">
-          <Text className="text-txt-muted text-sm font-mid">
-            Don't have a Pada.org account?
-          </Text>
-          <TouchableOpacity onPress={() => Linking.openURL(PADA_REGISTER_URL)}>
-            <Text className="text-primary-400 text-sm font-semi">
-              Register on the website →
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+        </ScrollView>
     </KeyboardAvoidingView>
   );
 }
