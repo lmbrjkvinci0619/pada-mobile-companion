@@ -25,8 +25,19 @@ interface CacheEntry<T> {
 const inFlightRequests = new Map<string, Promise<unknown>>();
 const responseCache = new Map<string, CacheEntry<unknown>>();
 
+let cacheUserContext: string | null = null;
+
+export function setCacheUserContext(userHash: string | null): void {
+  cacheUserContext = userHash;
+}
+
+export function getCacheUserContext(): string | null {
+  return cacheUserContext;
+}
+
 function getCacheKey(path: string, method: string): string {
-  return `${method}:${path}`;
+  const context = cacheUserContext ? `:${cacheUserContext}` : "";
+  return `${method}:${path}${context}`;
 }
 
 function getCached<T>(key: string, ttl: number): T | null {
@@ -70,10 +81,6 @@ async function request<T>(
     if (!token) {
       throw new AuthError("Not authenticated", ErrorCode.UNAUTHORIZED);
     }
-  }
-
-  if (signal?.aborted) {
-    throw new NetworkError("Request aborted");
   }
 
   const cacheKey = getCacheKey(path, method);
@@ -155,16 +162,25 @@ async function request<T>(
     }
   };
 
-  const requestPromise = (async () => {
-    try {
-      return await execRequest();
-    } finally {
-      inFlightRequests.delete(cacheKey);
-    }
-  })();
+  let requestPromise: Promise<T>;
 
   if (method === "GET") {
-    inFlightRequests.set(cacheKey, requestPromise);
+    requestPromise = (async () => {
+      inFlightRequests.set(cacheKey, execRequest() as unknown as Promise<T>);
+      try {
+        return await execRequest();
+      } finally {
+        inFlightRequests.delete(cacheKey);
+      }
+    })();
+  } else {
+    requestPromise = (async () => {
+      try {
+        return await execRequest();
+      } finally {
+        inFlightRequests.delete(cacheKey);
+      }
+    })();
   }
 
   return requestPromise;

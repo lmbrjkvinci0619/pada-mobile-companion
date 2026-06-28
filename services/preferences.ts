@@ -6,6 +6,7 @@ import type { NotificationPreferences } from "@/types";
 export interface UserPreferences {
   topscore_person_id: string;
   push_enabled: boolean;
+  announcements_enabled: boolean;
   notification_timing: "immediate" | "batched" | "digest";
   quiet_hours_start: string | null;
   quiet_hours_end: string | null;
@@ -53,7 +54,14 @@ export async function fetchUserPreferences(userId: string): Promise<UserPreferen
     });
 
     if (error) {
-      console.error("Edge function error:", error);
+      const errorMessage = error.message || String(error);
+      if (errorMessage.includes('not authenticated') || errorMessage.includes('401')) {
+        console.error("Authentication error fetching preferences:", errorMessage);
+      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+        console.error("Network error fetching preferences:", errorMessage);
+      } else {
+        console.error("Edge function error fetching preferences:", errorMessage);
+      }
       return null;
     }
 
@@ -72,15 +80,18 @@ export async function saveUserPreferences(
   try {
     const token = await getValidAccessToken();
 
+    const currentPrefs = useSettingsStore.getState().notifications;
+
     const prefsData = {
-      push_enabled: preferences.pushEnabled,
-      league_announcements_enabled: preferences.leagueAnnouncementsEnabled,
-      game_announcements_enabled: preferences.gameAnnouncementsEnabled,
-      pada_org_announcements_enabled: preferences.padaOrgAnnouncementsEnabled,
-      score_notifications_enabled: preferences.scoreNotificationsEnabled,
-      schedule_reminders_enabled: preferences.scheduleRemindersEnabled,
-      quiet_hours_start: preferences.quietHoursStart || null,
-      quiet_hours_end: preferences.quietHoursEnd || null,
+      push_enabled: preferences.pushEnabled ?? currentPrefs.pushEnabled ?? true,
+      announcements_enabled: preferences.announcementsEnabled ?? currentPrefs.announcementsEnabled ?? true,
+      league_announcements_enabled: preferences.leagueAnnouncementsEnabled ?? currentPrefs.leagueAnnouncementsEnabled ?? true,
+      game_announcements_enabled: preferences.gameAnnouncementsEnabled ?? currentPrefs.gameAnnouncementsEnabled ?? true,
+      pada_org_announcements_enabled: preferences.padaOrgAnnouncementsEnabled ?? currentPrefs.padaOrgAnnouncementsEnabled ?? true,
+      score_notifications_enabled: preferences.scoreNotificationsEnabled ?? currentPrefs.scoreNotificationsEnabled ?? true,
+      schedule_reminders_enabled: preferences.scheduleRemindersEnabled ?? currentPrefs.scheduleRemindersEnabled ?? true,
+      quiet_hours_start: preferences.quietHoursStart !== undefined ? preferences.quietHoursStart : (currentPrefs.quietHoursStart ?? null),
+      quiet_hours_end: preferences.quietHoursEnd !== undefined ? preferences.quietHoursEnd : (currentPrefs.quietHoursEnd ?? null),
     };
 
     if (token) {
@@ -151,7 +162,7 @@ export async function deleteUserPreferences(userId: string): Promise<boolean> {
 export function mapDbToNotificationPreferences(dbPrefs: UserPreferences): NotificationPreferences {
   return {
     pushEnabled: dbPrefs.push_enabled ?? true,
-    announcementsEnabled: dbPrefs.push_enabled ?? true,
+    announcementsEnabled: dbPrefs.announcements_enabled ?? true,
     leagueAnnouncementsEnabled: dbPrefs.league_announcements_enabled ?? true,
     gameAnnouncementsEnabled: dbPrefs.game_announcements_enabled ?? true,
     padaOrgAnnouncementsEnabled: dbPrefs.pada_org_announcements_enabled ?? true,
@@ -162,15 +173,32 @@ export function mapDbToNotificationPreferences(dbPrefs: UserPreferences): Notifi
   };
 }
 
-export async function loadAndSyncPreferences(userId: string): Promise<void> {
-  const dbPrefs = await fetchUserPreferences(userId);
+export async function loadAndSyncPreferences(userId: string): Promise<boolean> {
+  const defaultNotifs: NotificationPreferences = {
+    pushEnabled: true,
+    announcementsEnabled: true,
+    leagueAnnouncementsEnabled: true,
+    gameAnnouncementsEnabled: true,
+    padaOrgAnnouncementsEnabled: true,
+    scoreNotificationsEnabled: true,
+    scheduleRemindersEnabled: true,
+    quietHoursStart: undefined,
+    quietHoursEnd: undefined,
+  };
 
-  if (dbPrefs) {
-    const notifications = mapDbToNotificationPreferences(dbPrefs);
+  try {
+    const dbPrefs = await fetchUserPreferences(userId);
+
+    const notifications = dbPrefs
+      ? mapDbToNotificationPreferences(dbPrefs)
+      : defaultNotifs;
+
     useSettingsStore.getState().setNotifications(notifications);
+    useSettingsStore.getState().updateLastSync();
+    return true;
+  } catch {
+    return false;
   }
-
-  useSettingsStore.getState().updateLastSync();
 }
 
 export async function saveAndSyncPreferences(

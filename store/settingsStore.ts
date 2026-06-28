@@ -154,7 +154,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   loadPreferences: async (userId: string) => {
     set({ isLoadingPreferences: true, preferencesError: null });
     try {
-      await loadAndSyncPreferences(userId);
+      const success = await loadAndSyncPreferences(userId);
+      if (!success) {
+        set({ preferencesError: "Failed to load preferences" });
+      }
     } catch (err) {
       set({ preferencesError: "Failed to load preferences" });
       console.error("Error loading preferences:", err);

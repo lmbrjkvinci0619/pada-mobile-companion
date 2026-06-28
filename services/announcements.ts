@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "./supabase";
 import type { Announcement, AnnouncementTargetType, AnnouncementType, FetchAnnouncementsResult, FetchAnnouncementsOptions, NotificationPreferences } from "@/types";
 import { getValidAccessToken } from "./auth";
+import { sanitizeString, sanitizeAnnouncementContent } from "@/lib/validation";
 
 const HIDDEN_ANNOUNCEMENTS_KEY = "hidden_announcements";
 
@@ -11,14 +12,18 @@ async function getHiddenAnnouncementIds(): Promise<Set<string>> {
     if (stored) {
       return new Set(JSON.parse(stored) as string[]);
     }
-  } catch {}
+  } catch (err) {
+    console.error("Failed to get hidden announcement IDs:", err);
+  }
   return new Set();
 }
 
 async function saveHiddenAnnouncementIds(ids: Set<string>): Promise<void> {
   try {
     await AsyncStorage.setItem(HIDDEN_ANNOUNCEMENTS_KEY, JSON.stringify([...ids]));
-  } catch {}
+  } catch (err) {
+    console.error("Failed to save hidden announcement IDs:", err);
+  }
 }
 
 export async function hideAnnouncement(announcementId: string): Promise<void> {
@@ -58,7 +63,17 @@ export async function fetchAnnouncements(
     .select("team_id, teams!inner(id, topscore_id)")
     .eq("topscore_person_id", userId);
 
-  const teamIds = memberData?.map(m => (m.teams as { topscore_id?: string }).topscore_id).filter(Boolean) ?? [];
+  const teamIds: string[] = [];
+  if (Array.isArray(memberData)) {
+    for (const m of memberData) {
+      if (m?.teams && typeof m.teams === 'object' && 'topscore_id' in m.teams) {
+        const topscoreId = (m.teams as { topscore_id?: unknown }).topscore_id;
+        if (typeof topscoreId === 'string' && topscoreId.length > 0) {
+          teamIds.push(topscoreId);
+        }
+      }
+    }
+  }
 
   let query = supabase
     .from("announcements")
@@ -148,8 +163,8 @@ export async function createAnnouncement(payload: {
         topscoreToken: token,
         targetType: payload.targetType,
         targetId: payload.targetId,
-        title: payload.title,
-        content: payload.content,
+        title: sanitizeString(payload.title),
+        content: sanitizeAnnouncementContent(payload.content),
         isUrgent: payload.isUrgent,
         announcementType: payload.announcementType || "league_longterm",
         expiresAt: payload.expiresAt || null,
@@ -201,11 +216,15 @@ export async function syncUserPreferences(
       .from("user_preferences")
       .upsert({
         topscore_person_id: userId,
-        push_enabled: preferences.pushEnabled,
-        league_announcements_enabled: preferences.leagueAnnouncementsEnabled,
-        game_announcements_enabled: preferences.gameAnnouncementsEnabled,
-        pada_org_announcements_enabled: preferences.padaOrgAnnouncementsEnabled,
-        score_notifications_enabled: preferences.scoreNotificationsEnabled,
+        push_enabled: preferences.pushEnabled ?? true,
+        announcements_enabled: preferences.announcementsEnabled ?? true,
+        league_announcements_enabled: preferences.leagueAnnouncementsEnabled ?? true,
+        game_announcements_enabled: preferences.gameAnnouncementsEnabled ?? true,
+        pada_org_announcements_enabled: preferences.padaOrgAnnouncementsEnabled ?? true,
+        score_notifications_enabled: preferences.scoreNotificationsEnabled ?? true,
+        schedule_reminders_enabled: preferences.scheduleRemindersEnabled ?? true,
+        quiet_hours_start: preferences.quietHoursStart ?? null,
+        quiet_hours_end: preferences.quietHoursEnd ?? null,
         updated_at: new Date().toISOString(),
       }, {
         onConflict: "topscore_person_id",
@@ -267,6 +286,24 @@ export async function unregisterPushToken(userId: string, pushToken: string): Pr
     return true;
   } catch (err) {
     console.error("Unexpected error unregistering push token:", err);
+    return false;
+  }
+}
+
+export async function unregisterAllPushTokensForUser(userId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from("user_push_tokens")
+      .delete()
+      .eq("topscore_person_id", userId);
+
+    if (error) {
+      console.error("Error unregistering all push tokens:", error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("Unexpected error unregistering all push tokens:", err);
     return false;
   }
 }

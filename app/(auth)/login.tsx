@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
 import { APP_NAME, SPORT_EMOJI } from "@/constants/config";
 import { Button } from "@/components/ui/Button";
+import { isValidEmail } from "@/lib/validation";
 
 export default function LoginScreen() {
   const { login, isLoading, error } = useAuthStore();
@@ -22,9 +23,23 @@ export default function LoginScreen() {
   const [password, setPassword]   = useState("");
   const [showPass, setShowPass]   = useState(false);
   const [rememberMe, setRemember] = useState(true);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleLogin = async () => {
-    const ok = await login(email.trim(), password);
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail || !password) {
+      setValidationError("Please enter both email and password.");
+      return;
+    }
+
+    if (!isValidEmail(trimmedEmail)) {
+      setValidationError("Please enter a valid email address.");
+      return;
+    }
+
+    setValidationError(null);
+    const ok = await login(trimmedEmail, password, rememberMe);
     if (ok) router.replace("/(tabs)");
   };
 
@@ -58,9 +73,9 @@ export default function LoginScreen() {
           </Text>
 
           {/* Error */}
-          {error && (
+          {(error || validationError) && (
             <View className="bg-danger/10 border border-danger/30 rounded-xl px-4 py-3">
-              <Text className="text-danger-light text-sm font-mid">{error}</Text>
+              <Text className="text-danger-light text-sm font-mid">{validationError || error}</Text>
             </View>
           )}
 
@@ -74,7 +89,7 @@ export default function LoginScreen() {
                 placeholder="your@email.com"
                 placeholderTextColor="#484F58"
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(text) => { setEmail(text); setValidationError(null); }}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
@@ -93,7 +108,7 @@ export default function LoginScreen() {
                 placeholder="Your password"
                 placeholderTextColor="#484F58"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(text) => { setPassword(text); setValidationError(null); }}
                 secureTextEntry={!showPass}
                 autoCapitalize="none"
                 returnKeyType="done"

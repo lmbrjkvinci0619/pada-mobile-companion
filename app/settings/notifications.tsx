@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { View, Text, ScrollView, Switch, TouchableOpacity, Alert, ActivityIndicator, Modal, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -170,9 +170,11 @@ export default function NotificationSettingsScreen() {
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [hiddenCount, setHiddenCount] = useState(0);
+  const lastLoadedUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && user.id !== lastLoadedUserIdRef.current) {
+      lastLoadedUserIdRef.current = user.id;
       loadPreferences(user.id);
     }
   }, [user?.id]);
@@ -209,6 +211,7 @@ export default function NotificationSettingsScreen() {
       return;
     }
 
+    setNotifications(localNotifications);
     const success = await savePreferences(user.id);
     if (success) {
       Alert.alert("Success", "Notification settings saved");

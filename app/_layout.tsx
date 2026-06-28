@@ -10,10 +10,22 @@ import { queryClient } from "@/lib/queryClient";
 import { TOPSCORE_BASE_URL, SUPABASE_URL, SUPABASE_ANON_KEY } from "@/constants/config";
 import { registerForPushNotificationsAsync, setupNotificationListeners } from "@/services/notifications";
 import { router } from "expo-router";
+import { USE_MOCK_DATA } from "@/constants/mockData";
 
 LogBox.ignoreLogs(["Warning: ..."]);
 
 SplashScreen.preventAutoHideAsync();
+
+function MockDataWarning() {
+  if (!USE_MOCK_DATA) return null;
+  return (
+    <View className="absolute top-12 left-0 right-0 z-50 bg-yellow-500/90 py-2 px-4">
+      <Text className="text-yellow-900 text-xs font-bold text-center">
+        DEVELOPMENT MODE — Using mock data. Set EXPO_PUBLIC_USE_MOCK_DATA=false for production.
+      </Text>
+    </View>
+  );
+}
 
 const requiredEnvVars = [
   { key: "EXPO_PUBLIC_TOPSCORE_BASE_URL", value: TOPSCORE_BASE_URL, critical: true },
@@ -118,7 +130,7 @@ export default function RootLayout() {
     Inter_900Black,
   });
 
-  const { initialize, isLoading: authLoading } = useAuthStore();
+  const { initialize, isLoading: authLoading, user } = useAuthStore();
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [envErrors] = useState(() => validateEnvironment());
@@ -158,7 +170,7 @@ export default function RootLayout() {
         );
       }
     }
-  }, [isReady, authLoading]);
+  }, [isReady, authLoading, user?.id]);
 
   useEffect(() => {
     if (envErrors.length > 0) {
@@ -181,10 +193,11 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <MockDataWarning />
         <Slot />
-      </ErrorBoundary>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }

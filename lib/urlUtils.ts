@@ -54,9 +54,18 @@ export function openTeamInBrowser(teamSlug: string): void {
 }
 
 export function openUrl(url: string): void {
-  Linking.openURL(url).catch((err) => {
-    console.error("Failed to open URL:", err);
-  });
+  try {
+    const parsed = new URL(url);
+    if (!["https", "http", "mailto", "tel"].includes(parsed.protocol.replace(/:$/, ""))) {
+      console.warn("Blocked potentially unsafe URL scheme:", parsed.protocol);
+      return;
+    }
+    Linking.openURL(url).catch((err) => {
+      console.error("Failed to open URL:", err);
+    });
+  } catch {
+    console.warn("Invalid URL:", url);
+  }
 }
 
 export function openPadaOrg(path: string): void {
@@ -67,11 +76,11 @@ export function openPadaOrg(path: string): void {
 
 export function openExternalPage(path: string): void {
   if (path.startsWith("http")) {
-    Linking.openURL(path).catch((err) => {
-      console.error("Failed to open URL:", err);
-    });
-  } else {
+    openUrl(path);
+  } else if (/^[a-z0-9-]+$/i.test(path)) {
     openPadaOrg(path);
+  } else {
+    console.warn("Blocked potentially unsafe path:", path);
   }
 }
 

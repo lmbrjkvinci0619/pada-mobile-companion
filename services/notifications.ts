@@ -194,11 +194,7 @@ export async function getPresentedNotifications(): Promise<Notifications.Notific
 }
 
 export async function setBadgeCountAsync(count: number): Promise<void> {
-  if (Platform.OS === "ios") {
-    await Notifications.setBadgeCountAsync(count);
-  } else {
-    await Notifications.setBadgeCountAsync(count);
-  }
+  await Notifications.setBadgeCountAsync(count);
 }
 
 export async function clearBadge(): Promise<void> {

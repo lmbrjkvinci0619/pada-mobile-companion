@@ -1,15 +1,21 @@
 import * as SecureStore from "expo-secure-store";
 import { TOPSCORE_OAUTH_URL, SESSION_DURATION_DAYS } from "@/constants/config";
 import type { AuthTokens, User } from "@/types";
+import { checkLoginRateLimit, recordFailedLogin, clearLoginRateLimit } from "@/lib/validation";
 
 const TOKEN_KEY = "padahub_tokens";
 const USER_KEY = "padahub_user";
+
+let memoryTokens: AuthTokens | null = null;
 
 export async function saveTokens(tokens: AuthTokens): Promise<void> {
   await SecureStore.setItemAsync(TOKEN_KEY, JSON.stringify(tokens));
 }
 
 export async function loadTokens(): Promise<AuthTokens | null> {
+  if (memoryTokens) {
+    return memoryTokens;
+  }
   try {
     const raw = await SecureStore.getItemAsync(TOKEN_KEY);
     return raw ? (JSON.parse(raw) as AuthTokens) : null;
@@ -20,6 +26,7 @@ export async function loadTokens(): Promise<AuthTokens | null> {
 }
 
 export async function clearTokens(): Promise<void> {
+  memoryTokens = null;
   await SecureStore.deleteItemAsync(TOKEN_KEY);
   await SecureStore.deleteItemAsync(USER_KEY);
 }
@@ -50,12 +57,24 @@ interface OAuthErrorResponse {
 
 export async function loginWithCredentials(
   email: string,
-  password: string
+  password: string,
+  rememberMe: boolean = true
 ): Promise<LoginResult> {
+  const identifier = email.trim().toLowerCase();
+  const rateLimit = checkLoginRateLimit(identifier);
+
+  if (!rateLimit.allowed) {
+    const minutes = Math.ceil((rateLimit.retryAfterMs ?? 0) / 60000);
+    return {
+      success: false,
+      error: `Too many login attempts. Please try again in ${minutes} minute(s).`,
+    };
+  }
+
   try {
     const body = new URLSearchParams({
       grant_type: "password",
-      username: email,
+      username: identifier,
       password,
       client_id: process.env.EXPO_PUBLIC_TOPSCORE_CLIENT_ID ?? "",
       client_secret: process.env.EXPO_PUBLIC_TOPSCORE_CLIENT_SECRET ?? "",
@@ -68,26 +87,35 @@ export async function loginWithCredentials(
     });
 
     if (!res.ok) {
+      recordFailedLogin(identifier);
       const err = await res.json().catch(() => ({})) as OAuthErrorResponse;
       return {
         success: false,
-        error: err.error_description ?? "Invalid credentials",
+        error: "Invalid email or password.",
       };
     }
+
+    clearLoginRateLimit(identifier);
 
     const data = await res.json() as { access_token: string; refresh_token?: string; expires_in?: number };
     const expiry =
       Date.now() + (data.expires_in ?? SESSION_DURATION_DAYS * 86400) * 1000;
 
-    await saveTokens({
+    const tokens: AuthTokens = {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
       expiresAt: expiry,
-    });
+    };
+
+    if (rememberMe) {
+      await saveTokens(tokens);
+    } else {
+      memoryTokens = tokens;
+    }
 
     return { success: true };
   } catch {
-    return { success: false, error: "Network error. Please try again." };
+    return { success: false, error: "Unable to connect. Please check your network." };
   }
 }
 
@@ -117,7 +145,13 @@ export async function getValidAccessToken(): Promise<string | null> {
       if (res.ok) {
         const data = await res.json();
         const expiry = Date.now() + (data.expires_in ?? 3600) * 1000;
-        await saveTokens({ ...tokens, accessToken: data.access_token, expiresAt: expiry });
+        const newTokens = { ...tokens, accessToken: data.access_token, refreshToken: data.refresh_token ?? tokens.refreshToken, expiresAt: expiry };
+        const isMemoryOnly = memoryTokens !== null;
+        if (isMemoryOnly) {
+          memoryTokens = newTokens;
+        } else {
+          await saveTokens(newTokens);
+        }
         return data.access_token;
       }
       

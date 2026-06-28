@@ -145,21 +145,22 @@ export function mapEvent(data: ApiEvent): Event {
   };
 }
 
-export function mapRosterMember(m: ApiRosterMember): TeamMember {
-  const person = m.person ?? ({} as ApiPerson);
+export function mapRosterMember(m: ApiRosterMember | ApiPerson): TeamMember {
+  const person = "person" in m && m.person ? m.person : (m as ApiPerson);
+  const rosterMember = "jersey_number" in m ? m : null;
   return {
-    id: String(m.id ?? person.id),
-    personId: String(m.person_id ?? person.id),
+    id: String(rosterMember?.id ?? person.id),
+    personId: String(rosterMember?.person_id ?? person.id),
     firstName: person.first_name,
     lastName: person.last_name,
-    jerseyNumber: m.jersey_number,
-    position: m.position,
-    role: (m.role ?? "player") as TeamMember["role"],
+    jerseyNumber: rosterMember?.jersey_number,
+    position: rosterMember?.position,
+    role: ((rosterMember?.role ?? "player") as TeamMember["role"]),
     avatarUrl: person.avatar_url,
     email: person.email,
     phone: person.phone,
-    status: m.status,
-    joinedAt: m.joined_at,
+    status: rosterMember?.status,
+    joinedAt: rosterMember?.joined_at,
   };
 }
 

@@ -134,23 +134,34 @@ CREATE INDEX IF NOT EXISTS idx_announcements_created_at ON announcements(created
 CREATE INDEX IF NOT EXISTS idx_announcements_expires_at ON announcements.expires_at;
 CREATE INDEX IF NOT EXISTS idx_announcements_type ON announcements(announcement_type);
 
--- 5. Announcement Reads
+-- 5. Announcement Reads - users can only see/modify their own
 ALTER TABLE announcement_reads ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Anyone can manage their own reads" ON announcement_reads;
-CREATE POLICY "Anyone can manage their own reads" ON announcement_reads FOR ALL USING (true);
+DROP POLICY IF EXISTS "Users manage own announcement reads" ON announcement_reads;
+CREATE POLICY "Users manage own announcement reads" ON announcement_reads
+  FOR ALL USING (user_id = current_setting('request.jwt.claims', true)::json->>'topscore_person_id');
 
--- Add indexes for read tracking queries
+-- 6. User Preferences - defense in depth (writes go through edge function with service role)
+ALTER TABLE user_preferences ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can manage their own preferences" ON user_preferences;
+DROP POLICY IF EXISTS "Users manage own preferences" ON user_preferences;
+CREATE POLICY "Users manage own preferences" ON user_preferences
+  FOR ALL USING (topscore_person_id = current_setting('request.jwt.claims', true)::json->>'topscore_person_id');
+
+-- 7. User Push Tokens - defense in depth (writes go through edge function with service role)
+ALTER TABLE user_push_tokens ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can manage their own push tokens" ON user_push_tokens;
+DROP POLICY IF EXISTS "Users manage own push tokens" ON user_push_tokens;
+CREATE POLICY "Users manage own push tokens" ON user_push_tokens
+  FOR ALL USING (topscore_person_id = current_setting('request.jwt.claims', true)::json->>'topscore_person_id');
+
+-- Note: These RLS policies rely on topscore_person_id being set in JWT claims.
+-- Currently the app uses edge functions with service role key for writes, so RLS is
+-- defense-in-depth. Ensure Supabase JWT configuration includes topscore_person_id claim.
+
+-- Add indexes for announcement reads (user + announcement lookups)
 CREATE INDEX IF NOT EXISTS idx_announcement_reads_user_id ON announcement_reads(user_id);
 CREATE INDEX IF NOT EXISTS idx_announcement_reads_announcement_id ON announcement_reads(announcement_id);
 
--- 6. User Preferences
-ALTER TABLE user_preferences ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Users can manage their own preferences" ON user_preferences;
-CREATE POLICY "Users can manage their own preferences" ON user_preferences FOR ALL USING (true);
-
--- 7. User Push Tokens
-ALTER TABLE user_push_tokens ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Users can manage their own push tokens" ON user_push_tokens;
-CREATE POLICY "Users can manage their own push tokens" ON user_push_tokens FOR ALL USING (true);
-
+-- Index for user push tokens
 CREATE INDEX IF NOT EXISTS idx_user_push_tokens_person_id ON user_push_tokens(topscore_person_id);

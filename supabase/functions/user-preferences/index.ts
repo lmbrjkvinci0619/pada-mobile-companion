@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const TOPSCORE_BASE_URL = Deno.env.get("EXPO_PUBLIC_TOPSCORE_BASE_URL") || "https://pada.usetopscore.com";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
@@ -11,6 +12,7 @@ const corsHeaders = {
 
 interface PreferencesPayload {
   topscore_person_id: string;
+  topscore_token: string;
   action: "get" | "upsert" | "delete";
   preferences?: {
     push_enabled?: boolean;
@@ -27,18 +29,55 @@ interface PreferencesPayload {
   };
 }
 
+async function validateTopScoreToken(token: string): Promise<{ personId: string; role: string } | null> {
+  try {
+    const tsRes = await fetch(`${TOPSCORE_BASE_URL}/api/persons/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!tsRes.ok) return null;
+    const tsData = await tsRes.json();
+    const person = tsData.result[0];
+    return { personId: person.id.toString(), role: person.role };
+  } catch {
+    return null;
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const payload: PreferencesPayload = await req.json();
-    const { topscore_person_id, action, preferences } = payload;
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Missing authorization header" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    if (!topscore_person_id) {
-      return new Response(JSON.stringify({ error: "Missing user ID" }), {
+    const payload: PreferencesPayload = await req.json();
+    const { topscore_person_id, topscore_token, action, preferences } = payload;
+
+    if (!topscore_person_id || !topscore_token) {
+      return new Response(JSON.stringify({ error: "Missing user ID or token" }), {
         status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const validatedUser = await validateTopScoreToken(topscore_token);
+    if (!validatedUser) {
+      return new Response(JSON.stringify({ error: "Invalid TopScore token" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (validatedUser.personId !== topscore_person_id) {
+      return new Response(JSON.stringify({ error: "Unauthorized: token does not match user ID" }), {
+        status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

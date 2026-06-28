@@ -10,7 +10,10 @@ import {
 } from "@/services/auth";
 import { fetchCurrentUser } from "@/services/topscore";
 import { queryClient } from "@/lib/queryClient";
+import { clearCache as clearApiCache, setCacheUserContext } from "@/lib/apiClient";
 import { USE_MOCK_DATA } from "@/constants/mockData";
+import { clearLoginRateLimit } from "@/lib/validation";
+import { unregisterAllPushTokensForUser } from "@/services/announcements";
 
 interface AuthState {
   user: User | null;
@@ -19,7 +22,7 @@ interface AuthState {
   error: string | null;
 
   initialize: () => Promise<void>;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<boolean>;
   logout: () => Promise<void>;
   setError: (msg: string | null) => void;
   refreshUser: () => Promise<void>;
@@ -37,6 +40,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (USE_MOCK_DATA) {
         const user = await fetchCurrentUser();
         await saveUser(user);
+        setCacheUserContext(user.id);
         set({ user, isAuthenticated: true, isLoading: false });
         return;
       }
@@ -48,11 +52,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (tokens) {
         if (cachedUser) {
+          setCacheUserContext(cachedUser.id);
           set({ user: cachedUser, isAuthenticated: true, isLoading: false });
         } else {
           try {
             const freshUser = await fetchCurrentUser();
             await saveUser(freshUser);
+            setCacheUserContext(freshUser.id);
             set({ user: freshUser, isAuthenticated: true, isLoading: false });
           } catch {
             set({ isAuthenticated: false, isLoading: false });
@@ -66,27 +72,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  login: async (email: string, password: string) => {
+  login: async (email: string, password: string, rememberMe: boolean = true) => {
     set({ isLoading: true, error: null });
     try {
       if (USE_MOCK_DATA) {
         const user = await fetchCurrentUser();
-        await saveUser(user);
+        if (rememberMe) {
+          await saveUser(user);
+        }
+        setCacheUserContext(user.id);
         set({ user, isAuthenticated: true, isLoading: false });
         return true;
       }
 
-      const result = await loginWithCredentials(email, password);
+      const result = await loginWithCredentials(email, password, rememberMe);
       if (!result.success) {
         set({ error: result.error ?? "Login failed", isLoading: false });
         return false;
       }
 
-      const [user] = await Promise.all([
-        fetchCurrentUser(),
-        loadTokens(),
-      ]);
-      await saveUser(user);
+      const user = await fetchCurrentUser();
+      if (rememberMe) {
+        await saveUser(user);
+      }
+      setCacheUserContext(user.id);
       set({ user, isAuthenticated: true, isLoading: false });
       return true;
     } catch (e) {
@@ -97,9 +106,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
 logout: async () => {
+    const userId = get().user?.id;
+    const userEmail = get().user?.email;
     await clearTokens();
     await queryClient.clear();
+    clearApiCache();
+    setCacheUserContext(null);
     set({ user: null, isAuthenticated: false, error: null });
+    if (userEmail) {
+      clearLoginRateLimit(userEmail.toLowerCase());
+    }
+    if (userId) {
+      unregisterAllPushTokensForUser(userId).catch(() => {});
+    }
   },
 
   setError: (msg) => set({ error: msg }),
