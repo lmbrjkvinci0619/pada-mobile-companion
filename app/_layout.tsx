@@ -141,8 +141,13 @@ export default function RootLayout() {
         .then(() => setIsReady(true))
         .catch((e) => {
           logErrorToStorage(e, "Auth initialization");
-          setError(e.message);
+          setError(e?.message ?? "Failed to initialize app");
+          setIsReady(true);
         });
+    } else if (fontError) {
+      logErrorToStorage(fontError, "Font loading");
+      setError("Failed to load fonts");
+      setIsReady(true);
     }
   }, [fontsLoaded, fontError]);
 
@@ -153,22 +158,21 @@ export default function RootLayout() {
   }, [isReady, authLoading]);
 
   useEffect(() => {
-    if (isReady && !authLoading) {
-      const user = useAuthStore.getState().user;
-      if (user?.id) {
-        registerForPushNotificationsAsync(user.id).catch(console.error);
+    if (isReady && !authLoading && user?.id) {
+      registerForPushNotificationsAsync(user.id).catch(console.error);
 
-        setupNotificationListeners(
-          (notification) => {
-            console.log("Notification received in app:", notification);
-          },
-          (notification, data) => {
-            if (data?.announcementId) {
-              router.push(`/announcements/${data.announcementId}`);
-            }
+      const cleanup = setupNotificationListeners(
+        (notification) => {
+          console.log("Notification received in app:", notification);
+        },
+        (notification, data) => {
+          if (data?.announcementId) {
+            router.push(`/announcements/${data.announcementId}`);
           }
-        );
-      }
+        }
+      );
+
+      return cleanup;
     }
   }, [isReady, authLoading, user?.id]);
 

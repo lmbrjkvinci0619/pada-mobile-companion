@@ -1,6 +1,6 @@
 # PadaHub — Mobile Companion App
 
-**PadaHub** is the official mobile companion application for Pada.org. Built with React Native, Expo, and NativeWind, it leverages the TopScore API for read-only league viewing while using Supabase for custom features like real-time team chat, announcements, and captain-only live score reporting.
+**PadaHub** is the official mobile companion application for Pada.org. Built with React Native, Expo, and NativeWind, it leverages the TopScore API for read-only league viewing while using Supabase for custom features like announcements, captain-only live score reporting, and push notifications.
 
 ## Features
 
@@ -8,7 +8,6 @@
 - **Registrations**: View all registered leagues, teams, and events.
 - **Teams**: Full team roster viewing, captain identification, and schedules.
 - **Schedule**: Calendar view with ICS export support.
-- **Chat**: Team-scoped real-time messaging.
 - **Announcements**: Broadcasts from league admins and team captains.
 - **Live Score Reporting**: Captains can report game scores straight to the app.
 

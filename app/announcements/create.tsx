@@ -35,9 +35,11 @@ const ANNOUNCEMENT_TYPE_OPTIONS: { type: AnnouncementType; label: string; descri
 
 const TARGET_OPTIONS: { type: AnnouncementTargetType; label: string; description: string; requiresLeagueAdmin: boolean }[] = [
   { type: "team", label: "Team Only", description: "Your team members", requiresLeagueAdmin: false },
-  { type: "division", label: "Division", description: "All teams in division", requiresLeagueAdmin: true },
-  { type: "league", label: "League-wide", description: "Entire league", requiresLeagueAdmin: true },
+  { type: "division", label: "Division", description: "All teams in a division", requiresLeagueAdmin: true },
+  { type: "league", label: "League-wide", description: "All teams in a league", requiresLeagueAdmin: true },
 ];
+
+const PADA_GLOBAL_TARGET_ID = "pada-global";
 
 export default function CreateAnnouncementScreen() {
   const { user } = useAuthStore();
@@ -52,6 +54,8 @@ export default function CreateAnnouncementScreen() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [isLoadingTeams, setIsLoadingTeams] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
+  const [divisionTargets, setDivisionTargets] = useState<{ id: string; name: string }[]>([]);
+  const [leagueTargets, setLeagueTargets] = useState<{ id: string; name: string }[]>([]);
 
   const isLeagueAdmin = user?.role === "league_admin";
   const isCaptain = user?.role === "captain";
@@ -62,6 +66,22 @@ export default function CreateAnnouncementScreen() {
       loadTeams();
     }
   }, [canPost]);
+
+  useEffect(() => {
+    if (targetType === "team" && teams.length > 0 && !teams.some(t => t.id === targetId)) {
+      setTargetId(teams[0].id);
+    }
+    if (targetType === "division" && divisionTargets.length > 0 && !divisionTargets.some(d => d.id === targetId)) {
+      setTargetId(divisionTargets[0].id);
+    }
+    if (targetType === "league") {
+      if (leagueTargets.length > 0 && !leagueTargets.some(l => l.id === targetId)) {
+        setTargetId(leagueTargets[0].id);
+      } else if (!targetId) {
+        setTargetId(PADA_GLOBAL_TARGET_ID);
+      }
+    }
+  }, [targetType, teams, divisionTargets, leagueTargets]);
 
   useEffect(() => {
     if (!isLeagueAdmin && targetType !== "team") {
@@ -75,6 +95,25 @@ export default function CreateAnnouncementScreen() {
       setTeams(data);
       if (data.length > 0 && !targetId) {
         setTargetId(data[0].id);
+      }
+      const divs = new Map<string, { id: string; name: string }>();
+      for (const t of data) {
+        if (t.division && !divs.has(t.division)) {
+          divs.set(t.division, { id: t.division, name: t.division });
+        }
+      }
+      setDivisionTargets(Array.from(divs.values()));
+      const leagues = new Map<string, { id: string; name: string }>();
+      for (const t of data) {
+        const lid = (t as Team & { leagueId?: string }).leagueId;
+        if (lid && !leagues.has(lid)) {
+          leagues.set(lid, { id: lid, name: lid });
+        }
+      }
+      const leagueList = Array.from(leagues.values());
+      setLeagueTargets(leagueList);
+      if (isLeagueAdmin && targetType === "league" && !targetId && leagueList.length > 0) {
+        setTargetId(leagueList[0].id);
       }
     } catch (err) {
       console.error("Error loading teams:", err);
@@ -94,6 +133,14 @@ export default function CreateAnnouncementScreen() {
     return teams.find(t => t.id === targetId);
   }, [teams, targetId]);
 
+  const selectedDivision = useMemo(() => {
+    return divisionTargets.find(d => d.id === targetId);
+  }, [divisionTargets, targetId]);
+
+  const selectedLeague = useMemo(() => {
+    return leagueTargets.find(l => l.id === targetId);
+  }, [leagueTargets, targetId]);
+
   const getAvailableTargetOptions = () => {
     if (isLeagueAdmin) {
       return TARGET_OPTIONS;
@@ -110,6 +157,15 @@ export default function CreateAnnouncementScreen() {
     }
     if (targetType === "team" && !targetId) {
       return "Please select a team";
+    }
+    if (targetType === "league" && isLeagueAdmin) {
+      // League-wide posts are routed to the PADA global channel.
+    }
+    if (targetType === "division" && isLeagueAdmin) {
+      const profile = divisionTargets.find((d) => d.id === targetId);
+      if (!profile && targetId) {
+        return "Selected division is invalid";
+      }
     }
     if (announcementType === "pada_org" && !isLeagueAdmin) {
       return "Only league admins can create PADA organization announcements";
@@ -147,9 +203,14 @@ export default function CreateAnnouncementScreen() {
 
     setIsSubmitting(true);
 
-    const finalTargetId = targetType === "league" || targetType === "division"
-      ? `${targetType}-all`
-      : targetId;
+    let finalTargetId: string;
+    if (targetType === "league") {
+      finalTargetId = targetId || PADA_GLOBAL_TARGET_ID;
+    } else if (targetType === "division") {
+      finalTargetId = targetId;
+    } else {
+      finalTargetId = targetId;
+    }
 
     const success = await createAnnouncement({
       authorId: user.id,

@@ -79,7 +79,7 @@ export function mapRegistration(data: ApiRegistration): Registration {
   return {
     id: String(data.id),
     type: (data.type ?? "team") as Registration["type"],
-    status: (data.status ?? "active") as Registration["status"],
+    status: (data.status ?? "incomplete") as Registration["status"],
     organizationName: data.organization_name ?? data.name ?? "",
     seasonName: data.season_name,
     startDate: data.start_date ?? "",

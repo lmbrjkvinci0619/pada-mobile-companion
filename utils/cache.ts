@@ -19,7 +19,7 @@ function scheduleCacheCleanup(): void {
   setTimeout(() => {
     const now = Date.now();
     const keys = storage.getAllKeys().filter((k: string) => k.startsWith(CACHE_PREFIX));
-    
+
     for (const key of keys) {
       try {
         const raw = storage.getString(key);

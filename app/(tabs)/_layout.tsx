@@ -78,7 +78,6 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="people" size={size} color={color} />
           ),
-          href: "/teams",
         }}
       />
       <Tabs.Screen

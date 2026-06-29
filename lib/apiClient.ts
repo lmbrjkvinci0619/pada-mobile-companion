@@ -26,8 +26,12 @@ const inFlightRequests = new Map<string, Promise<unknown>>();
 const responseCache = new Map<string, CacheEntry<unknown>>();
 
 let cacheUserContext: string | null = null;
+let invalidatingAuthContext = false;
 
 export function setCacheUserContext(userHash: string | null): void {
+  if (cacheUserContext !== userHash) {
+    responseCache.clear();
+  }
   cacheUserContext = userHash;
 }
 
@@ -75,34 +79,36 @@ async function request<T>(
     skipAuth = false,
   } = config;
 
-  let token: string | null = null;
-  if (!skipAuth) {
-    token = await getValidAccessToken();
-    if (!token) {
-      throw new AuthError("Not authenticated", ErrorCode.UNAUTHORIZED);
-    }
-  }
-
   const cacheKey = getCacheKey(path, method);
   const cacheTtl = method === "GET" ? 60000 : 0;
 
   if (method === "GET") {
     const cached = getCached<T>(cacheKey, cacheTtl);
-    if (cached) {
-      return cached;
-    }
+    if (cached) return cached;
 
-    const inFlight = inFlightRequests.get(cacheKey);
-    if (inFlight) {
-      return inFlight as Promise<T>;
-    }
+    const inFlight = inFlightRequests.get(cacheKey) as Promise<T> | undefined;
+    if (inFlight) return inFlight;
   }
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-  let retryCount = 0;
+  const execRequest = async (attemptIndex: number): Promise<T> => {
+    let token: string | null = null;
+    if (!skipAuth) {
+      token = await getValidAccessToken();
+      if (!token) {
+        throw new AuthError("Not authenticated", ErrorCode.UNAUTHORIZED);
+      }
+    }
 
-  const execRequest = async (): Promise<T> => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    const externalSignal = signal;
+
+    const onExternalAbort = () => controller.abort();
+    if (externalSignal) {
+      if (externalSignal.aborted) controller.abort();
+      else externalSignal.addEventListener("abort", onExternalAbort, { once: true });
+    }
+
     try {
       const res = await fetch(`${TOPSCORE_BASE_URL}${path}`, {
         method,
@@ -116,26 +122,31 @@ async function request<T>(
       });
 
       clearTimeout(timeoutId);
+      if (externalSignal) externalSignal.removeEventListener("abort", onExternalAbort);
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         const message = (err as { message?: string }).message ?? `API error ${res.status}`;
 
-        if (res.status >= 500 && retryCount < MAX_RETRIES) {
-          retryCount++;
-          await sleep(RETRY_DELAY_BASE * Math.pow(2, retryCount - 1));
-          return execRequest();
+        if (res.status === 401 && !skipAuth) {
+          if (!invalidatingAuthContext) {
+            invalidatingAuthContext = true;
+            clearCache();
+            invalidatingAuthContext = false;
+          }
+          throw new AuthError("Session expired", ErrorCode.UNAUTHORIZED);
         }
 
-        if (res.status === 401 && !skipAuth) {
-          throw new AuthError("Session expired", ErrorCode.UNAUTHORIZED);
+        if (res.status >= 500 && attemptIndex < MAX_RETRIES) {
+          await sleep(RETRY_DELAY_BASE * Math.pow(2, attemptIndex));
+          return execRequest(attemptIndex + 1);
         }
 
         throw ApiError.fromStatus(res.status, message);
       }
 
-      const data = await res.json();
-
+      const responseText = await res.text();
+      const data = responseText.length > 0 ? JSON.parse(responseText) : ({} as T);
       if (method === "GET" && cacheTtl > 0) {
         setCache(cacheKey, data, cacheTtl);
       }
@@ -143,19 +154,20 @@ async function request<T>(
       return data as T;
     } catch (error) {
       clearTimeout(timeoutId);
+      if (externalSignal) externalSignal.removeEventListener("abort", onExternalAbort);
 
       if (error instanceof AuthError || error instanceof ApiError) {
         throw error;
       }
 
-      if (signal?.aborted || (error instanceof Error && error.name === "AbortError")) {
+      const isAbort = error instanceof Error && error.name === "AbortError";
+      if (signal?.aborted || isAbort) {
         throw new NetworkError("Request aborted");
       }
 
-      if (retryCount < MAX_RETRIES) {
-        retryCount++;
-        await sleep(RETRY_DELAY_BASE * Math.pow(2, retryCount - 1));
-        return execRequest();
+      if (attemptIndex < MAX_RETRIES) {
+        await sleep(RETRY_DELAY_BASE * Math.pow(2, attemptIndex));
+        return execRequest(attemptIndex + 1);
       }
 
       throw new NetworkError("Network error. Please check your connection.");
@@ -165,22 +177,26 @@ async function request<T>(
   let requestPromise: Promise<T>;
 
   if (method === "GET") {
-    requestPromise = (async () => {
-      inFlightRequests.set(cacheKey, execRequest() as unknown as Promise<T>);
-      try {
-        return await execRequest();
-      } finally {
+    let resolveInflight!: (value: T) => void;
+    let rejectInflight!: (reason: unknown) => void;
+    requestPromise = new Promise<T>((resolve, reject) => {
+      resolveInflight = resolve;
+      rejectInflight = reject;
+    });
+
+    inFlightRequests.set(cacheKey, requestPromise as unknown as Promise<unknown>);
+
+    execRequest(0)
+      .then((data) => {
         inFlightRequests.delete(cacheKey);
-      }
-    })();
+        resolveInflight(data);
+      })
+      .catch((err) => {
+        inFlightRequests.delete(cacheKey);
+        rejectInflight(err);
+      });
   } else {
-    requestPromise = (async () => {
-      try {
-        return await execRequest();
-      } finally {
-        inFlightRequests.delete(cacheKey);
-      }
-    })();
+    requestPromise = execRequest(0);
   }
 
   return requestPromise;
@@ -189,13 +205,10 @@ async function request<T>(
 export const apiClient = {
   get: <T>(path: string, config?: Omit<RequestConfig, "method" | "body">) =>
     request<T>(path, { ...config, method: "GET" }),
-
   post: <T>(path: string, body: unknown, config?: Omit<RequestConfig, "method">) =>
     request<T>(path, { ...config, method: "POST", body }),
-
   put: <T>(path: string, body: unknown, config?: Omit<RequestConfig, "method">) =>
     request<T>(path, { ...config, method: "PUT", body }),
-
   delete: <T>(path: string, config?: Omit<RequestConfig, "method" | "body">) =>
     request<T>(path, { ...config, method: "DELETE" }),
 };

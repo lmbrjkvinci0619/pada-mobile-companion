@@ -60,6 +60,7 @@ import {
   mapMailMessage,
   mapBracket,
   mapRosterMember,
+  mapLocation,
 } from "@/lib/mappers/topscore";
 import {
   MOCK_USER,
@@ -94,6 +95,7 @@ export async function updateProfile(
   updates: Partial<{
     first_name: string;
     last_name: string;
+    email: string;
     phone: string;
     avatar_url: string;
     about: string;
@@ -287,6 +289,18 @@ export async function fetchUpcomingEvents(
   limit: number = 10,
   signal?: AbortSignal
 ): Promise<Event[]> {
+  if (isMockEnabled()) {
+    const now = new Date().toISOString();
+    return MOCK_EVENTS.filter(
+      (e) =>
+        (e.status === "scheduled" || e.status === "in_progress") &&
+        e.startDate >= now &&
+        (!teamId || e.teamId === teamId)
+    )
+      .sort((a, b) => a.startDate.localeCompare(b.startDate))
+      .slice(0, limit);
+  }
+
   const path = teamId
     ? `/api/events?team_id=${teamId}&status=scheduled&upcoming=true&limit=${limit}&fields=locations,scores`
     : `/api/events?status=scheduled&upcoming=true&limit=${limit}&fields=locations,scores`;
@@ -300,6 +314,19 @@ export async function fetchPastEvents(
   limit: number = 10,
   signal?: AbortSignal
 ): Promise<Event[]> {
+  if (isMockEnabled()) {
+    const now = new Date().toISOString();
+    return [
+      ...MOCK_EVENTS.filter(
+        (e) =>
+          (e.status === "completed" || e.startDate < now) &&
+          (!teamId || e.teamId === teamId)
+      ),
+    ]
+      .sort((a, b) => b.startDate.localeCompare(a.startDate))
+      .slice(0, limit);
+  }
+
   const path = teamId
     ? `/api/events?team_id=${teamId}&status=completed&limit=${limit}&fields=locations,scores`
     : `/api/events?status=completed&limit=${limit}&fields=locations,scores`;
@@ -519,6 +546,7 @@ export async function reportScore(
   homeScore: number,
   awayScore: number,
   isOvertime: boolean = false,
+  status?: import("@/types").EventStatus,
   signal?: AbortSignal
 ): Promise<{ success: boolean; score_id?: string }> {
   return apiClient.post<{ success: boolean; score_id?: string }>(
@@ -527,6 +555,7 @@ export async function reportScore(
       home_score: homeScore,
       away_score: awayScore,
       is_overtime: isOvertime,
+      ...(status ? { status } : {}),
     },
     { signal }
   );
@@ -536,6 +565,7 @@ export async function updateScore(
   eventId: string,
   homeScore: number,
   awayScore: number,
+  status?: import("@/types").EventStatus,
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
   return apiClient.put<{ success: boolean }>(
@@ -543,6 +573,7 @@ export async function updateScore(
     {
       home_score: homeScore,
       away_score: awayScore,
+      ...(status ? { status } : {}),
     },
     { signal }
   );
@@ -565,7 +596,7 @@ export async function fetchArticleBySlug(
   slug: string,
   signal?: AbortSignal
 ): Promise<Article | null> {
-  if (isMockEnabled()) return MOCK_ARTICLES[0];
+  if (isMockEnabled()) return null;
 
   try {
     const data = await apiClient.get<ApiArticle>(`/api/articles/${slug}`, { signal });
@@ -793,19 +824,10 @@ export async function fetchLocations(
     ? `/api/locations?organization_id=${organizationId}`
     : "/api/locations";
   const data = await apiClient.get<ApiLocation[]>(path, { signal });
-  return data.filter(Boolean).map((loc) => ({
-    id: String(loc.id ?? ""),
-    name: loc.name ?? "",
-    address: loc.address ?? "",
-    city: loc.city ?? "",
-    state: loc.state,
-    zip: loc.zip,
-    latitude: loc.latitude,
-    longitude: loc.longitude,
-    fieldCount: loc.field_count,
-    notes: loc.notes,
-    isIndoor: loc.is_indoor,
-  }));
+  if (!Array.isArray(data)) return [];
+  return data
+    .map((loc) => mapLocation(loc))
+    .filter((loc): loc is import("@/types").Location => loc !== undefined);
 }
 
 // ─── Roster Management ─────────────────────────────────────────────────────

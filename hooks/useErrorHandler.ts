@@ -40,8 +40,6 @@ export function useRefetchOnError() {
   const queryClient = useQueryClient();
 
   return useCallback((queryKey: string[]) => {
-    return () => {
-      queryClient.invalidateQueries({ queryKey });
-    };
+    queryClient.invalidateQueries({ queryKey });
   }, [queryClient]);
 }

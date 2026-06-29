@@ -32,6 +32,7 @@ describe('TopScore Service', () => {
 
       ((global as any).fetch as jest.Mock).mockResolvedValue({
         ok: true,
+        text: async () => JSON.stringify(apiResponse),
         json: async () => apiResponse,
       });
 
@@ -56,6 +57,7 @@ describe('TopScore Service', () => {
 
       ((global as any).fetch as jest.Mock).mockResolvedValue({
         ok: true,
+        text: async () => JSON.stringify(apiResponse),
         json: async () => apiResponse,
       });
 
@@ -78,6 +80,7 @@ describe('TopScore Service', () => {
 
       ((global as any).fetch as jest.Mock).mockResolvedValue({
         ok: true,
+        text: async () => JSON.stringify(apiResponse),
         json: async () => apiResponse,
       });
 

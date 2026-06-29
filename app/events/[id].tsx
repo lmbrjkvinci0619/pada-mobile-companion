@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, ScrollView, TouchableOpacity, Linking, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Linking, Alert, ActivityIndicator } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { useLocalSearchParams, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -119,9 +119,9 @@ export default function EventDetailScreen() {
           </Card>
         )}
 
-        <TouchableOpacity 
+        <TouchableOpacity
            className="bg-surface-raised border border-surface-overlay rounded-xl py-4 mb-8 flex-row items-center justify-center gap-2"
-           onPress={() => alert("Calendar Event Exported (ICS generation simulated)")}
+           onPress={() => Alert.alert("Calendar Event", "ICS calendar export (simulated). Real implementation will generate an .ics feed.")}
         >
            <Ionicons name="calendar-outline" size={20} color="#E6EDF3" />
            <Text className="text-txt-primary font-bold text-base">Add to Calendar</Text>

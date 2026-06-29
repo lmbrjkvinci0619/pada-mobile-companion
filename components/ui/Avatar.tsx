@@ -37,8 +37,10 @@ const COLORS = [
 
 function seedColor(name?: string): string {
   if (!name) return COLORS[0];
-  const code = name.charCodeAt(0) + (name.charCodeAt(1) ?? 0);
-  return COLORS[code % COLORS.length];
+  const first = name.charCodeAt(0) || 0;
+  const second = name.length > 1 ? (name.charCodeAt(1) || 0) : 0;
+  const code = first + second;
+  return COLORS[code % COLORS.length] ?? COLORS[0];
 }
 
 export const Avatar = React.memo(function Avatar({ uri, name, size = "md", className, border = false }: AvatarProps) {

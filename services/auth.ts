@@ -7,6 +7,7 @@ const TOKEN_KEY = "padahub_tokens";
 const USER_KEY = "padahub_user";
 
 let memoryTokens: AuthTokens | null = null;
+let memoryOnlySession = false;
 
 export async function saveTokens(tokens: AuthTokens): Promise<void> {
   await SecureStore.setItemAsync(TOKEN_KEY, JSON.stringify(tokens));
@@ -27,6 +28,7 @@ export async function loadTokens(): Promise<AuthTokens | null> {
 
 export async function clearTokens(): Promise<void> {
   memoryTokens = null;
+  memoryOnlySession = false;
   await SecureStore.deleteItemAsync(TOKEN_KEY);
   await SecureStore.deleteItemAsync(USER_KEY);
 }
@@ -111,6 +113,7 @@ export async function loginWithCredentials(
       await saveTokens(tokens);
     } else {
       memoryTokens = tokens;
+      memoryOnlySession = true;
     }
 
     return { success: true };
@@ -146,8 +149,7 @@ export async function getValidAccessToken(): Promise<string | null> {
         const data = await res.json();
         const expiry = Date.now() + (data.expires_in ?? 3600) * 1000;
         const newTokens = { ...tokens, accessToken: data.access_token, refreshToken: data.refresh_token ?? tokens.refreshToken, expiresAt: expiry };
-        const isMemoryOnly = memoryTokens !== null;
-        if (isMemoryOnly) {
+        if (memoryOnlySession) {
           memoryTokens = newTokens;
         } else {
           await saveTokens(newTokens);

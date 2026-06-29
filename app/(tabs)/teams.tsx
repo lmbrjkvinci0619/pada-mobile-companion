@@ -3,6 +3,7 @@ import { FlatList, View, Text, TouchableOpacity, RefreshControl, ActivityIndicat
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAuthStore } from "@/store/authStore";
 import { useTeams } from "@/hooks/useApi";
 import { Badge } from "@/components/ui/Badge";
@@ -90,13 +91,16 @@ export default function TeamsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
-      <View className="bg-gradient-to-b from-[#161B22] to-bg px-5 pt-6 pb-6 rounded-b-[40px]">
+      <LinearGradient
+        colors={["#161B22", "#0D1117"]}
+        className="px-5 pt-6 pb-6 rounded-b-[40px] shadow-2xl"
+      >
         <Text className="text-primary-300 text-xs font-bold tracking-[2px] uppercase mb-1">PADA.org</Text>
         <Text className="text-txt-primary text-3xl font-black">My Teams</Text>
         <Text className="text-txt-secondary text-sm font-semi mt-1 opacity-80">
           All teams you're currently registered with
-        </Text>
-      </View>
+       </Text>
+     </LinearGradient>
 
       <ReadOnlyBanner />
 

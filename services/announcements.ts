@@ -3,8 +3,13 @@ import { supabase } from "./supabase";
 import type { Announcement, AnnouncementTargetType, AnnouncementType, FetchAnnouncementsResult, FetchAnnouncementsOptions, NotificationPreferences } from "@/types";
 import { getValidAccessToken } from "./auth";
 import { sanitizeString, sanitizeAnnouncementContent } from "@/lib/validation";
+import { MOCK_ANNOUNCEMENTS, USE_MOCK_DATA } from "@/constants/mockData";
 
 const HIDDEN_ANNOUNCEMENTS_KEY = "hidden_announcements";
+
+function isSafeFilterValue(value: string): boolean {
+  return typeof value === "string" && /^[A-Za-z0-9_\-:.]+$/.test(value);
+}
 
 async function getHiddenAnnouncementIds(): Promise<Set<string>> {
   try {
@@ -52,10 +57,47 @@ export async function clearHiddenAnnouncements(): Promise<void> {
   await AsyncStorage.removeItem(HIDDEN_ANNOUNCEMENTS_KEY);
 }
 
+export const FETCH_ANNOUNCEMENTS_PAGE_SIZE = 50;
+
+export async function fetchAnnouncementsByPageFromList(
+  source: Announcement[],
+  hiddenIds: Set<string>,
+  userId: string,
+  options?: Partial<FetchAnnouncementsOptions>
+): Promise<FetchAnnouncementsResult<Announcement>> {
+  const limit = clampLimit(options?.limit ?? FETCH_ANNOUNCEMENTS_PAGE_SIZE);
+  const offset = Math.max(0, options?.offset ?? 0);
+
+  const visible = source.filter((a) => !hiddenIds.has(a.id));
+  const page = visible.slice(offset, offset + limit).map((ann) => ({
+    ...ann,
+    isRead: ann.isRead ?? false,
+    isHidden: hiddenIds.has(ann.id),
+  }));
+
+  return {
+    data: page,
+    pagination: {
+      total: visible.length,
+      limit,
+      offset,
+      hasMore: offset + page.length < visible.length,
+    },
+  };
+}
+
 export async function fetchAnnouncements(
   userId: string,
-  _options?: Partial<FetchAnnouncementsOptions>
+  options?: Partial<FetchAnnouncementsOptions>
 ): Promise<FetchAnnouncementsResult<Announcement>> {
+  const limit = clampLimit(options?.limit ?? FETCH_ANNOUNCEMENTS_PAGE_SIZE);
+  const offset = Math.max(0, options?.offset ?? 0);
+
+  if (USE_MOCK_DATA) {
+    const hiddenIds = await getHiddenAnnouncementIds();
+    return fetchAnnouncementsByPageFromList(MOCK_ANNOUNCEMENTS, hiddenIds, userId, options);
+  }
+
   const hiddenIds = await getHiddenAnnouncementIds();
 
   const { data: memberData } = await supabase
@@ -75,30 +117,48 @@ export async function fetchAnnouncements(
     }
   }
 
-  let query = supabase
-    .from("announcements")
-    .select("*, announcement_reads(user_id)")
-    .order("created_at", { ascending: false })
-    .or(`expires_at.is.null,expires_at.gt.now`);
+  const safeTeamIds = teamIds.filter((id) => isSafeFilterValue(id));
 
-  if (teamIds.length > 0) {
-    const teamIdFilter = teamIds.join(',');
-    query = query.or(`target_type.eq.league,target_type.eq.division,and(target_type.eq.team,target_id.in.(${teamIdFilter}))`);
-  } else {
-    query = query.or("target_type.eq.league,target_type.eq.division");
+  const expiryOpen = "expires_at.is.null";
+  const expiryActive = "expires_at.gt.now()";
+  const expiryEither = `or(${expiryOpen},${expiryActive})`;
+
+  const audienceFilters: string[] = [];
+  audienceFilters.push(expiryEither);
+  audienceFilters.push(`and(${expiryEither},target_type.in.(league,division))`);
+  if (safeTeamIds.length > 0) {
+    const joined = safeTeamIds.map((id) => `"${id}"`).join(",");
+    audienceFilters.push(
+      `and(${expiryEither},target_type.in.(league,division),target_id.in.(${joined}))`
+    );
+    audienceFilters.push(
+      `and(${expiryEither},target_type.eq.team,target_id.in.(${joined}))`
+    );
   }
+  const audienceFilter = audienceFilters.join(",");
 
-  const { data, error } = await query;
+  const end = offset + limit - 1;
+
+  const { data, error, count } = await supabase
+    .from("announcements")
+    .select("*, announcement_reads(user_id)", { count: "exact" })
+    .or(audienceFilter)
+    .order("created_at", { ascending: false })
+    .range(offset, end);
 
   if (error) {
     console.error("Error fetching announcements:", error);
-    return { data: [], pagination: { total: 0, limit: 50, offset: 0, hasMore: false } };
+    return {
+      data: [],
+      pagination: { total: 0, limit, offset, hasMore: false },
+    };
   }
 
   const announcements: Announcement[] = (data || [])
-    .filter(ann => !hiddenIds.has(ann.id))
-    .map(ann => {
-      const isRead = ann.announcement_reads?.some((read: { user_id: string }) => read.user_id === userId) ?? false;
+    .filter((ann) => !hiddenIds.has(ann.id))
+    .map((ann) => {
+      const isRead =
+        ann.announcement_reads?.some((read: { user_id: string }) => read.user_id === userId) ?? false;
 
       return {
         id: ann.id,
@@ -118,18 +178,29 @@ export async function fetchAnnouncements(
       };
     });
 
+  const total = typeof count === "number"
+    ? Math.max(0, count - hiddenIds.size)
+    : announcements.length;
   return {
     data: announcements,
     pagination: {
-      total: announcements.length,
-      limit: 50,
-      offset: 0,
-      hasMore: false,
+      total,
+      limit,
+      offset,
+      hasMore: offset + announcements.length < total,
     },
   };
 }
 
+function clampLimit(value: number): number {
+  if (!Number.isFinite(value) || value <= 0) return FETCH_ANNOUNCEMENTS_PAGE_SIZE;
+  return Math.min(Math.floor(value), 100);
+}
+
 export async function markAnnouncementAsRead(announcementId: string, userId: string): Promise<void> {
+  if (USE_MOCK_DATA) {
+    return;
+  }
   const { error } = await supabase
     .from("announcement_reads")
     .upsert(
@@ -154,6 +225,10 @@ export async function createAnnouncement(payload: {
   announcementType?: AnnouncementType;
   expiresAt?: string;
 }): Promise<boolean> {
+  if (USE_MOCK_DATA) {
+    return true;
+  }
+
   const token = await getValidAccessToken();
   if (!token) return false;
 
@@ -183,6 +258,17 @@ export async function createAnnouncement(payload: {
 }
 
 export async function fetchAnnouncementById(id: string): Promise<Announcement | null> {
+  if (USE_MOCK_DATA) {
+    const found = MOCK_ANNOUNCEMENTS.find((a) => a.id === id);
+    if (!found) return null;
+    const hiddenIds = await getHiddenAnnouncementIds();
+    return {
+      ...found,
+      isRead: true,
+      isHidden: hiddenIds.has(found.id),
+    };
+  }
+
   const { data, error } = await supabase
     .from("announcements")
     .select("*")
@@ -193,15 +279,16 @@ export async function fetchAnnouncementById(id: string): Promise<Announcement | 
 
   return {
     id: data.id,
+    title: data.title,
+    content: data.content,
     authorId: data.author_id,
     authorName: data.author_name,
     authorRole: data.author_role as Announcement["authorRole"],
     announcementType: data.announcement_type as AnnouncementType,
     targetType: data.target_type as Announcement["targetType"],
     targetId: data.target_id,
-    title: data.title,
-    content: data.content,
     isUrgent: data.is_urgent,
+    isRead: true,
     createdAt: data.created_at,
     expiresAt: data.expires_at,
   };

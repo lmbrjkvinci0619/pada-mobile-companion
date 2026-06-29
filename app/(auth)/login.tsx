@@ -7,7 +7,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Linking,
   ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
@@ -16,6 +15,7 @@ import { useAuthStore } from "@/store/authStore";
 import { APP_NAME, SPORT_EMOJI } from "@/constants/config";
 import { Button } from "@/components/ui/Button";
 import { isValidEmail } from "@/lib/validation";
+import { openUrl } from "@/lib/urlUtils";
 
 export default function LoginScreen() {
   const { login, isLoading, error } = useAuthStore();
@@ -157,7 +157,7 @@ export default function LoginScreen() {
           {/* Forgot Password */}
           <TouchableOpacity
             className="items-center"
-            onPress={() => Linking.openURL("https://pada.usetopscore.com/password_resets/new")}
+            onPress={() => openUrl("https://pada.usetopscore.com/password_resets/new")}
           >
             <Text className="text-primary-400 text-sm font-semi">
               Forgot your password?

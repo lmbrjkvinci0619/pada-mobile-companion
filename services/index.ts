@@ -24,6 +24,16 @@ export {
   fetchAnnouncementById,
   createAnnouncement,
   markAnnouncementAsRead,
+  hideAnnouncement,
+  unhideAnnouncement,
+  isAnnouncementHidden,
+  getHiddenAnnouncementCount,
+  clearHiddenAnnouncements,
+  syncUserPreferences,
+  registerPushToken,
+  unregisterPushToken,
+  unregisterAllPushTokensForUser,
+  FETCH_ANNOUNCEMENTS_PAGE_SIZE,
 } from "./announcements";
 
-export { supabase } from "./supabase";
+export { supabase, isSupabaseConfigured, resetSupabaseClient } from "./supabase";

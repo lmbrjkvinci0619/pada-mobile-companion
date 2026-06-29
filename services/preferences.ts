@@ -10,7 +10,6 @@ export interface UserPreferences {
   notification_timing: "immediate" | "batched" | "digest";
   quiet_hours_start: string | null;
   quiet_hours_end: string | null;
-  team_chat_enabled: boolean;
   announcement_categories: string[];
   score_notifications_enabled: boolean;
   league_announcements_enabled: boolean;
@@ -32,41 +31,41 @@ export interface UserSettings {
 export async function fetchUserPreferences(userId: string): Promise<UserPreferences | null> {
   try {
     const token = await getValidAccessToken();
-    if (!token) {
-      const { data, error } = await supabase
-        .from("user_preferences")
-        .select("*")
-        .eq("topscore_person_id", userId)
-        .single();
+
+    if (token) {
+      const body: Record<string, unknown> = { topscore_person_id: userId, action: "get" };
+      if (token) body.topscore_token = token;
+
+      const { data, error } = await supabase.functions.invoke("user-preferences", { body });
 
       if (error) {
-        if (error.code === "PGRST116") {
-          return null;
+        const errorMessage = error.message || String(error);
+        if (errorMessage.includes('not authenticated') || errorMessage.includes('401')) {
+          console.error("Authentication error fetching preferences:", errorMessage);
+        } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+          console.error("Network error fetching preferences:", errorMessage);
+        } else {
+          console.error("Edge function error fetching preferences:", errorMessage);
         }
-        console.error("Error fetching user preferences:", error);
         return null;
       }
-      return data as UserPreferences;
+
+      const result = data as { data: UserPreferences | null };
+      return result.data || null;
     }
 
-    const { data, error } = await supabase.functions.invoke("user-preferences", {
-      body: { topscore_person_id: userId, action: "get" },
-    });
+    const { data: directData, error: directError } = await supabase
+    .from("user_preferences")
+    .select("*")
+    .eq("topscore_person_id", userId)
+    .single();
 
-    if (error) {
-      const errorMessage = error.message || String(error);
-      if (errorMessage.includes('not authenticated') || errorMessage.includes('401')) {
-        console.error("Authentication error fetching preferences:", errorMessage);
-      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
-        console.error("Network error fetching preferences:", errorMessage);
-      } else {
-        console.error("Edge function error fetching preferences:", errorMessage);
-      }
+    if (directError) {
+      if (directError.code === "PGRST116") return null;
+      console.error("Error fetching user preferences directly:", directError);
       return null;
     }
-
-    const result = data as { data: UserPreferences | null };
-    return result.data || null;
+    return directData as UserPreferences;
   } catch (err) {
     console.error("Unexpected error fetching user preferences:", err);
     return null;
@@ -96,7 +95,7 @@ export async function saveUserPreferences(
 
     if (token) {
       const { error } = await supabase.functions.invoke("user-preferences", {
-        body: { topscore_person_id: userId, action: "upsert", preferences: prefsData },
+        body: { topscore_person_id: userId, topscore_token: token, action: "upsert", preferences: prefsData },
       });
 
       if (error) {
@@ -105,14 +104,12 @@ export async function saveUserPreferences(
       }
     } else {
       const { error } = await supabase
-        .from("user_preferences")
-        .upsert({
-          topscore_person_id: userId,
-          ...prefsData,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: "topscore_person_id",
-        });
+      .from("user_preferences")
+      .upsert({
+        topscore_person_id: userId,
+        ...prefsData,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "topscore_person_id" });
 
       if (error) {
         console.error("Error saving user preferences:", error);
@@ -130,10 +127,9 @@ export async function saveUserPreferences(
 export async function deleteUserPreferences(userId: string): Promise<boolean> {
   try {
     const token = await getValidAccessToken();
-
     if (token) {
       const { error } = await supabase.functions.invoke("user-preferences", {
-        body: { topscore_person_id: userId, action: "delete" },
+        body: { topscore_person_id: userId, topscore_token: token, action: "delete" },
       });
 
       if (error) {
@@ -142,9 +138,9 @@ export async function deleteUserPreferences(userId: string): Promise<boolean> {
       }
     } else {
       const { error } = await supabase
-        .from("user_preferences")
-        .delete()
-        .eq("topscore_person_id", userId);
+      .from("user_preferences")
+      .delete()
+      .eq("topscore_person_id", userId);
 
       if (error) {
         console.error("Error deleting user preferences:", error);
@@ -190,8 +186,8 @@ export async function loadAndSyncPreferences(userId: string): Promise<boolean> {
     const dbPrefs = await fetchUserPreferences(userId);
 
     const notifications = dbPrefs
-      ? mapDbToNotificationPreferences(dbPrefs)
-      : defaultNotifs;
+    ? mapDbToNotificationPreferences(dbPrefs)
+    : defaultNotifs;
 
     useSettingsStore.getState().setNotifications(notifications);
     useSettingsStore.getState().updateLastSync();

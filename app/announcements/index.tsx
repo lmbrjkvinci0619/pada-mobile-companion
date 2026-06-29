@@ -113,21 +113,26 @@ export default function AnnouncementsListScreen() {
   const [offset, setOffset] = useState(0);
 
   const loadAnnouncements = async (reset = false) => {
-    if (!user?.id) return;
-    
     try {
+      if (!user?.id) {
+        setAnnouncements([]);
+        setHasMore(false);
+        setError(null);
+        return;
+      }
+
       const currentOffset = reset ? 0 : offset;
-      const result = await fetchAnnouncements(user.id, { 
-        limit: PAGE_SIZE, 
-        offset: currentOffset 
+      const result = await fetchAnnouncements(user.id, {
+        limit: PAGE_SIZE,
+        offset: currentOffset,
       });
-      
+
       if (reset) {
         setAnnouncements(result.data);
       } else {
         setAnnouncements(prev => [...prev, ...result.data]);
       }
-      
+
       setHasMore(result.pagination?.hasMore ?? false);
       setOffset(currentOffset + result.data.length);
       setError(null);
@@ -138,14 +143,17 @@ export default function AnnouncementsListScreen() {
   };
 
   const load = async () => {
-    if (user?.id) {
-      await loadAnnouncements(true);
+    if (!user?.id) {
       setIsLoading(false);
+      return;
     }
+    await loadAnnouncements(true);
+    setIsLoading(false);
   };
 
   useFocusEffect(
     useCallback(() => {
+      setIsLoading(true);
       load();
     }, [user?.id])
   );
@@ -159,7 +167,7 @@ export default function AnnouncementsListScreen() {
 
   const loadMore = async () => {
     if (isLoadingMore || !hasMore || !user?.id) return;
-    
+
     setIsLoadingMore(true);
     await loadAnnouncements(false);
     setIsLoadingMore(false);

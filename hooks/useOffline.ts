@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import NetInfo, { type NetInfoState } from "@react-native-community/netinfo";
 
 interface UseOfflineResult {
   isOffline: boolean;
@@ -6,64 +7,62 @@ interface UseOfflineResult {
   retry: () => void;
 }
 
-async function checkConnectivity(): Promise<boolean> {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-    
-    const response = await fetch("https://www.google.com/generate_204", {
-      method: "HEAD",
-      signal: controller.signal,
-    });
-    
-    clearTimeout(timeoutId);
-    return response.ok || response.status === 204;
-  } catch {
-    return false;
-  }
+function deriveState(state: NetInfoState): { isConnected: boolean | null; isOffline: boolean } {
+  const isConnected = state.isConnected;
+  const isOffline = isConnected === false;
+  return {
+    isConnected,
+    isOffline,
+  };
 }
 
 export function useOffline(): UseOfflineResult {
-  const [isConnected, setIsConnected] = useState<boolean | null>(null);
-  const [isOffline, setIsOffline] = useState<boolean>(false);
+  const [state, setState] = useState<{
+    isConnected: boolean | null;
+    isOffline: boolean;
+  }>(() => ({ isConnected: null, isOffline: false }));
+
+  const refresh = useCallback(async () => {
+    try {
+      const next = await NetInfo.fetch();
+      setState((prev) => {
+        const derived = deriveState(next);
+        if (prev.isConnected === false && derived.isConnected === true) {
+          console.log("Network restored");
+        } else if (prev.isConnected === true && derived.isConnected === false) {
+          console.log("Network lost");
+        }
+        return derived;
+      });
+    } catch (err) {
+      console.warn("Failed to query connectivity:", err);
+    }
+  }, []);
 
   useEffect(() => {
-    checkConnectivity().then((connected) => {
-      setIsConnected(connected);
-      setIsOffline(!connected);
-    });
+    refresh();
 
-    const interval = setInterval(() => {
-      checkConnectivity().then((connected) => {
-        setIsConnected((prev) => {
-          const wasOffline = prev === false;
-          setIsOffline(!connected);
-          
-          if (wasOffline && connected) {
-            console.log("Network restored");
-          } else if (!wasOffline && !connected) {
-            console.log("Network lost");
-          }
-          
-          return connected;
-        });
+    const unsubscribe = NetInfo.addEventListener((next) => {
+      setState((prev) => {
+        const derived = deriveState(next);
+        if (prev.isConnected === false && derived.isConnected === true) {
+          console.log("Network restored");
+        } else if (prev.isConnected === true && derived.isConnected === false) {
+          console.log("Network lost");
+        }
+        return derived;
       });
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const retry = useCallback(() => {
-    checkConnectivity().then((connected) => {
-      setIsConnected(connected);
-      setIsOffline(!connected);
     });
-  }, []);
+
+    return () => {
+      unsubscribe();
+    };
+  }, [refresh]);
 
   return {
-    isOffline,
-    isConnected,
-    retry,
+    isOffline: state.isOffline,
+    isConnected: state.isConnected,
+    retry: refresh,
   };
 }
 

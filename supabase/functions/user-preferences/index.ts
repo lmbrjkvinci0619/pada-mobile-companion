@@ -19,7 +19,6 @@ interface PreferencesPayload {
     notification_timing?: "immediate" | "batched" | "digest";
     quiet_hours_start?: string | null;
     quiet_hours_end?: string | null;
-    team_chat_enabled?: boolean;
     announcement_categories?: string[];
     score_notifications_enabled?: boolean;
     league_announcements_enabled?: boolean;
@@ -117,7 +116,6 @@ serve(async (req) => {
         notification_timing: preferences.notification_timing ?? "immediate",
         quiet_hours_start: preferences.quiet_hours_start,
         quiet_hours_end: preferences.quiet_hours_end,
-        team_chat_enabled: preferences.team_chat_enabled ?? true,
         announcement_categories: preferences.announcement_categories ?? ["all"],
         score_notifications_enabled: preferences.score_notifications_enabled ?? true,
         league_announcements_enabled: preferences.league_announcements_enabled ?? true,

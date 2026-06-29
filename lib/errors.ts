@@ -1,5 +1,3 @@
-import { useAuthStore } from "@/store/authStore";
-
 export const ErrorCode = {
   NETWORK_ERROR: "NETWORK_ERROR",
   TIMEOUT: "TIMEOUT",
@@ -170,14 +168,14 @@ export function getErrorMessage(error: unknown): string {
 
 export function handleErrorStrategy(error: unknown): void {
   const { strategy } = getErrorDetails(error);
-  
+
   switch (strategy) {
-    case RecoveryStrategy.LOGOUT:
-      useAuthStore.getState().logout();
-      break;
-    case RecoveryStrategy.REFRESH_TOKEN:
-      break;
-    default:
-      break;
+  case RecoveryStrategy.LOGOUT:
+    import("@/store/authStore").then(({ useAuthStore }) => useAuthStore.getState().logout()).catch(() => {});
+    break;
+  case RecoveryStrategy.REFRESH_TOKEN:
+    break;
+  default:
+    break;
   }
 }

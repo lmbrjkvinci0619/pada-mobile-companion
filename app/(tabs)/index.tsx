@@ -267,9 +267,8 @@ export default function HomeScreen() {
   if (isLoading && !refreshing) {
     return (
       <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        {/* @ts-ignore */}
-        <Ionicons name="sync" size={32} color="#1E88E5" className="animate-spin" />
-      </SafeAreaView>
+        <Ionicons name="sync" size={32} color="#1E88E5" />
+    </SafeAreaView>
     );
   }
 

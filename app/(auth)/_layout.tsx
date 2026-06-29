@@ -1,20 +1,16 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Stack, Redirect } from "expo-router";
 import { useAuthStore } from "@/store/authStore";
 import { View, ActivityIndicator } from "react-native";
 
 export default function AuthLayout() {
-  const { isAuthenticated, isLoading, initialize } = useAuthStore();
-
-  useEffect(() => {
-    initialize();
-  }, []);
+  const { isAuthenticated, isLoading } = useAuthStore();
 
   if (isLoading) {
     return (
       <View className="flex-1 bg-bg items-center justify-center">
         <ActivityIndicator size="large" color="#1E88E5" />
-      </View>
+     </View>
     );
   }
 
@@ -25,6 +21,6 @@ export default function AuthLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="login" />
-    </Stack>
+   </Stack>
   );
 }
