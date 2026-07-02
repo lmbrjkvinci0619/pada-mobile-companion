@@ -1,8 +1,10 @@
 import React from "react";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
-import { registerPushToken, syncUserPreferences } from "./announcements";
+import { registerPushToken } from "./announcements";
+import { saveAndSyncPreferences } from "./preferences";
 import { useSettingsStore } from "@/store/settingsStore";
+import { EXPO_PROJECT_ID } from "@/constants/config";
 
 export type NotificationPermissionStatus = "granted" | "denied" | "not_determined" | "can_ask";
 
@@ -52,6 +54,8 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 export async function openDeviceNotificationSettings(): Promise<void> {
   if (Platform.OS === "ios") {
     await Notifications.setBadgeCountAsync(0);
+  } else if (Platform.OS === "android") {
+    await Notifications.setBadgeCountAsync(0);
   }
 }
 
@@ -98,9 +102,10 @@ export async function registerForPushNotificationsAsync(userId?: string): Promis
     }
 
     try {
-      const tokenData = await Notifications.getExpoPushTokenAsync({
-        projectId: process.env.EXPO_PUBLIC_PROJECT_ID,
-      });
+      const tokenOptions = EXPO_PROJECT_ID
+        ? { projectId: EXPO_PROJECT_ID }
+        : undefined;
+      const tokenData = await Notifications.getExpoPushTokenAsync(tokenOptions);
       token = tokenData.data;
     } catch (error) {
       console.error("Error getting push token:", error);
@@ -158,7 +163,7 @@ export function setupNotificationListeners(
 export async function syncNotificationPreferences(userId: string): Promise<void> {
   const notifications = useSettingsStore.getState().notifications;
   try {
-    await syncUserPreferences(userId, notifications);
+    await saveAndSyncPreferences(userId, notifications);
   } catch (error) {
     console.error("Error syncing notification preferences:", error);
   }

@@ -4,11 +4,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useSettingsStore } from "@/store/settingsStore";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { EXTERNAL_URLS, openUrl } from "@/lib/urlUtils";
 
 export default function UserSettingsScreen() {
+  useAuthRedirect();
   const { user, isAuthenticated } = useAuthStore();
   const { displayName, setDisplayName } = useSettingsStore();
   
@@ -232,7 +235,7 @@ export default function UserSettingsScreen() {
             <SettingRow
               title="Help Center"
               subtitle="FAQs and support articles"
-              onPress={() => {}}
+              onPress={() => openUrl(EXTERNAL_URLS.help)}
             >
               <View className="w-8 h-8 rounded-lg bg-warning/20 items-center justify-center">
                 <Ionicons name="help-circle-outline" size={16} color="#D29922" />
@@ -241,7 +244,7 @@ export default function UserSettingsScreen() {
             <SettingRow
               title="Contact Support"
               subtitle="Get help from our team"
-              onPress={() => {}}
+              onPress={() => openUrl(EXTERNAL_URLS.supportEmail)}
             >
               <View className="w-8 h-8 rounded-lg bg-danger/20 items-center justify-center">
                 <Ionicons name="chatbubbles-outline" size={16} color="#E53935" />
@@ -250,7 +253,7 @@ export default function UserSettingsScreen() {
             <SettingRow
               title="Terms of Service"
               subtitle="Read our terms"
-              onPress={() => {}}
+              onPress={() => openUrl(EXTERNAL_URLS.terms)}
             >
               <View className="w-8 h-8 rounded-lg bg-surface-raised items-center justify-center">
                 <Ionicons name="document-text-outline" size={16} color="#8B949E" />
@@ -259,7 +262,7 @@ export default function UserSettingsScreen() {
             <SettingRow
               title="Privacy Policy"
               subtitle="How we handle your data"
-              onPress={() => {}}
+              onPress={() => openUrl(EXTERNAL_URLS.privacy)}
             >
               <View className="w-8 h-8 rounded-lg bg-surface-raised items-center justify-center">
                 <Ionicons name="shield-outline" size={16} color="#8B949E" />

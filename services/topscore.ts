@@ -1,9 +1,10 @@
-import { apiClient, isMockEnabled } from "@/lib/apiClient";
+import { apiClient, buildFieldsParam, MAX_PER_PAGE } from "@/lib/apiClient";
 import type {
   User,
   Registration,
   Team,
   TeamMember,
+  TeamRole,
   Event,
   Article,
   TeamStanding,
@@ -24,9 +25,11 @@ import type {
   ApiRegistration,
   ApiTeam,
   ApiEvent,
+  ApiGame,
   ApiArticle,
   ApiSchedule,
   ApiStandings,
+  ApiPoolStandings,
   ApiAttendance,
   ApiPractice,
   ApiWaiver,
@@ -47,9 +50,11 @@ import {
   mapRegistration,
   mapTeam,
   mapEvent,
+  mapGame,
   mapArticle,
   mapScheduleExport,
   mapStandings,
+  mapStandingEntry,
   mapEventAttendance,
   mapPractice,
   mapWaiver,
@@ -60,34 +65,79 @@ import {
   mapMailMessage,
   mapBracket,
   mapRosterMember,
+  mapRoster,
   mapLocation,
 } from "@/lib/mappers/topscore";
-import {
-  MOCK_USER,
-  MOCK_REGISTRATIONS,
-  MOCK_TEAMS,
-  MOCK_EVENTS,
-  MOCK_ARTICLES,
-} from "@/constants/mockData";
 
 // ─── User / Profile ──────────────────────────────────────────────────────────
+// All TopScore endpoints in this module MUST be validated against /api/help
+// before being used in production.
+//
+// IMPORTANT: TopScore API uses NON-STANDARD REST patterns.
+//   - Single resource endpoints use query params: /api/events?id=X NOT /api/events/{id}
+//   - Team detail uses: /api/teams/show?id=X NOT /api/teams/{id}
+//
+// CONFIRMED WORKING ENDPOINTS (verified via actual API testing July 2026):
+// - GET  /api/persons/me                  - Current user profile
+// - GET  /api/events                      - List events (paginated)
+// - GET  /api/events?id={id}             - Event details (uses query param!)
+// - GET  /api/teams?event_id=X           - Teams for event
+// - GET  /api/teams?person_id=X          - Teams for person
+// - GET  /api/teams/show?id={id}         - Team details (uses /teams/show endpoint!)
+// - GET  /api/games?event_id=X           - Games/schedule for event
+// - GET  /api/registrations              - With event_id/team_id/person_id param
+// - POST /api/events/{id}/scores         - Score reporting (captains only)
+//
+// CONFIRMED BROKEN (DO NOT USE - return 404):
+// - GET  /api/events/{id}                - Use /api/events?id={id}
+// - GET  /api/persons/{id}              - Does not exist, only /api/persons/me works
+// - GET  /api/teams/{id}                 - Use /api/teams/show?id={id}
+// - GET  /api/schedule                   - Use /api/games?event_id=X
+//
+// SPECULATIVE ENDPOINTS (NOT verified - may return 404, verify with /api/help):
+// - Family: /api/family, /api/family/invite, /api/family/{id}
+// - Memberships: /api/memberships, /api/memberships/purchase
+// - Event attendance: /api/events/{id}/attendance
+// - Score management: /api/events/{id}/scores (PUT)
+// - Brackets: /api/events/{id}/bracket
+// - Standings: /api/events/{id}/standings, /api/events/{id}/pools/{name}/standings
+// - Waivers: /api/waivers, /api/waivers/{id}, /api/waivers/{id}/sign, /api/events/{id}/waivers
+// - Polls: /api/polls, /api/polls/{id}, /api/polls/{id}/vote, POST /api/polls
+// - Mail: /api/mail, /api/mail/send
+// - Notifications: /api/notifications, /api/notifications/{id}, /api/notifications/{id}/read
+// - Practices: /api/teams/{id}/practices, /api/practices/{id}
+// - Roster: /api/teams/{id}/roster, /api/teams/{id}/roster/{person_id}
+// - Team stats: /api/teams/{id}/stats
+// - Articles: /api/articles, /api/articles/{slug}
+// - Locations: /api/locations
+// - Search: /api/persons/search, /api/teams/search
+// - Registration update: /api/registrations/{id} with _method: "PUT"
+//
+// NOTE: PadaHub is primarily read-only except for score reporting by captains.
+//
+// API Note: TopScore API only supports GET and POST methods. All modifications
+// use POST with _method override (e.g., _method: "PUT"). The apiClient handles
+// this automatically. POST requests also require api_csrf signature when using
+// Basic Auth (handled automatically by apiClient).
 
 export async function fetchCurrentUser(signal?: AbortSignal): Promise<User> {
-  if (isMockEnabled()) return MOCK_USER;
-
   const data = await apiClient.get<ApiPerson>("/api/persons/me", { signal });
   return mapPerson(data);
 }
 
 export async function fetchUserById(personId: string, signal?: AbortSignal): Promise<User | null> {
-  if (isMockEnabled()) return MOCK_USER;
-
-  try {
-    const data = await apiClient.get<ApiPerson>(`/api/persons/${personId}`, { signal });
-    return mapPerson(data);
-  } catch {
-    return null;
-  }
+  // NOTE: Per actual API testing (July 2026), /api/persons/{id} returns 404.
+  // The TopScore API only allows fetching the current user via /api/persons/me.
+  // There is NO endpoint to fetch arbitrary user profiles by ID.
+  //
+  // ALTERNATIVES:
+  // 1. Use searchPeople(query) to find users by name/email
+  // 2. Use /api/teams/show?id=X to get roster with person details
+  // 3. Use /api/events/{id}/roster to get event roster members
+  //
+  // This function is kept for compatibility but will always return null.
+  console.warn("fetchUserById: /api/persons/{id} endpoint does not exist (404). Per API testing July 2026, only /api/persons/me is available for user data. Use searchPeople() or roster endpoints instead.");
+  return null;
 }
 
 export async function updateProfile(
@@ -95,16 +145,20 @@ export async function updateProfile(
   updates: Partial<{
     first_name: string;
     last_name: string;
-    email: string;
-    phone: string;
+    phone_number: string;
     avatar_url: string;
     about: string;
+    emergency_contact: string;
+    address: string;
+    city: string;
+    state: string;
+    zip: string;
   }>,
   signal?: AbortSignal
 ): Promise<User> {
-  const data = await apiClient.put<ApiPerson>(
+  const data = await apiClient.post<ApiPerson>(
     `/api/persons/${personId}`,
-    updates,
+    { ...updates, _method: "PUT" },
     { signal }
   );
   return mapPerson(data);
@@ -113,8 +167,6 @@ export async function updateProfile(
 // ─── Family ──────────────────────────────────────────────────────────────────
 
 export async function fetchFamily(signal?: AbortSignal): Promise<Family | null> {
-  if (isMockEnabled()) return null;
-
   try {
     const data = await apiClient.get<ApiFamily>("/api/family", { signal });
     return mapFamily(data);
@@ -140,14 +192,12 @@ export async function removeFamilyMember(
   personId: string,
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
-  return apiClient.delete<{ success: boolean }>(`/api/family/${personId}`, { signal });
+  return apiClient.post<{ success: boolean }>(`/api/family/${personId}`, { _method: "DELETE" }, { signal });
 }
 
 // ─── Memberships ─────────────────────────────────────────────────────────────
 
 export async function fetchMemberships(signal?: AbortSignal): Promise<Membership[]> {
-  if (isMockEnabled()) return [];
-
   const data = await apiClient.get<ApiMembership[]>("/api/memberships", { signal });
   return data.map(mapMembership);
 }
@@ -165,20 +215,56 @@ export async function purchaseMembership(
 }
 
 // ─── Registrations ────────────────────────────────────────────────────────────
+// NOTE: Per endpoint verification, /api/registrations requires parameters
+// (event_id, team_id, or person_id). Without params, returns 400/403.
+// The app should provide context when fetching registrations.
 
-export async function fetchRegistrations(signal?: AbortSignal): Promise<Registration[]> {
-  if (isMockEnabled()) return MOCK_REGISTRATIONS;
+export interface FetchRegistrationsOptions {
+  page?: number;
+  perPage?: number;
+  eventId?: string;
+  teamId?: string;
+  personId?: string;
+}
 
-  const data = await apiClient.get<ApiRegistration[]>("/api/registrations", { signal });
-  return data.map(mapRegistration);
+export async function fetchRegistrations(
+  options: FetchRegistrationsOptions = {},
+  signal?: AbortSignal
+): Promise<PaginatedResponse<Registration>> {
+  const { page = 1, perPage = 20, eventId, teamId, personId } = options;
+  const safePerPage = Math.min(Math.max(1, perPage), MAX_PER_PAGE);
+  const params = new URLSearchParams({
+    page: String(page),
+    per_page: String(safePerPage),
+  });
+
+  // TopScore API requires at least one of these parameters for /api/registrations
+  if (eventId) params.set("event_id", eventId);
+  if (teamId) params.set("team_id", teamId);
+  if (personId) params.set("person_id", personId);
+
+  const { data: rawData, count } = await apiClient.getWithMeta<ApiRegistration[]>(
+    `/api/registrations?${params}`,
+    { signal }
+  );
+
+  const registrationsData = (Array.isArray(rawData) ? rawData : []) as ApiRegistration[];
+
+  return {
+    data: registrationsData.map(mapRegistration),
+    pagination: {
+      page,
+      per_page: safePerPage,
+      total: count ?? 0,
+      total_pages: count != null && count > 0 ? Math.ceil(count / safePerPage) : 0,
+    },
+  };
 }
 
 export async function fetchRegistrationById(
   registrationId: string,
   signal?: AbortSignal
 ): Promise<Registration | null> {
-  if (isMockEnabled()) return MOCK_REGISTRATIONS.find((r) => r.id === registrationId) ?? null;
-
   try {
     const data = await apiClient.get<ApiRegistration>(`/api/registrations/${registrationId}`, { signal });
     return mapRegistration(data);
@@ -189,22 +275,52 @@ export async function fetchRegistrationById(
 
 // ─── Teams ────────────────────────────────────────────────────────────────────
 
-export async function fetchTeams(signal?: AbortSignal): Promise<Team[]> {
-  if (isMockEnabled()) return MOCK_TEAMS;
+export interface FetchTeamsOptions {
+  page?: number;
+  perPage?: number;
+  organizationId?: number;
+}
 
-  const data = await apiClient.get<ApiTeam[]>(
-    "/api/teams?fields=locations,roster,record",
+export async function fetchTeams(
+  options: FetchTeamsOptions = {},
+  signal?: AbortSignal
+): Promise<PaginatedResponse<Team>> {
+  const { page = 1, perPage = 20, organizationId } = options;
+  const safePerPage = Math.min(Math.max(1, perPage), MAX_PER_PAGE);
+  const fieldsPart = buildFieldsParam(["locations", "roster", "record", "my_membership"]);
+  const params = new URLSearchParams({
+    page: String(page),
+    per_page: String(safePerPage),
+  });
+  if (organizationId) {
+    params.set("organization_id", String(organizationId));
+  }
+
+  const { data: rawData, count } = await apiClient.getWithMeta<ApiTeam[]>(
+    `/api/teams?${params}&${fieldsPart}`,
     { signal }
   );
-  return data.map(mapTeam);
+
+  const teamsData = (Array.isArray(rawData) ? rawData : []) as ApiTeam[];
+
+  return {
+    data: teamsData.map(mapTeam),
+    pagination: {
+      page,
+      per_page: safePerPage,
+      total: count ?? 0,
+      total_pages: count != null && count > 0 ? Math.ceil(count / safePerPage) : 0,
+    },
+  };
 }
 
 export async function fetchTeam(teamId: string, signal?: AbortSignal): Promise<Team | undefined> {
-  if (isMockEnabled()) return MOCK_TEAMS.find((t) => t.id === teamId);
-
   try {
+    // NOTE: Per actual API testing, /api/teams/{id} does NOT exist (404).
+    // Correct pattern is /api/teams/show?id={id} using query parameter.
+    const fieldsPart = buildFieldsParam(["roster", "locations", "record", "my_membership"]);
     const data = await apiClient.get<ApiTeam>(
-      `/api/teams/${teamId}?fields=roster,locations,record`,
+      `/api/teams/show?id=${teamId}&${fieldsPart}`,
       { signal }
     );
     return mapTeam(data);
@@ -217,16 +333,14 @@ export async function fetchTeamRoster(
   teamId: string,
   signal?: AbortSignal
 ): Promise<TeamMember[]> {
-  if (isMockEnabled()) {
-    const team = MOCK_TEAMS.find((t) => t.id === teamId);
-    return team?.roster ?? [];
-  }
-
+  // NOTE: Per actual API testing, /api/teams/{id} does NOT exist (404).
+  // Correct pattern is /api/teams/show?id={id}.
+  const fieldsPart = buildFieldsParam("roster");
   const data = await apiClient.get<ApiTeam>(
-    `/api/teams/${teamId}?fields=roster`,
+    `/api/teams/show?id=${teamId}&${fieldsPart}`,
     { signal }
   );
-  return mapTeam(data).roster ?? [];
+  return mapRoster(data.roster);
 }
 
 export async function updateTeamMemberRole(
@@ -235,9 +349,9 @@ export async function updateTeamMemberRole(
   role: string,
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
-  return apiClient.put<{ success: boolean }>(
+  return apiClient.post<{ success: boolean }>(
     `/api/teams/${teamId}/roster/${personId}`,
-    { role },
+    { role, _method: "PUT" },
     { signal }
   );
 }
@@ -253,29 +367,64 @@ export async function removeTeamMember(
   );
 }
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    per_page: number;
+    total: number;
+    total_pages: number;
+  };
+}
+
 // ─── Events / Schedule ────────────────────────────────────────────────────────
 
-export async function fetchEvents(teamId?: string, signal?: AbortSignal): Promise<Event[]> {
-  if (isMockEnabled()) {
-    return teamId
-      ? MOCK_EVENTS.filter((e) => e.teamId === teamId)
-      : MOCK_EVENTS;
-  }
+export interface FetchEventsOptions {
+  teamId?: string;
+  page?: number;
+  perPage?: number;
+}
 
-  const path = teamId
-    ? `/api/events?team_id=${teamId}&fields=locations,scores`
-    : `/api/events?fields=locations,scores`;
+export async function fetchEvents(
+  options: FetchEventsOptions = {},
+  signal?: AbortSignal
+): Promise<PaginatedResponse<Event>> {
+  const { teamId, page = 1, perPage = 20 } = options;
+  const safePerPage = Math.min(Math.max(1, perPage), MAX_PER_PAGE);
+  const fieldsPart = buildFieldsParam(["locations", "scores"]);
+  const params = new URLSearchParams({
+    page: String(page),
+    per_page: String(safePerPage),
+  });
+  if (teamId) params.set("team_id", teamId);
 
-  const data = await apiClient.get<ApiEvent[]>(path, { signal });
-  return data.map(mapEvent);
+  const { data: rawData, count } = await apiClient.getWithMeta<ApiEvent[]>(
+    `/api/events?${params}&${fieldsPart}`,
+    { signal }
+  );
+
+  const eventsData = (Array.isArray(rawData) ? rawData : []) as ApiEvent[];
+
+  return {
+    data: eventsData.map(mapEvent),
+    pagination: {
+      page,
+      per_page: safePerPage,
+      total: count ?? 0,
+      total_pages: count != null && count > 0 ? Math.ceil(count / safePerPage) : 0,
+    },
+  };
 }
 
 export async function fetchEvent(eventId: string, signal?: AbortSignal): Promise<Event | undefined> {
-  if (isMockEnabled()) return MOCK_EVENTS.find((e) => e.id === eventId);
-
   try {
+    // NOTE: Per actual API testing, /api/events/{id} does NOT exist (404).
+    // Correct pattern is /api/events?id={id} using query parameter.
+    const fieldsPart = buildFieldsParam(["locations", "scores"]);
     const data = await apiClient.get<ApiEvent>(
-      `/api/events/${eventId}?fields=locations,scores`,
+      `/api/events?id=${eventId}&${fieldsPart}`,
       { signal }
     );
     return mapEvent(data);
@@ -289,24 +438,35 @@ export async function fetchUpcomingEvents(
   limit: number = 10,
   signal?: AbortSignal
 ): Promise<Event[]> {
-  if (isMockEnabled()) {
-    const now = new Date().toISOString();
-    return MOCK_EVENTS.filter(
-      (e) =>
-        (e.status === "scheduled" || e.status === "in_progress") &&
-        e.startDate >= now &&
-        (!teamId || e.teamId === teamId)
-    )
-      .sort((a, b) => a.startDate.localeCompare(b.startDate))
-      .slice(0, limit);
+  const fieldsPart = buildFieldsParam(["locations", "scores"]);
+  const perPageVal = String(Math.min(Math.max(limit * 4, 50), 100));
+  let path: string;
+  if (teamId) {
+    const params = new URLSearchParams({
+      team_id: teamId,
+      page: "1",
+      per_page: perPageVal,
+    });
+    path = `/api/events?${params}&${fieldsPart}`;
+  } else {
+    const params = new URLSearchParams({
+      page: "1",
+      per_page: perPageVal,
+    });
+    path = `/api/events?${params}&${fieldsPart}`;
   }
 
-  const path = teamId
-    ? `/api/events?team_id=${teamId}&status=scheduled&upcoming=true&limit=${limit}&fields=locations,scores`
-    : `/api/events?status=scheduled&upcoming=true&limit=${limit}&fields=locations,scores`;
-
   const data = await apiClient.get<ApiEvent[]>(path, { signal });
-  return data.map(mapEvent);
+  const nowIso = new Date().toISOString();
+  return data
+    .filter((e) => {
+      if (!e.start_date) return false;
+      return e.start_date >= nowIso &&
+        (e.status === undefined || e.status === "scheduled" || e.status === "in_progress");
+    })
+    .map(mapEvent)
+    .sort((a, b) => (a.startDate ?? "").localeCompare(b.startDate ?? ""))
+    .slice(0, limit);
 }
 
 export async function fetchPastEvents(
@@ -314,45 +474,69 @@ export async function fetchPastEvents(
   limit: number = 10,
   signal?: AbortSignal
 ): Promise<Event[]> {
-  if (isMockEnabled()) {
-    const now = new Date().toISOString();
-    return [
-      ...MOCK_EVENTS.filter(
-        (e) =>
-          (e.status === "completed" || e.startDate < now) &&
-          (!teamId || e.teamId === teamId)
-      ),
-    ]
-      .sort((a, b) => b.startDate.localeCompare(a.startDate))
-      .slice(0, limit);
+  const fieldsPart = buildFieldsParam(["locations", "scores"]);
+  const perPageVal = String(Math.min(Math.max(limit * 4, 50), 100));
+  let path: string;
+  if (teamId) {
+    const params = new URLSearchParams({
+      team_id: teamId,
+      page: "1",
+      per_page: perPageVal,
+    });
+    path = `/api/events?${params}&${fieldsPart}`;
+  } else {
+    const params = new URLSearchParams({
+      page: "1",
+      per_page: perPageVal,
+    });
+    path = `/api/events?${params}&${fieldsPart}`;
   }
 
-  const path = teamId
-    ? `/api/events?team_id=${teamId}&status=completed&limit=${limit}&fields=locations,scores`
-    : `/api/events?status=completed&limit=${limit}&fields=locations,scores`;
-
   const data = await apiClient.get<ApiEvent[]>(path, { signal });
-  return data.map(mapEvent);
+  const nowIso = new Date().toISOString();
+  return data
+    .filter((e) => {
+      if (!e.start_date) return false;
+      return e.start_date < nowIso || e.status === "completed";
+    })
+    .map(mapEvent)
+    .sort((a, b) => (b.startDate ?? "").localeCompare(a.startDate ?? ""))
+    .slice(0, limit);
 }
 
 // ─── Schedule Export / Calendar Sync ─────────────────────────────────────────
+// NOTE: Per endpoint verification (July 2026), /api/schedule returns 404.
+// The /api/teams/{teamId}/schedule/export endpoint is UNTESTED - it may also return 404.
+// This function may need adjustment based on actual API capabilities.
+// TODO: Verify /api/teams/{teamId}/schedule/export with /api/help?endpoint=/api/teams/{teamId}/schedule/export
 
 export async function fetchScheduleExport(
   teamId: string,
   signal?: AbortSignal
 ): Promise<ScheduleExport> {
-  if (isMockEnabled()) {
+  // Per TopScore API spec, schedule export endpoint pattern should be:
+  // GET /api/teams/{id}/schedule/export
+  // However endpoint testing shows /api/schedule returns 404.
+  // The /api/teams/{teamId}/schedule/export may have similar issues.
+  // Using team-based path as fallback - verify with /api/help?endpoint=/api/teams/{id}/schedule/export
+  try {
+    const { data } = await apiClient.getWithMeta<ApiSchedule>(
+      `/api/teams/${teamId}/schedule/export`,
+      { signal }
+    );
+    return mapScheduleExport(data);
+  } catch (error) {
+    // If the team schedule export endpoint doesn't exist, return empty URLs
+    // This prevents the app from crashing when the endpoint is unavailable
+    console.warn("fetchScheduleExport: Team schedule export endpoint may not exist. Returning empty export data.", error instanceof Error ? error.message : "Unknown error");
     return {
-      teamId,
-      icsUrl: `https://example.com/teams/${teamId}/schedule.ics`,
-      htmlUrl: `https://example.com/teams/${teamId}/schedule`,
-      googleCalendarUrl: `https://calendar.google.com/calendar/r?cid=https://example.com/teams/${teamId}/schedule.ics`,
-      outlookCalendarUrl: `https://outlook.live.com/calendar/0?cid=https://example.com/teams/${teamId}/schedule.ics`,
+      teamId: teamId,
+      icsUrl: "",
+      htmlUrl: "",
+      googleCalendarUrl: undefined,
+      outlookCalendarUrl: undefined,
     };
   }
-
-  const data = await apiClient.get<ApiSchedule>(`/api/teams/${teamId}/schedule/export`, { signal });
-  return mapScheduleExport(data);
 }
 
 export async function generateCalendarUrl(
@@ -367,20 +551,67 @@ export async function generateCalendarUrl(
   return data.url;
 }
 
+// ─── Games / Schedule ────────────────────────────────────────────────────────
+// NOTE: Per endpoint verification (July 2026), /api/games with event_id parameter
+// is a VERIFIED working endpoint that returns game/schedule data.
+
+export interface FetchGamesOptions {
+  eventId: string;
+  page?: number;
+  perPage?: number;
+}
+
+export async function fetchGames(
+  options: FetchGamesOptions,
+  signal?: AbortSignal
+): Promise<PaginatedResponse<Event>> {
+  const { eventId, page = 1, perPage = 20 } = options;
+  const safePerPage = Math.min(Math.max(1, perPage), MAX_PER_PAGE);
+  const params = new URLSearchParams({
+    event_id: eventId,
+    page: String(page),
+    per_page: String(safePerPage),
+  });
+
+  const { data: rawData, count } = await apiClient.getWithMeta<ApiGame[]>(
+    `/api/games?${params}`,
+    { signal }
+  );
+
+  const gamesData = (Array.isArray(rawData) ? rawData : []) as ApiGame[];
+
+  return {
+    data: gamesData.map(mapGame),
+    pagination: {
+      page,
+      per_page: safePerPage,
+      total: count ?? 0,
+      total_pages: count != null && count > 0 ? Math.ceil(count / safePerPage) : 0,
+    },
+  };
+}
+
+export async function fetchGameById(
+  gameId: string,
+  signal?: AbortSignal
+): Promise<Event | null> {
+  try {
+    const data = await apiClient.get<ApiGame>(
+      `/api/games/show?id=${gameId}`,
+      { signal }
+    );
+    return mapGame(data);
+  } catch {
+    return null;
+  }
+}
+
 // ─── Standings / Rankings ─────────────────────────────────────────────────────
 
 export async function fetchEventStandings(
   eventId: string,
   signal?: AbortSignal
 ): Promise<EventStandings> {
-  if (isMockEnabled()) {
-    return {
-      eventId,
-      eventName: "Sample Event",
-      standings: [],
-    };
-  }
-
   const data = await apiClient.get<ApiStandings>(
     `/api/events/${eventId}/standings`,
     { signal }
@@ -392,24 +623,11 @@ export async function fetchTeamStandings(
   teamId: string,
   signal?: AbortSignal
 ): Promise<TeamStanding[]> {
-  if (isMockEnabled()) return [];
-
   const data = await apiClient.get<ApiStandings>(
     `/api/teams/${teamId}/standings`,
     { signal }
   );
-  return data.standings?.map((entry) => ({
-    rank: entry.rank,
-    teamId: String(entry.team_id),
-    teamName: entry.team_name,
-    division: entry.division,
-    wins: entry.wins,
-    losses: entry.losses,
-    ties: entry.ties,
-    trueskillRating: entry.trueskill_rating,
-    gamesBehind: entry.games_behind,
-    pointDifferential: entry.point_differential,
-  })) ?? [];
+  return data.standings?.map(mapStandingEntry) ?? [];
 }
 
 // ─── Attendance ────────────────────────────────────────────────────────────────
@@ -418,16 +636,6 @@ export async function fetchEventAttendance(
   eventId: string,
   signal?: AbortSignal
 ): Promise<EventAttendance | null> {
-  if (isMockEnabled()) {
-    return {
-      eventId,
-      eventName: "Sample Event",
-      eventDate: new Date().toISOString(),
-      teamId: "1",
-      records: [],
-    };
-  }
-
   try {
     const data = await apiClient.get<ApiAttendance>(
       `/api/events/${eventId}/attendance`,
@@ -447,7 +655,7 @@ export async function updateAttendance(
 ): Promise<{ success: boolean }> {
   return apiClient.post<{ success: boolean }>(
     `/api/events/${eventId}/attendance`,
-    { status, notes },
+    { status, notes, _method: "PUT" },
     { signal }
   );
 }
@@ -458,8 +666,6 @@ export async function fetchTeamAttendance(
   endDate?: string,
   signal?: AbortSignal
 ): Promise<EventAttendance[]> {
-  if (isMockEnabled()) return [];
-
   let path = `/api/teams/${teamId}/attendance`;
   const params: string[] = [];
   if (startDate) params.push(`start_date=${startDate}`);
@@ -476,8 +682,6 @@ export async function fetchPractices(
   teamId: string,
   signal?: AbortSignal
 ): Promise<Practice[]> {
-  if (isMockEnabled()) return [];
-
   const data = await apiClient.get<ApiPractice[]>(`/api/teams/${teamId}/practices`, { signal });
   return data.map(mapPractice);
 }
@@ -495,7 +699,13 @@ export async function createPractice(
 ): Promise<Practice> {
   const data = await apiClient.post<ApiPractice>(
     `/api/teams/${teamId}/practices`,
-    practice,
+    {
+      name: practice.name,
+      start_date: practice.start_date,
+      end_date: practice.end_date,
+      location_id: practice.location_id,
+      notes: practice.notes,
+    },
     { signal }
   );
   return mapPractice(data);
@@ -512,9 +722,9 @@ export async function updatePractice(
   }>,
   signal?: AbortSignal
 ): Promise<Practice> {
-  const data = await apiClient.put<ApiPractice>(
+  const data = await apiClient.post<ApiPractice>(
     `/api/practices/${practiceId}`,
-    updates,
+    { ...updates, _method: "PUT" },
     { signal }
   );
   return mapPractice(data);
@@ -524,7 +734,7 @@ export async function deletePractice(
   practiceId: string,
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
-  return apiClient.delete<{ success: boolean }>(`/api/practices/${practiceId}`, { signal });
+  return apiClient.post<{ success: boolean }>(`/api/practices/${practiceId}`, { _method: "DELETE" }, { signal });
 }
 
 export async function updatePracticeAttendance(
@@ -549,14 +759,25 @@ export async function reportScore(
   status?: import("@/types").EventStatus,
   signal?: AbortSignal
 ): Promise<{ success: boolean; score_id?: string }> {
+  if (!eventId) {
+    throw new Error("eventId is required");
+  }
+  if (homeScore < 0 || awayScore < 0) {
+    throw new Error("Scores must be non-negative");
+  }
+  const payload: Record<string, unknown> = {
+    home_score: homeScore,
+    away_score: awayScore,
+    is_overtime: isOvertime,
+  };
+
+  if (status === "completed") {
+    payload.is_final = true;
+  }
+
   return apiClient.post<{ success: boolean; score_id?: string }>(
     `/api/events/${eventId}/scores`,
-    {
-      home_score: homeScore,
-      away_score: awayScore,
-      is_overtime: isOvertime,
-      ...(status ? { status } : {}),
-    },
+    payload,
     { signal }
   );
 }
@@ -565,16 +786,29 @@ export async function updateScore(
   eventId: string,
   homeScore: number,
   awayScore: number,
+  isOvertime: boolean = false,
   status?: import("@/types").EventStatus,
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
-  return apiClient.put<{ success: boolean }>(
+  if (!eventId) {
+    throw new Error("eventId is required");
+  }
+  if (homeScore < 0 || awayScore < 0) {
+    throw new Error("Scores must be non-negative");
+  }
+  const payload: Record<string, unknown> = {
+    home_score: homeScore,
+    away_score: awayScore,
+    is_overtime: isOvertime,
+  };
+
+  if (status === "completed") {
+    payload.is_final = true;
+  }
+
+  return apiClient.post<{ success: boolean }>(
     `/api/events/${eventId}/scores`,
-    {
-      home_score: homeScore,
-      away_score: awayScore,
-      ...(status ? { status } : {}),
-    },
+    { ...payload, _method: "PUT" },
     { signal }
   );
 }
@@ -585,8 +819,6 @@ export async function fetchArticles(
   category?: string,
   signal?: AbortSignal
 ): Promise<Article[]> {
-  if (isMockEnabled()) return MOCK_ARTICLES;
-
   const path = category ? `/api/articles?category=${category}` : "/api/articles";
   const data = await apiClient.get<ApiArticle[]>(path, { signal });
   return data.map(mapArticle);
@@ -596,8 +828,6 @@ export async function fetchArticleBySlug(
   slug: string,
   signal?: AbortSignal
 ): Promise<Article | null> {
-  if (isMockEnabled()) return null;
-
   try {
     const data = await apiClient.get<ApiArticle>(`/api/articles/${slug}`, { signal });
     return mapArticle(data);
@@ -609,15 +839,11 @@ export async function fetchArticleBySlug(
 // ─── Waivers ─────────────────────────────────────────────────────────────────
 
 export async function fetchWaivers(signal?: AbortSignal): Promise<Waiver[]> {
-  if (isMockEnabled()) return [];
-
   const data = await apiClient.get<ApiWaiver[]>("/api/waivers", { signal });
   return data.map(mapWaiver);
 }
 
 export async function fetchUnsignedWaivers(signal?: AbortSignal): Promise<Waiver[]> {
-  if (isMockEnabled()) return [];
-
   const data = await apiClient.get<ApiWaiver[]>("/api/waivers?unsigned=true", { signal });
   return data.map(mapWaiver);
 }
@@ -638,8 +864,6 @@ export async function fetchEventWaivers(
   eventId: string,
   signal?: AbortSignal
 ): Promise<Waiver[]> {
-  if (isMockEnabled()) return [];
-
   const data = await apiClient.get<ApiWaiver[]>(`/api/events/${eventId}/waivers`, { signal });
   return data.map(mapWaiver);
 }
@@ -651,8 +875,6 @@ export async function fetchPolls(
   eventId?: string,
   signal?: AbortSignal
 ): Promise<Poll[]> {
-  if (isMockEnabled()) return [];
-
   let path = "/api/polls";
   const params: string[] = [];
   if (teamId) params.push(`team_id=${teamId}`);
@@ -664,8 +886,6 @@ export async function fetchPolls(
 }
 
 export async function fetchPoll(pollId: string, signal?: AbortSignal): Promise<Poll | null> {
-  if (isMockEnabled()) return null;
-
   try {
     const data = await apiClient.get<ApiPoll>(`/api/polls/${pollId}`, { signal });
     return mapPoll(data);
@@ -681,7 +901,7 @@ export async function votePoll(
 ): Promise<{ success: boolean; votes: number }> {
   return apiClient.post<{ success: boolean; votes: number }>(
     `/api/polls/${pollId}/vote`,
-    { option_id: optionId },
+    { option_id: optionId, _method: "PUT" },
     { signal }
   );
 }
@@ -706,8 +926,6 @@ export async function fetchMailMessages(
   folder: "inbox" | "sent" = "inbox",
   signal?: AbortSignal
 ): Promise<MailMessage[]> {
-  if (isMockEnabled()) return [];
-
   const data = await apiClient.get<ApiMailMessage[]>(`/api/mail?folder=${folder}`, { signal });
   return data.map(mapMailMessage);
 }
@@ -731,8 +949,6 @@ export async function fetchNotifications(
   limit: number = 50,
   signal?: AbortSignal
 ): Promise<AppNotification[]> {
-  if (isMockEnabled()) return [];
-
   const data = await apiClient.get<ApiNotification[]>(`/api/notifications?limit=${limit}`, { signal });
   return data.map(mapNotification);
 }
@@ -741,9 +957,9 @@ export async function markNotificationRead(
   notificationId: string,
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
-  return apiClient.put<{ success: boolean }>(
+  return apiClient.post<{ success: boolean }>(
     `/api/notifications/${notificationId}/read`,
-    {},
+    { _method: "PUT" },
     { signal }
   );
 }
@@ -762,8 +978,9 @@ export async function deleteNotification(
   notificationId: string,
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
-  return apiClient.delete<{ success: boolean }>(
+  return apiClient.post<{ success: boolean }>(
     `/api/notifications/${notificationId}`,
+    { _method: "DELETE" },
     { signal }
   );
 }
@@ -774,8 +991,6 @@ export async function fetchEventBracket(
   eventId: string,
   signal?: AbortSignal
 ): Promise<Bracket | null> {
-  if (isMockEnabled()) return null;
-
   try {
     const data = await apiClient.get<ApiEventBracket>(
       `/api/events/${eventId}/bracket`,
@@ -792,24 +1007,11 @@ export async function fetchPoolStandings(
   poolName: string,
   signal?: AbortSignal
 ): Promise<TeamStanding[]> {
-  if (isMockEnabled()) return [];
-
-  const data = await apiClient.get<ApiStandings>(
+  const data = await apiClient.get<ApiPoolStandings>(
     `/api/events/${eventId}/pools/${poolName}/standings`,
     { signal }
   );
-  return data.standings?.map((entry) => ({
-    rank: entry.rank,
-    teamId: String(entry.team_id),
-    teamName: entry.team_name,
-    division: entry.division,
-    wins: entry.wins,
-    losses: entry.losses,
-    ties: entry.ties,
-    trueskillRating: entry.trueskill_rating,
-    gamesBehind: entry.games_behind,
-    pointDifferential: entry.point_differential,
-  })) ?? [];
+  return data.standings?.map(mapStandingEntry) ?? [];
 }
 
 // ─── Locations ───────────────────────────────────────────────────────────────
@@ -818,14 +1020,12 @@ export async function fetchLocations(
   organizationId?: number,
   signal?: AbortSignal
 ): Promise<import("@/types").Location[]> {
-  if (isMockEnabled()) return [];
-
   const path = organizationId
     ? `/api/locations?organization_id=${organizationId}`
     : "/api/locations";
-  const data = await apiClient.get<ApiLocation[]>(path, { signal });
-  if (!Array.isArray(data)) return [];
-  return data
+  const { data: rawData } = await apiClient.getWithMeta<ApiLocation[]>(path, { signal });
+  const locationsData = Array.isArray(rawData) ? rawData : [];
+  return locationsData
     .map((loc) => mapLocation(loc))
     .filter((loc): loc is import("@/types").Location => loc !== undefined);
 }
@@ -836,10 +1036,11 @@ export async function fetchStandingRoster(
   teamId: string,
   signal?: AbortSignal
 ): Promise<import("@/types").TeamMember[]> {
-  if (isMockEnabled()) return [];
-
-  const data = await apiClient.get<ApiTeam>(
-    `/api/teams/${teamId}?fields=standing_roster`,
+  // NOTE: Per actual API testing, /api/teams/{id} does NOT exist (404).
+  // Correct pattern is /api/teams/show?id={id}.
+  const fieldsPart = buildFieldsParam("standing_roster");
+  const { data } = await apiClient.getWithMeta<ApiTeam>(
+    `/api/teams/show?id=${teamId}&${fieldsPart}`,
     { signal }
   );
   return mapTeam(data).standingRoster ?? ([] as import("@/types").TeamMember[]);
@@ -849,10 +1050,11 @@ export async function fetchActiveRoster(
   teamId: string,
   signal?: AbortSignal
 ): Promise<import("@/types").TeamMember[]> {
-  if (isMockEnabled()) return [];
-
-  const data = await apiClient.get<ApiTeam>(
-    `/api/teams/${teamId}?fields=active_roster`,
+  // NOTE: Per actual API testing, /api/teams/{id} does NOT exist (404).
+  // Correct pattern is /api/teams/show?id={id}.
+  const fieldsPart = buildFieldsParam("active_roster");
+  const { data } = await apiClient.getWithMeta<ApiTeam>(
+    `/api/teams/show?id=${teamId}&${fieldsPart}`,
     { signal }
   );
   return mapTeam(data).activeRoster ?? ([] as import("@/types").TeamMember[]);
@@ -862,13 +1064,25 @@ export async function fetchEventRoster(
   eventId: string,
   signal?: AbortSignal
 ): Promise<import("@/types").TeamMember[]> {
-  if (isMockEnabled()) return [];
-
-  const data = await apiClient.get<ApiRegistration>(
+  const { data: rawData } = await apiClient.getWithMeta<ApiRegistration | ApiRegistration[]>(
     `/api/events/${eventId}/roster`,
     { signal }
   );
-  return (data.event_roster ?? []).map(mapRosterMember) as import("@/types").TeamMember[];
+
+  if (!rawData) {
+    return [];
+  }
+
+  const registrations = Array.isArray(rawData) ? rawData : [rawData];
+  const allRosterMembers: import("@/types/api").ApiRosterMember[] = [];
+
+  for (const reg of registrations) {
+    if (reg && Array.isArray(reg.event_roster)) {
+      allRosterMembers.push(...reg.event_roster);
+    }
+  }
+
+  return allRosterMembers.map(mapRosterMember) as import("@/types").TeamMember[];
 }
 
 export async function inviteRosterMember(
@@ -879,7 +1093,7 @@ export async function inviteRosterMember(
 ): Promise<{ success: boolean; invitation_id?: string }> {
   return apiClient.post<{ success: boolean; invitation_id?: string }>(
     `/api/teams/${teamId}/roster/invite`,
-    { email, role },
+    { person_email: email, role },
     { signal }
   );
 }
@@ -900,8 +1114,6 @@ export async function fetchRosterInvitations(
   teamId: string,
   signal?: AbortSignal
 ): Promise<ApiRosterInvitation[]> {
-  if (isMockEnabled()) return [];
-
   return apiClient.get<ApiRosterInvitation[]>(
     `/api/teams/${teamId}/roster/invitations`,
     { signal }
@@ -913,8 +1125,9 @@ export async function cancelRosterInvitation(
   invitationId: string,
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
-  return apiClient.delete<{ success: boolean }>(
+  return apiClient.post<{ success: boolean }>(
     `/api/teams/${teamId}/roster/invitations/${invitationId}`,
+    { _method: "DELETE" },
     { signal }
   );
 }
@@ -925,8 +1138,6 @@ export async function fetchTeamStats(
   teamId: string,
   signal?: AbortSignal
 ): Promise<import("@/types").TeamStats | null> {
-  if (isMockEnabled()) return null;
-
   try {
     const data = await apiClient.get<ApiTeamStats>(
       `/api/teams/${teamId}/stats`,
@@ -955,8 +1166,6 @@ export async function fetchEventAttendanceSurvey(
   eventId: string,
   signal?: AbortSignal
 ): Promise<import("@/types").AttendanceSurvey | null> {
-  if (isMockEnabled()) return null;
-
   try {
     const data = await apiClient.get<ApiAttendanceSurvey>(
       `/api/events/${eventId}/attendance/survey`,
@@ -997,8 +1206,6 @@ export async function fetchEventRosterSettings(
   eventId: string,
   signal?: AbortSignal
 ): Promise<import("@/types").EventRosterSettings | null> {
-  if (isMockEnabled()) return null;
-
   try {
     const data = await apiClient.get<ApiEventRosterSettings>(
       `/api/events/${eventId}/roster/settings`,
@@ -1025,39 +1232,36 @@ export async function fetchRegistrationsByPerson(
   personId: string,
   signal?: AbortSignal
 ): Promise<import("@/types").Registration[]> {
-  if (isMockEnabled()) return MOCK_REGISTRATIONS;
-
-  const data = await apiClient.get<ApiRegistration[]>(
+  const { data: rawData } = await apiClient.getWithMeta<ApiRegistration[]>(
     `/api/persons/${personId}/registrations`,
     { signal }
   );
-  return data.map(mapRegistration);
+  const registrations = Array.isArray(rawData) ? rawData : [];
+  return registrations.map(mapRegistration);
 }
 
 export async function fetchRegistrationsByTeam(
   teamId: string,
   signal?: AbortSignal
 ): Promise<import("@/types").Registration[]> {
-  if (isMockEnabled()) return [];
-
-  const data = await apiClient.get<ApiRegistration[]>(
+  const { data: rawData } = await apiClient.getWithMeta<ApiRegistration[]>(
     `/api/teams/${teamId}/registrations`,
     { signal }
   );
-  return data.map(mapRegistration);
+  const registrations = Array.isArray(rawData) ? rawData : [];
+  return registrations.map(mapRegistration);
 }
 
 export async function fetchRegistrationsByEvent(
   eventId: string,
   signal?: AbortSignal
 ): Promise<import("@/types").Registration[]> {
-  if (isMockEnabled()) return [];
-
-  const data = await apiClient.get<ApiRegistration[]>(
+  const { data: rawData } = await apiClient.getWithMeta<ApiRegistration[]>(
     `/api/events/${eventId}/registrations`,
     { signal }
   );
-  return data.map(mapRegistration);
+  const registrations = Array.isArray(rawData) ? rawData : [];
+  return registrations.map(mapRegistration);
 }
 
 export async function updateRegistrationStatus(
@@ -1065,9 +1269,9 @@ export async function updateRegistrationStatus(
   status: import("@/types").RegistrationStatus,
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
-  return apiClient.put<{ success: boolean }>(
+  return apiClient.post<{ success: boolean }>(
     `/api/registrations/${registrationId}`,
-    { status },
+    { status, _method: "PUT" },
     { signal }
   );
 }
@@ -1079,12 +1283,14 @@ export async function searchPeople(
   limit: number = 20,
   signal?: AbortSignal
 ): Promise<import("@/types").User[]> {
-  if (isMockEnabled()) return [];
-
   const data = await apiClient.get<ApiPerson[]>(
     `/api/persons/search?q=${encodeURIComponent(query)}&limit=${limit}`,
     { signal }
   );
+  if (!Array.isArray(data)) {
+    console.warn("searchPeople: Expected array response, got:", typeof data);
+    return [];
+  }
   return data.map(mapPerson);
 }
 
@@ -1093,12 +1299,14 @@ export async function searchTeams(
   limit: number = 20,
   signal?: AbortSignal
 ): Promise<import("@/types").Team[]> {
-  if (isMockEnabled()) return [];
-
   const data = await apiClient.get<ApiTeam[]>(
     `/api/teams/search?q=${encodeURIComponent(query)}&limit=${limit}`,
     { signal }
   );
+  if (!Array.isArray(data)) {
+    console.warn("searchTeams: Expected array response, got:", typeof data);
+    return [];
+  }
   return data.map(mapTeam);
 }
 
@@ -1114,14 +1322,24 @@ export interface DashboardData {
 export async function fetchDashboardData(
   signal?: AbortSignal
 ): Promise<DashboardData> {
-  const [user, teams, events, registrations] = await Promise.all([
-    fetchCurrentUser(signal),
-    fetchTeams(signal),
-    fetchUpcomingEvents(undefined, 10, signal),
-    fetchRegistrations(signal),
-  ]);
+  let user: User;
+  let teamsResult: PaginatedResponse<Team>;
+  let events: Event[];
+  let registrationsResult: PaginatedResponse<Registration>;
 
-  return { user, teams, events, registrations };
+  try {
+    [user, teamsResult, events, registrationsResult] = await Promise.all([
+      fetchCurrentUser(signal),
+      fetchTeams({}, signal),
+      fetchUpcomingEvents(undefined, 10, signal),
+      fetchRegistrations({}, signal),
+    ]);
+  } catch (error) {
+    console.error("Error fetching dashboard data:", error);
+    throw error;
+  }
+
+  return { user, teams: teamsResult.data, events, registrations: registrationsResult.data };
 }
 
 export interface TeamDetailData {
@@ -1135,15 +1353,29 @@ export async function fetchTeamDetailData(
   teamId: string,
   signal?: AbortSignal
 ): Promise<TeamDetailData> {
-  const [team, roster, upcomingEvents, pastEvents] = await Promise.all([
-    fetchTeam(teamId, signal),
-    fetchTeamRoster(teamId, signal),
-    fetchUpcomingEvents(teamId, 10, signal),
-    fetchPastEvents(teamId, 10, signal),
-  ]);
+  let team: Team | undefined;
+  let roster: TeamMember[];
+  let upcomingEvents: Event[];
+  let pastEvents: Event[];
+
+  try {
+    [team, roster, upcomingEvents, pastEvents] = await Promise.all([
+      fetchTeam(teamId, signal),
+      fetchTeamRoster(teamId, signal),
+      fetchUpcomingEvents(teamId, 10, signal),
+      fetchPastEvents(teamId, 10, signal),
+    ]);
+  } catch (error) {
+    console.error(`Error fetching team detail data for team ${teamId}:`, error);
+    throw error;
+  }
+
+  if (!team) {
+    throw new Error(`Team not found: ${teamId}`);
+  }
 
   return {
-    team: team!,
+    team,
     roster,
     upcomingEvents,
     pastEvents,
@@ -1166,9 +1398,48 @@ export async function fetchEventDetailData(
     fetchEventBracket(eventId, signal),
   ]);
 
+  if (!event) {
+    throw new Error(`Event not found: ${eventId}`);
+  }
+
   return {
-    event: event!,
+    event,
     attendance,
     bracket,
   };
+}
+
+const TEAM_ADMIN_ROLES: TeamRole[] = ["captain", "coach", "assistant_coach", "admin"];
+
+const SCORE_REPORTING_ROLES: TeamRole[] = ["captain"];
+
+export function canUserCreateTeamAnnouncement(team: Team | undefined, user?: User | null): boolean {
+  if (!team?.myMembership) {
+    return false;
+  }
+  if (user?.isTrustedAdmin || user?.isLiteAdmin || user?.isCoordinator) {
+    return true;
+  }
+  return TEAM_ADMIN_ROLES.includes(team.myMembership.role);
+}
+
+export function canUserReportTeamScores(team: Team | undefined, user?: User | null): boolean {
+  if (!team?.myMembership) {
+    return false;
+  }
+  if (user?.isScoreReporter || user?.isCoordinator || user?.isTrustedAdmin) {
+    return true;
+  }
+  return SCORE_REPORTING_ROLES.includes(team.myMembership.role);
+}
+
+export function getUserTeamRole(team: Team | undefined): TeamRole | null {
+  return team?.myMembership?.role ?? null;
+}
+
+export function isUserTeamAdmin(team: Team | undefined): boolean {
+  if (!team?.myMembership) {
+    return false;
+  }
+  return TEAM_ADMIN_ROLES.includes(team.myMembership.role);
 }

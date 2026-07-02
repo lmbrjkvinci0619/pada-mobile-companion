@@ -4,6 +4,7 @@ import { useLocalSearchParams, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useTeam, useEvents } from "@/hooks/useApi";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import type { TeamMember, Event } from "@/types";
 import { ReadOnlyBanner } from "@/components/ui/ReadOnlyBanner";
 import { Avatar } from "@/components/ui/Avatar";
@@ -15,9 +16,10 @@ import { RefreshControl } from "react-native";
 type TeamTab = "roster" | "schedule";
 
 export default function TeamDetailScreen() {
+  useAuthRedirect();
   const { id, tab } = useLocalSearchParams<{ id: string; tab?: string }>();
   const { data: team, isLoading: teamLoading, refetch: refetchTeam } = useTeam(id);
-  const { data: events = [], refetch: refetchEvents } = useEvents(id);
+  const { data: events = [], refetch: refetchEvents } = useEvents({ teamId: id });
 
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<TeamTab>(
@@ -26,8 +28,8 @@ export default function TeamDetailScreen() {
 
   const upcomingEvents = useMemo(
     () => events
-      .filter(e => e.status === "scheduled" || e.status === "in_progress")
-      .sort((a, b) => a.startDate.localeCompare(b.startDate)),
+      .filter(e => (e.status === "scheduled" || e.status === "in_progress") && e.startDate)
+      .sort((a, b) => (a.startDate ?? "").localeCompare(b.startDate ?? "")),
     [events]
   );
 
@@ -160,16 +162,16 @@ export default function TeamDetailScreen() {
           } else {
             const ev = item as Event;
             return (
-              <TouchableOpacity
+<TouchableOpacity
                 className="bg-surface rounded-2xl p-4 mb-3 border border-surface-border/20"
                 onPress={() => router.push(`/events/${ev.id}`)}
               >
                 <View className="flex-row justify-between items-center mb-2">
-                   <Badge label={format(parseISO(ev.startDate), "MMM d")} variant="ghost" />
+                   <Badge label={ev.startDate ? format(parseISO(ev.startDate), "MMM d") : "TBD"} variant="ghost" />
                    <Text className="text-txt-secondary text-[10px] font-black uppercase tracking-widest">
-                     {format(parseISO(ev.startDate), "h:mm a")}
-               </Text>
-             </View>
+                     {ev.startDate ? format(parseISO(ev.startDate), "h:mm a") : ""}
+                 </Text>
+              </View>
                 <Text className="text-txt-primary font-black text-lg mb-1">vs {ev.opponentName || "TBD"}</Text>
                 <Text className="text-txt-secondary text-xs font-semi mb-3">{ev.title}</Text>
 

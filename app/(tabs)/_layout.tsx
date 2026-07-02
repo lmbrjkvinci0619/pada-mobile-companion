@@ -3,6 +3,7 @@ import { Tabs, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { View, Text, ActivityIndicator } from "react-native";
 import { useAuthStore } from "@/store/authStore";
+import { useAnnouncements } from "@/hooks/useApi";
 
 const TabBarBadge = React.memo(function TabBarBadge({ count }: { count: number }) {
   if (count === 0) return null;
@@ -22,7 +23,12 @@ function TabsLoading() {
 }
 
 export default function TabsLayout() {
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated, isLoading, user } = useAuthStore();
+  const { data: announcements = [] } = useAnnouncements(user?.id || "");
+  const unreadCount = useMemo(
+    () => announcements.filter((a) => !a.isRead).length,
+    [announcements]
+  );
 
   if (isLoading) {
     return <TabsLoading />;
@@ -31,6 +37,16 @@ export default function TabsLayout() {
   if (!isAuthenticated) {
     return <Redirect href="/(auth)/login" />;
   }
+
+  const renderHomeIcon = useCallback(
+    ({ color, size }: { color: string; size: number }) => (
+      <View>
+        <Ionicons name="home" size={size} color={color} />
+        <TabBarBadge count={unreadCount} />
+     </View>
+    ),
+    [unreadCount]
+  );
 
   return (
     <Tabs
@@ -57,9 +73,7 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
-          ),
+          tabBarIcon: renderHomeIcon,
         }}
       />
       <Tabs.Screen

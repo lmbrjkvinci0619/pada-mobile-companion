@@ -1,4 +1,4 @@
-import "./global.css";
+import "../global.css";
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_900Black } from "@expo-google-fonts/inter";
 import { Slot } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -158,22 +158,31 @@ export default function RootLayout() {
   }, [isReady, authLoading]);
 
   useEffect(() => {
-    if (isReady && !authLoading && user?.id) {
-      registerForPushNotificationsAsync(user.id).catch(console.error);
-
-      const cleanup = setupNotificationListeners(
-        (notification) => {
-          console.log("Notification received in app:", notification);
-        },
-        (notification, data) => {
-          if (data?.announcementId) {
-            router.push(`/announcements/${data.announcementId}`);
-          }
-        }
-      );
-
-      return cleanup;
+    if (!isReady || authLoading || !user?.id) {
+      return;
     }
+
+    let cancelled = false;
+    registerForPushNotificationsAsync(user.id).catch((e) => {
+      if (!cancelled) console.error("Push registration failed:", e);
+    });
+
+    const cleanup = setupNotificationListeners(
+      (notification) => {
+        if (!cancelled) console.log("Notification received in app:", notification);
+      },
+      (notification, data) => {
+        if (cancelled) return;
+        if (data?.announcementId) {
+          router.push(`/announcements/${data.announcementId}`);
+        }
+      }
+    );
+
+    return () => {
+      cancelled = true;
+      cleanup();
+    };
   }, [isReady, authLoading, user?.id]);
 
   useEffect(() => {

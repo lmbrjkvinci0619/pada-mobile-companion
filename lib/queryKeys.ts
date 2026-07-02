@@ -8,12 +8,15 @@ export const queryKeys = {
   },
   events: {
     all: ["events", "all"] as const,
-    byTeam: (teamId: string) => ["events", "team", teamId] as const,
+    byTeam: (teamId: string, filter?: "upcoming" | "past") => ["events", "team", teamId, ...(filter ? [filter] : [])] as const,
     byId: (id: string) => ["events", "id", id] as const,
   },
   teams: {
     all: ["teams", "all"] as const,
     byId: (id: string) => ["teams", "id", id] as const,
+    roster: (teamId: string) => ["teams", teamId, "roster"] as const,
+    standingRoster: (teamId: string) => ["teams", teamId, "standing_roster"] as const,
+    activeRoster: (teamId: string) => ["teams", teamId, "active_roster"] as const,
   },
   registrations: {
     all: ["registrations", "all"] as const,

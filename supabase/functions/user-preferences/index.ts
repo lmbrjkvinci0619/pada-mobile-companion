@@ -1,7 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const TOPSCORE_BASE_URL = Deno.env.get("EXPO_PUBLIC_TOPSCORE_BASE_URL") || "https://pada.usetopscore.com";
+// TopScore API configuration - must match the mobile app's EXPO_PUBLIC_TOPSCORE_BASE_URL
+// Default: https://pada.usetopscore.com (without /api suffix - paths are appended)
+const TOPSCORE_BASE_URL = Deno.env.get("EXPO_PUBLIC_TOPSCORE_BASE_URL") ?? "https://pada.usetopscore.com";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
@@ -34,9 +36,10 @@ async function validateTopScoreToken(token: string): Promise<{ personId: string;
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!tsRes.ok) return null;
-    const tsData = await tsRes.json();
-    const person = tsData.result[0];
-    return { personId: person.id.toString(), role: person.role };
+    const tsData = await tsRes.json() as { result?: { person_id?: number; role?: string }; status?: string | number };
+    const person = tsData.result;
+    if (!person || !person.person_id) return null;
+    return { personId: String(person.person_id), role: person.role ?? "" };
   } catch {
     return null;
   }

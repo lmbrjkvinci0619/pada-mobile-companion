@@ -3,6 +3,9 @@ CREATE TABLE IF NOT EXISTS teams (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   topscore_id TEXT UNIQUE NOT NULL,
   name TEXT NOT NULL,
+  division TEXT, -- division name for grouping teams
+  sport TEXT DEFAULT 'Ultimate Frisbee',
+  logo_url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -12,9 +15,20 @@ CREATE TABLE IF NOT EXISTS team_members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   team_id UUID REFERENCES teams(id) ON DELETE CASCADE,
   topscore_person_id TEXT NOT NULL,
-  role TEXT DEFAULT 'member', -- 'member', 'captain', 'coach', 'admin'
+  role TEXT DEFAULT 'member', -- 'player', 'captain', 'coach', 'assistant_coach', 'admin', 'chaperone', 'volunteer', 'staff'
   joined_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE (team_id, topscore_person_id)
+);
+
+-- Divisions table for organization-level grouping
+CREATE TABLE IF NOT EXISTS divisions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  topscore_division_id TEXT UNIQUE NOT NULL, -- TopScore division identifier
+  name TEXT NOT NULL,
+  sport TEXT,
+  season TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Announcements table
@@ -48,7 +62,7 @@ CREATE TABLE IF NOT EXISTS user_preferences (
   topscore_person_id TEXT PRIMARY KEY,
   push_enabled BOOLEAN DEFAULT TRUE,
   announcements_enabled BOOLEAN DEFAULT TRUE,
-  announcements_notification_timing TEXT DEFAULT 'immediate',
+  notification_timing TEXT DEFAULT 'immediate',
   announcement_categories TEXT[] DEFAULT ARRAY['all'],
   score_notifications_enabled BOOLEAN DEFAULT TRUE,
   league_announcements_enabled BOOLEAN DEFAULT TRUE,
@@ -82,11 +96,13 @@ DROP POLICY IF EXISTS "No direct inserts for announcements" ON announcements;
 CREATE POLICY "Anyone can read announcements" ON announcements FOR SELECT USING (true);
 CREATE POLICY "No direct inserts for announcements" ON announcements FOR INSERT WITH CHECK (false);
 
--- Add indexes for better query performance
+-- Indexes for announcements
 CREATE INDEX IF NOT EXISTS idx_announcements_target_type_id ON announcements(target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_announcements_target_id ON announcements(target_id);
 CREATE INDEX IF NOT EXISTS idx_announcements_created_at ON announcements(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_announcements_expires_at ON announcements.expires_at;
+CREATE INDEX IF NOT EXISTS idx_announcements_expires_at ON announcements(expires_at);
 CREATE INDEX IF NOT EXISTS idx_announcements_type ON announcements(announcement_type);
+CREATE INDEX IF NOT EXISTS idx_announcements_author_id ON announcements(author_id);
 
 -- 5. Announcement Reads - users can only see/modify their own
 ALTER TABLE announcement_reads ENABLE ROW LEVEL SECURITY;
@@ -119,3 +135,11 @@ CREATE INDEX IF NOT EXISTS idx_announcement_reads_announcement_id ON announcemen
 
 -- Index for user push tokens
 CREATE INDEX IF NOT EXISTS idx_user_push_tokens_person_id ON user_push_tokens(topscore_person_id);
+
+-- Indexes for team_members (critical for join performance)
+CREATE INDEX IF NOT EXISTS idx_team_members_team_id ON team_members(team_id);
+CREATE INDEX IF NOT EXISTS idx_team_members_person_id ON team_members(topscore_person_id);
+
+-- Indexes for teams
+CREATE INDEX IF NOT EXISTS idx_teams_topscore_id ON teams(topscore_id);
+CREATE INDEX IF NOT EXISTS idx_teams_division ON teams(division);

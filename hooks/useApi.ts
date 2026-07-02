@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient, useMutation, UseQueryOptions, UseMutationOptions } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation, UseQueryOptions } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import * as topscore from "@/services/topscore";
 import * as announcements from "@/services/announcements";
@@ -26,16 +26,16 @@ export function useUserById(personId: string, options?: UseQueryOptions<User | n
   });
 }
 
-export function useEvents(teamId?: string, options?: UseQueryOptions<Event[], Error, Event[]>) {
-  const queryKey = teamId
-    ? queryKeys.events.byTeam(teamId)
+export function useEvents(options?: topscore.FetchEventsOptions, queryOptions?: UseQueryOptions<Event[], Error, Event[]>) {
+  const queryKey = options?.teamId
+    ? queryKeys.events.byTeam(options.teamId)
     : queryKeys.events.all;
 
   return useQuery({
     queryKey,
-    queryFn: () => topscore.fetchEvents(teamId),
+    queryFn: () => topscore.fetchEvents(options).then(r => r.data),
     retry: DEFAULT_RETRY,
-    ...options,
+    ...queryOptions,
   });
 }
 
@@ -51,7 +51,7 @@ export function useEvent(eventId: string, options?: UseQueryOptions<Event | unde
 
 export function useUpcomingEvents(teamId?: string, limit: number = 10, options?: UseQueryOptions<Event[], Error, Event[]>) {
   return useQuery({
-    queryKey: teamId ? ["events", "upcoming", teamId] : ["events", "upcoming"],
+    queryKey: queryKeys.events.byTeam(teamId ?? "", "upcoming"),
     queryFn: () => topscore.fetchUpcomingEvents(teamId, limit),
     retry: DEFAULT_RETRY,
     ...options,
@@ -60,19 +60,19 @@ export function useUpcomingEvents(teamId?: string, limit: number = 10, options?:
 
 export function usePastEvents(teamId?: string, limit: number = 10, options?: UseQueryOptions<Event[], Error, Event[]>) {
   return useQuery({
-    queryKey: teamId ? ["events", "past", teamId] : ["events", "past"],
+    queryKey: queryKeys.events.byTeam(teamId ?? "", "past"),
     queryFn: () => topscore.fetchPastEvents(teamId, limit),
     retry: DEFAULT_RETRY,
     ...options,
   });
 }
 
-export function useTeams(options?: UseQueryOptions<Team[], Error, Team[]>) {
+export function useTeams(options?: topscore.FetchTeamsOptions, queryOptions?: UseQueryOptions<Team[], Error, Team[]>) {
   return useQuery({
     queryKey: queryKeys.teams.all,
-    queryFn: () => topscore.fetchTeams(),
+    queryFn: () => topscore.fetchTeams(options).then(r => r.data),
     retry: DEFAULT_RETRY,
-    ...options,
+    ...queryOptions,
   });
 }
 
@@ -88,7 +88,7 @@ export function useTeam(teamId: string, options?: UseQueryOptions<Team | undefin
 
 export function useTeamRoster(teamId: string, options?: UseQueryOptions<TeamMember[], Error>) {
   return useQuery({
-    queryKey: ["teams", teamId, "roster"],
+    queryKey: queryKeys.teams.roster(teamId),
     queryFn: () => topscore.fetchTeamRoster(teamId),
     enabled: !!teamId,
     retry: DEFAULT_RETRY,
@@ -99,7 +99,7 @@ export function useTeamRoster(teamId: string, options?: UseQueryOptions<TeamMemb
 
 export function useStandingRoster(teamId: string, options?: UseQueryOptions<TeamMember[], Error>) {
   return useQuery({
-    queryKey: ["teams", teamId, "standing_roster"],
+    queryKey: queryKeys.teams.standingRoster(teamId),
     queryFn: () => topscore.fetchStandingRoster(teamId),
     enabled: !!teamId,
     retry: DEFAULT_RETRY,
@@ -110,7 +110,7 @@ export function useStandingRoster(teamId: string, options?: UseQueryOptions<Team
 
 export function useActiveRoster(teamId: string, options?: UseQueryOptions<TeamMember[], Error>) {
   return useQuery({
-    queryKey: ["teams", teamId, "active_roster"],
+    queryKey: queryKeys.teams.activeRoster(teamId),
     queryFn: () => topscore.fetchActiveRoster(teamId),
     enabled: !!teamId,
     retry: DEFAULT_RETRY,
@@ -119,13 +119,13 @@ export function useActiveRoster(teamId: string, options?: UseQueryOptions<TeamMe
   });
 }
 
-export function useRegistrations(options?: UseQueryOptions<Registration[], Error, Registration[]>) {
+export function useRegistrations(options?: topscore.FetchRegistrationsOptions, queryOptions?: UseQueryOptions<Registration[], Error, Registration[]>) {
   return useQuery({
     queryKey: queryKeys.registrations.all,
-    queryFn: () => topscore.fetchRegistrations(),
+    queryFn: () => topscore.fetchRegistrations(options ?? {}).then(r => r.data),
     retry: DEFAULT_RETRY,
     staleTime: 2 * 60 * 60 * 1000,
-    ...options,
+    ...queryOptions,
   });
 }
 
@@ -161,11 +161,11 @@ export function useEventAttendanceSurvey(eventId: string, options?: UseQueryOpti
 
 export function useAnnouncements(userId: string, options?: UseQueryOptions<Announcement[], Error>) {
   return useQuery({
-    queryKey: queryKeys.announcements.all(userId),
+    queryKey: queryKeys.announcements.all(userId || "none"),
     queryFn: () => announcements.fetchAnnouncements(userId).then((r) => r.data),
     enabled: !!userId,
     retry: DEFAULT_RETRY,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
     ...options,
   });
 }
@@ -222,18 +222,29 @@ export function useInvalidateRegistrations() {
 }
 
 export function useUpdateProfile() {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ personId, updates }: { personId: string; updates: Partial<{ first_name: string; last_name: string; phone: string; avatar_url: string; about: string }> }) =>
+    mutationFn: ({ personId, updates }: { personId: string; updates: Partial<{ first_name: string; last_name: string; phone_number: string; avatar_url: string; about: string }> }) =>
       topscore.updateProfile(personId, updates),
     retry: 1,
+    onSuccess: (_data, { personId }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.byId(personId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.user });
+    },
   });
 }
 
 export function useUpdateAttendance() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ eventId, status, notes }: { eventId: string; status: "attending" | "declined" | "maybe"; notes?: string }) =>
       topscore.updateAttendance(eventId, status, notes),
     retry: 1,
+    onSuccess: (_data, { eventId }) => {
+      queryClient.invalidateQueries({ queryKey: ["events", eventId, "attendance"] });
+      queryClient.invalidateQueries({ queryKey: ["event", eventId, "detail"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
   });
 }
 

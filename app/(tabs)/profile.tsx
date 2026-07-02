@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, Redirect } from "expo-router";
@@ -8,19 +8,21 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect } from "react";
 import { EXTERNAL_URLS, openUrl } from "@/lib/urlUtils";
 
 export default function ProfileScreen() {
   const { user, logout, isAuthenticated } = useAuthStore();
   const { notifications, loadPreferences } = useSettingsStore();
   const router = useRouter();
+  const lastLoadedUserId = useRef<string | null>(null);
 
   useEffect(() => {
-    if (user?.id) {
-      loadPreferences(user.id);
+    const userId = user?.id;
+    if (userId && userId !== lastLoadedUserId.current) {
+      lastLoadedUserId.current = userId;
+      loadPreferences(userId);
     }
-  }, [user?.id]);
+  }, [user?.id, loadPreferences]);
 
   if (!isAuthenticated) {
     return <Redirect href="/(auth)/login" />;

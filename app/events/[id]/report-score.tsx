@@ -4,10 +4,12 @@ import { useLocalSearchParams, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
-import { fetchEvent, reportScore, updateScore } from "@/services/topscore";
+import { useEvent, useTeam } from "@/hooks/useApi";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
+import { reportScore, updateScore, canUserReportTeamScores } from "@/services/topscore";
 import { invalidateCache } from "@/lib/apiClient";
 import { invalidateQueries } from "@/lib/queryClient";
-import type { Event, EventStatus } from "@/types";
+import type { EventStatus } from "@/types";
 import { Button } from "@/components/ui/Button";
 
 function ScoreAdjuster({
@@ -44,9 +46,13 @@ function ScoreAdjuster({
 }
 
 export default function ReportScoreScreen() {
+  useAuthRedirect();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuthStore();
-  const [event, setEvent] = useState<Event | null>(null);
+  const { data: eventData } = useEvent(id);
+  const event = eventData ?? null;
+  const eventTeamId = event?.teamId;
+  const { data: team } = useTeam(eventTeamId ?? "");
 
   const [homeScore, setHomeScore] = useState(0);
   const [awayScore, setAwayScore] = useState(0);
@@ -54,32 +60,26 @@ export default function ReportScoreScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
-    fetchEvent(id as string).then((e) => {
-      if (e) {
-        setEvent(e);
-        if (e.score) {
-          setHomeScore(e.score.homeScore);
-          setAwayScore(e.score.awayScore);
-        }
-        if (e.status === "completed" || e.status === "cancelled") {
-          setStatus(e.status);
-        } else if (e.status === "scheduled") {
-          setStatus("in_progress");
-        }
-      }
-    });
-  }, [id]);
+    if (!event) return;
+    if (event.score) {
+      setHomeScore(event.score.homeScore);
+      setAwayScore(event.score.awayScore);
+    }
+    if (event.status === "completed" || event.status === "cancelled") {
+      setStatus(event.status);
+    } else if (event.status === "scheduled") {
+      setStatus("in_progress");
+    }
+  }, [event]);
 
-  const isAuthorized =
-    user?.role === "captain" || user?.role === "league_admin";
+  const isAuthorized = canUserReportTeamScores(team, user);
 
   const handleSubmit = async () => {
     if (!event) return;
     if (!isAuthorized) {
       Alert.alert(
         "Permission Required",
-        "Only team captains and league admins can report scores."
+        "Only team captains (for this specific team) may report scores."
       );
       return;
     }
@@ -96,14 +96,13 @@ export default function ReportScoreScreen() {
     setIsSubmitting(true);
     try {
       const result = event.score
-        ? await updateScore(event.id, homeScore, awayScore, status)
+        ? await updateScore(event.id, homeScore, awayScore, false, status)
         : await reportScore(event.id, homeScore, awayScore, false, status);
 
-      if (result?.success !== false) {
+if (result?.success !== false) {
         invalidateCache(`/api/events/${event.id}`);
         invalidateQueries(["events", "id", event.id]);
         invalidateQueries(["events", "all"]);
-        invalidateQueries(["event", event.id, "detail"]);
         Alert.alert("Score Submitted", "The score has been reported.", [
           { text: "OK", onPress: () => router.back() },
         ]);
@@ -132,13 +131,13 @@ export default function ReportScoreScreen() {
         className="flex-1 bg-bg items-center justify-center px-6"
         edges={["top", "bottom"]}
       >
-        <Ionicons name="lock-closed" size={48} color="#E53935" />
-        <Text className="text-txt-primary text-xl font-bold mt-4 text-center">
-          Permission Required
-       </Text>
-        <Text className="text-txt-muted text-center mt-2">
-          Only team captains and league admins can report scores.
-       </Text>
+          <Ionicons name="lock-closed" size={48} color="#E53935" />
+          <Text className="text-txt-primary text-xl font-bold mt-4 text-center">
+            Permission Required
+         </Text>
+          <Text className="text-txt-muted text-center mt-2">
+            Only the captain of this specific team (and authorized event coordinators or score reporters) may report scores.
+         </Text>
         <Button
           label="Go Back"
           variant="outline"

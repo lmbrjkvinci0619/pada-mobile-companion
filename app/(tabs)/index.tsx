@@ -29,9 +29,9 @@ function eventDateLabel(dateStr: string): string {
 }
 
 const MyNextGameCard = React.memo(function MyNextGameCard({ event }: { event: Event }) {
-  const eventDate = parseISO(event.startDate);
-  const dateLabel = eventDateLabel(event.startDate);
-  const timeLabel = format(eventDate, "h:mm a");
+  const eventDate = event.startDate ? parseISO(event.startDate) : new Date();
+  const dateLabel = event.startDate ? eventDateLabel(event.startDate) : "Date TBD";
+  const timeLabel = event.startDate ? format(eventDate, "h:mm a") : "";
 
   return (
     <Card className="p-0 overflow-hidden border border-primary-500/30">
@@ -87,8 +87,8 @@ const MyNextGameCard = React.memo(function MyNextGameCard({ event }: { event: Ev
 });
 
 const PublicEventCard = React.memo(function PublicEventCard({ event }: { event: Event }) {
-  const eventDate = parseISO(event.startDate);
-  const dateLabel = eventDateLabel(event.startDate);
+  const eventDate = event.startDate ? parseISO(event.startDate) : new Date();
+  const dateLabel = event.startDate ? eventDateLabel(event.startDate) : "Date TBD";
 
   return (
     <TouchableOpacity
@@ -204,8 +204,8 @@ export default function HomeScreen() {
   const upcomingGames = useMemo(
     () =>
       events
-        .filter((e) => e.type === "game" && (e.status === "scheduled" || e.status === "in_progress"))
-        .sort((a, b) => a.startDate.localeCompare(b.startDate))
+        .filter((e) => e.type === "game" && (e.status === "scheduled" || e.status === "in_progress") && e.startDate)
+        .sort((a, b) => (a.startDate ?? "").localeCompare(b.startDate ?? ""))
         .slice(0, 6),
     [events]
   );
@@ -213,8 +213,8 @@ export default function HomeScreen() {
   const publicEvents = useMemo(
     () =>
       events
-        .filter((e) => e.status === "scheduled")
-        .sort((a, b) => a.startDate.localeCompare(b.startDate))
+        .filter((e) => e.status === "scheduled" && e.startDate)
+        .sort((a, b) => (a.startDate ?? "").localeCompare(b.startDate ?? ""))
         .slice(0, 6),
     [events]
   );
@@ -236,19 +236,20 @@ export default function HomeScreen() {
 
     const userTeamIds = registrations
       .filter(r => r.status === "accepted" && r.teamId)
-      .map(r => r.teamId);
+      .map(r => r.teamId as string);
 
     if (userTeamIds.length === 0) return null;
 
     const myGames = events.filter(
       e => e.type === "game" &&
-           userTeamIds.includes(e.teamId) &&
-           e.status === "scheduled"
+           e.teamId != null && userTeamIds.includes(e.teamId) &&
+           e.status === "scheduled" &&
+           e.startDate
     );
 
     if (myGames.length === 0) return null;
 
-    return myGames.sort((a, b) => a.startDate.localeCompare(b.startDate))[0];
+    return myGames.sort((a, b) => (a.startDate ?? "").localeCompare(b.startDate ?? ""))[0];
   }, [events, registrations, isAuthenticated]);
 
   const liveEvent = useMemo(
@@ -487,13 +488,13 @@ export default function HomeScreen() {
                         >
                           <View className="flex-row items-center justify-between mb-4">
                             <Badge
-                              label={ev.status === "in_progress" ? "LIVE" : eventDateLabel(ev.startDate)}
+                              label={ev.status === "in_progress" ? "LIVE" : (ev.startDate ? eventDateLabel(ev.startDate) : "Date TBD")}
                               variant={ev.status === "in_progress" ? "ghost" : "primary"}
                               className={ev.status === "in_progress" ? "bg-white/20 border-white/40" : ""}
                             />
                             {ev.status !== "in_progress" && (
                               <Text className="text-txt-secondary text-[10px] font-bold uppercase tracking-widest">
-                                {format(parseISO(ev.startDate), "h:mm a")}
+                                {ev.startDate ? format(parseISO(ev.startDate), "h:mm a") : ""}
                               </Text>
                             )}
                           </View>

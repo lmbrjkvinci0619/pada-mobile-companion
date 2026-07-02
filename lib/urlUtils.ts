@@ -1,9 +1,40 @@
 import { Linking } from "react-native";
 import { TOPSCORE_BASE_URL, PADA_ORG_URL } from "@/constants/config";
 
+/**
+ * Constructs a TopScore URL from a path.
+ *
+ * IMPORTANT: TopScore API has two URL conventions:
+ * 1. Base URL without /api suffix (RECOMMENDED): https://pada.usetopscore.com
+ *    - Paths should include /api prefix: /api/events
+ * 2. Base URL with /api suffix: https://pada.usetopscore.com/api
+ *    - Paths should NOT include /api prefix: /events
+ *
+ * This function handles BOTH conventions by checking if the base URL already
+ * contains /api. If it does, we strip the /api from paths to avoid duplication.
+ * If it doesn't, we ensure paths start with /api.
+ */
 export function getTopScoreUrl(path: string): string {
-  const base = TOPSCORE_BASE_URL.replace("/api", "");
-  return `${base}${path}`;
+  const base = TOPSCORE_BASE_URL.endsWith("/api")
+    ? TOPSCORE_BASE_URL.slice(0, -3)
+    : TOPSCORE_BASE_URL.endsWith("/api/")
+    ? TOPSCORE_BASE_URL.slice(0, -4)
+    : TOPSCORE_BASE_URL;
+
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+
+  const hasApiInBase = TOPSCORE_BASE_URL.includes("/api");
+  if (hasApiInBase) {
+    if (normalizedPath.startsWith("/api")) {
+      return `${base}${normalizedPath}`;
+    }
+    return `${base}/api${normalizedPath}`;
+  }
+
+  if (!normalizedPath.startsWith("/api")) {
+    return `${base}/api${normalizedPath}`;
+  }
+  return `${base}${normalizedPath}`;
 }
 
 export function getEventUrl(eventSlug: string): string {
@@ -22,18 +53,26 @@ export function getTeamsPageUrl(): string {
   return `${PADA_ORG_URL}/t`;
 }
 
-export function getRegistrationUrl(registrationId: string, eventId?: string, teamId?: string): string {
+export function getRegistrationUrl(registrationId: string, eventId?: string, teamId?: string, leagueId?: string): string {
   if (eventId) {
     return getTopScoreUrl(`/events/${eventId}`);
   }
   if (teamId) {
     return getTopScoreUrl(`/teams/${teamId}`);
   }
+  if (leagueId) {
+    return getTopScoreUrl(`/leagues/${leagueId}`);
+  }
   return getEventsPageUrl();
 }
 
-export function openRegistrationInBrowser(registrationId: string, eventId?: string, teamId?: string): void {
-  const url = getRegistrationUrl(registrationId, eventId, teamId);
+export function openRegistrationInBrowser(
+  registrationId: string,
+  eventId?: string,
+  teamId?: string,
+  leagueId?: string
+): void {
+  const url = getRegistrationUrl(registrationId, eventId, teamId, leagueId);
   Linking.openURL(url).catch((err) => {
     console.error("Failed to open URL:", err);
   });

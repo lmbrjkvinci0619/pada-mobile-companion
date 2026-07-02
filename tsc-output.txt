@@ -1,0 +1,4 @@
+﻿
+> pada-mobile-companion@1.0.0 tsc
+> tsc --noEmit
+

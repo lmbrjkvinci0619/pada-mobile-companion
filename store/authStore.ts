@@ -11,7 +11,6 @@ import {
 import { fetchCurrentUser } from "@/services/topscore";
 import { queryClient } from "@/lib/queryClient";
 import { clearCache as clearApiCache, setCacheUserContext } from "@/lib/apiClient";
-import { USE_MOCK_DATA } from "@/constants/mockData";
 import { clearLoginRateLimit } from "@/lib/validation";
 import { unregisterAllPushTokensForUser } from "@/services/announcements";
 
@@ -37,14 +36,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initialize: async () => {
     set({ isLoading: true });
     try {
-      if (USE_MOCK_DATA) {
-        const user = await fetchCurrentUser();
-        await saveUser(user);
-        setCacheUserContext(user.id);
-        set({ user, isAuthenticated: true, isLoading: false });
-        return;
-      }
-
       const [tokens, cachedUser] = await Promise.all([
         loadTokens(),
         loadUser(),
@@ -52,6 +43,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (tokens) {
         if (cachedUser) {
+          const previousContext = useAuthStore.getState().user?.id ?? null;
+          if (previousContext && previousContext !== cachedUser.id) {
+            queryClient.clear();
+            clearApiCache();
+          }
           setCacheUserContext(cachedUser.id);
           set({ user: cachedUser, isAuthenticated: true, isLoading: false });
         } else {
@@ -75,15 +71,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (email: string, password: string, rememberMe: boolean = true) => {
     set({ isLoading: true, error: null });
     try {
-      if (USE_MOCK_DATA) {
-        const user = await fetchCurrentUser();
-        if (rememberMe) {
-          await saveUser(user);
-        }
-        setCacheUserContext(user.id);
-        set({ user, isAuthenticated: true, isLoading: false });
-        return true;
-      }
+      const previousContext = get().user?.id ?? null;
 
       const result = await loginWithCredentials(email, password, rememberMe);
       if (!result.success) {
@@ -92,6 +80,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       const user = await fetchCurrentUser();
+      if (previousContext && previousContext !== user.id) {
+        queryClient.clear();
+        clearApiCache();
+      }
       if (rememberMe) {
         await saveUser(user);
       }

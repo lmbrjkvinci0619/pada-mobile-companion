@@ -55,8 +55,7 @@ export function checkLoginRateLimit(identifier: string): { allowed: boolean; ret
   }
 
   if (entry.count >= LOGIN_MAX_ATTEMPTS) {
-    const retryAfterMs = entry.resetAt - now + LOGIN_COOLDOWN_MS;
-    return { allowed: false, retryAfterMs };
+    return { allowed: false, retryAfterMs: entry.resetAt - now + LOGIN_COOLDOWN_MS };
   }
 
   entry.count++;

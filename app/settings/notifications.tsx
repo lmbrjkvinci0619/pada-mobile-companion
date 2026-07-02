@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useSettingsStore } from "@/store/settingsStore";
 import { fetchUserPreferences, saveUserPreferences } from "@/services/preferences";
 import { clearHiddenAnnouncements, getHiddenAnnouncementCount } from "@/services/announcements";
@@ -153,6 +154,7 @@ const QuietHoursButton = ({
 );
 
 export default function NotificationSettingsScreen() {
+  useAuthRedirect();
   const { user } = useAuthStore();
   const {
     notifications,
@@ -221,13 +223,13 @@ export default function NotificationSettingsScreen() {
   };
 
   const handleRefresh = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id || hasChanges) return;
     setIsRefreshing(true);
     await loadPreferences(user.id);
     setIsRefreshing(false);
-  }, [user?.id]);
+  }, [user?.id, hasChanges, loadPreferences]);
 
-  const handleReset = () => {
+  const handleReset = async () => {
     Alert.alert(
       "Reset Settings",
       "Are you sure you want to reset all notification settings to defaults?",
@@ -236,7 +238,7 @@ export default function NotificationSettingsScreen() {
         {
           text: "Reset",
           style: "destructive",
-          onPress: () => {
+          onPress: async () => {
             const defaults: NotificationPreferences = {
               pushEnabled: true,
               announcementsEnabled: true,
@@ -249,6 +251,10 @@ export default function NotificationSettingsScreen() {
               quietHoursEnd: undefined,
             };
             setLocalNotifications(defaults);
+            if (user?.id) {
+              setNotifications(defaults);
+              await savePreferences(user.id);
+            }
           },
         },
       ]

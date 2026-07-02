@@ -33,10 +33,9 @@ export async function fetchUserPreferences(userId: string): Promise<UserPreferen
     const token = await getValidAccessToken();
 
     if (token) {
-      const body: Record<string, unknown> = { topscore_person_id: userId, action: "get" };
-      if (token) body.topscore_token = token;
-
-      const { data, error } = await supabase.functions.invoke("user-preferences", { body });
+      const { data, error } = await supabase.functions.invoke("user-preferences", {
+        body: { topscore_person_id: userId, topscore_token: token, action: "get" },
+      });
 
       if (error) {
         const errorMessage = error.message || String(error);
@@ -81,17 +80,44 @@ export async function saveUserPreferences(
 
     const currentPrefs = useSettingsStore.getState().notifications;
 
-    const prefsData = {
-      push_enabled: preferences.pushEnabled ?? currentPrefs.pushEnabled ?? true,
-      announcements_enabled: preferences.announcementsEnabled ?? currentPrefs.announcementsEnabled ?? true,
-      league_announcements_enabled: preferences.leagueAnnouncementsEnabled ?? currentPrefs.leagueAnnouncementsEnabled ?? true,
-      game_announcements_enabled: preferences.gameAnnouncementsEnabled ?? currentPrefs.gameAnnouncementsEnabled ?? true,
-      pada_org_announcements_enabled: preferences.padaOrgAnnouncementsEnabled ?? currentPrefs.padaOrgAnnouncementsEnabled ?? true,
-      score_notifications_enabled: preferences.scoreNotificationsEnabled ?? currentPrefs.scoreNotificationsEnabled ?? true,
-      schedule_reminders_enabled: preferences.scheduleRemindersEnabled ?? currentPrefs.scheduleRemindersEnabled ?? true,
-      quiet_hours_start: preferences.quietHoursStart !== undefined ? preferences.quietHoursStart : (currentPrefs.quietHoursStart ?? null),
-      quiet_hours_end: preferences.quietHoursEnd !== undefined ? preferences.quietHoursEnd : (currentPrefs.quietHoursEnd ?? null),
-    };
+    const has = <K extends keyof NotificationPreferences>(key: K): boolean =>
+      Object.prototype.hasOwnProperty.call(preferences, key);
+
+    const prefsData: Record<string, unknown> = {};
+
+    if (has("pushEnabled")) prefsData.push_enabled = preferences.pushEnabled;
+    else if (currentPrefs.pushEnabled !== undefined) prefsData.push_enabled = currentPrefs.pushEnabled;
+    else prefsData.push_enabled = true;
+
+    if (has("announcementsEnabled")) prefsData.announcements_enabled = preferences.announcementsEnabled;
+    else if (currentPrefs.announcementsEnabled !== undefined) prefsData.announcements_enabled = currentPrefs.announcementsEnabled;
+    else prefsData.announcements_enabled = true;
+
+    if (has("leagueAnnouncementsEnabled")) prefsData.league_announcements_enabled = preferences.leagueAnnouncementsEnabled;
+    else if (currentPrefs.leagueAnnouncementsEnabled !== undefined) prefsData.league_announcements_enabled = currentPrefs.leagueAnnouncementsEnabled;
+    else prefsData.league_announcements_enabled = true;
+
+    if (has("gameAnnouncementsEnabled")) prefsData.game_announcements_enabled = preferences.gameAnnouncementsEnabled;
+    else if (currentPrefs.gameAnnouncementsEnabled !== undefined) prefsData.game_announcements_enabled = currentPrefs.gameAnnouncementsEnabled;
+    else prefsData.game_announcements_enabled = true;
+
+    if (has("padaOrgAnnouncementsEnabled")) prefsData.pada_org_announcements_enabled = preferences.padaOrgAnnouncementsEnabled;
+    else if (currentPrefs.padaOrgAnnouncementsEnabled !== undefined) prefsData.pada_org_announcements_enabled = currentPrefs.padaOrgAnnouncementsEnabled;
+    else prefsData.pada_org_announcements_enabled = true;
+
+    if (has("scoreNotificationsEnabled")) prefsData.score_notifications_enabled = preferences.scoreNotificationsEnabled;
+    else if (currentPrefs.scoreNotificationsEnabled !== undefined) prefsData.score_notifications_enabled = currentPrefs.scoreNotificationsEnabled;
+    else prefsData.score_notifications_enabled = true;
+
+    if (has("scheduleRemindersEnabled")) prefsData.schedule_reminders_enabled = preferences.scheduleRemindersEnabled;
+    else if (currentPrefs.scheduleRemindersEnabled !== undefined) prefsData.schedule_reminders_enabled = currentPrefs.scheduleRemindersEnabled;
+    else prefsData.schedule_reminders_enabled = true;
+
+    if (has("quietHoursStart")) prefsData.quiet_hours_start = preferences.quietHoursStart ?? null;
+    else prefsData.quiet_hours_start = currentPrefs.quietHoursStart ?? null;
+
+    if (has("quietHoursEnd")) prefsData.quiet_hours_end = preferences.quietHoursEnd ?? null;
+    else prefsData.quiet_hours_end = currentPrefs.quietHoursEnd ?? null;
 
     if (token) {
       const { error } = await supabase.functions.invoke("user-preferences", {
@@ -204,7 +230,6 @@ export async function saveAndSyncPreferences(
   const success = await saveUserPreferences(userId, preferences);
 
   if (success) {
-    useSettingsStore.getState().setNotifications(preferences);
     useSettingsStore.getState().updateLastSync();
   }
 

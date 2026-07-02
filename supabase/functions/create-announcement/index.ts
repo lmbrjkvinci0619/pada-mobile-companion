@@ -1,13 +1,37 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const TOPSCORE_BASE_URL = Deno.env.get("EXPO_PUBLIC_TOPSCORE_BASE_URL") || "https://pada.usetopscore.com";
+// TopScore API configuration - must match the mobile app's EXPO_PUBLIC_TOPSCORE_BASE_URL
+// Default: https://pada.usetopscore.com (without /api suffix - paths are appended)
+const TOPSCORE_BASE_URL = Deno.env.get("EXPO_PUBLIC_TOPSCORE_BASE_URL") ?? "https://pada.usetopscore.com";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 const ANNOUNCEMENT_TARGET_TYPES: readonly string[] = ["league", "division", "team"];
 const ANNOUNCEMENT_TYPES: readonly string[] = ["pada_org", "league_longterm", "game"];
-const VALID_AUTH_ROLES: readonly string[] = ["league_admin", "team_captain", "member"];
+const VALID_AUTH_ROLES: readonly string[] = ["league_admin", "team_captain", "captain", "coach", "team_admin"];
+
+function normalizeRole(role: string): "league_admin" | "team_captain" {
+  switch (role) {
+    case "league_admin":
+    case "admin":
+    case "lite_admin":
+    case "trusted_admin":
+      return "league_admin";
+    case "team_captain":
+    case "captain":
+    case "coach":
+    case "team_admin":
+      return "team_captain";
+    case "assistant_coach":
+    case "chaperone":
+    case "volunteer":
+    case "staff":
+    case "player":
+    default:
+      return "team_captain";
+  }
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -57,16 +81,22 @@ serve(async (req) => {
       });
     }
 
-    const tsData = await tsRes.json();
-    const person = tsData.result[0];
-    const personId = person.id.toString();
-    const personName = `${person.first_name} ${person.last_name}`;
+    const tsData = await tsRes.json() as { result?: { person_id?: number; first_name?: string; last_name?: string; role?: string; is_admin?: boolean }; status?: string | number };
+    const person = tsData.result;
+    if (!person || !person.person_id) {
+      return new Response(JSON.stringify({ error: "Invalid TopScore response" }), {
+        status: 502,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const personId = String(person.person_id);
+    const personName = `${person.first_name ?? ""} ${person.last_name ?? ""}`.trim();
 
     // PADA org announcements require league_admin role and are always global
     let finalTargetType = targetType;
     let finalTargetId = targetId;
     if (finalAnnouncementType === "pada_org") {
-      if (person.role !== "admin" && !person.is_admin) {
+      if (!person.is_admin) {
         return new Response(JSON.stringify({ error: "Only league admins can create PADA organization announcements" }), {
           status: 403,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -92,11 +122,11 @@ serve(async (req) => {
 
       if (memberData && VALID_AUTH_ROLES.includes(memberData.role)) {
         canCreate = true;
-        authorRole = memberData.role;
+        authorRole = normalizeRole(memberData.role);
       }
     } else if (finalTargetType === "league" || finalTargetType === "division") {
-      // For league/division, check if user has global admin role in our DB or TopScore
-      if (person.role === "admin" || person.is_admin) {
+      // For league/division, check if user has admin status in TopScore
+      if (person.is_admin) {
         canCreate = true;
         authorRole = "league_admin";
       }

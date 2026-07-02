@@ -1,5 +1,6 @@
 export { useErrorHandler, useRefetchOnError } from "./useErrorHandler";
 export { useOffline, useOnline } from "./useOffline";
+export { useAuthRedirect } from "./useAuthRedirect";
 export {
   useUser,
   useUserById,

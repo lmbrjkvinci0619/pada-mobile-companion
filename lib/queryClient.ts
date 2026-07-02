@@ -1,18 +1,27 @@
 import { QueryClient } from "@tanstack/react-query";
 import { CACHE_CONFIG, REQUEST_CONFIG } from "@/constants/cache";
+import { AuthError } from "./errors";
+
+function shouldRetry(failureCount: number, error: unknown): boolean {
+  if (error instanceof AuthError) return false;
+  return failureCount < REQUEST_CONFIG.maxRetries;
+}
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: CACHE_CONFIG.defaultStaleTime,
       gcTime: CACHE_CONFIG.defaultGcTime,
-      retry: REQUEST_CONFIG.maxRetries,
+      retry: shouldRetry,
       retryDelay: (attemptIndex) => Math.min(REQUEST_CONFIG.retryDelayBase * 2 ** attemptIndex, REQUEST_CONFIG.maxRetryDelay),
       refetchOnWindowFocus: true,
       refetchOnReconnect: true,
     },
     mutations: {
-      retry: 2,
+      retry: (failureCount, error) => {
+        if (error instanceof AuthError) return false;
+        return failureCount < 2;
+      },
     },
   },
 });

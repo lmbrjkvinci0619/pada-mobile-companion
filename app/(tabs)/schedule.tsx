@@ -10,6 +10,13 @@ import type { Event } from "@/types";
 import { Card } from "@/components/ui/Card";
 import { LinearGradient } from "expo-linear-gradient";
 
+function isSameDayLocal(eventDateStr: string | undefined, selectedDateStr: string): boolean {
+  if (!eventDateStr) return false;
+  const eventDate = parseISO(eventDateStr);
+  const selectedDate = parseISO(selectedDateStr + "T12:00:00");
+  return isSameDay(eventDate, selectedDate);
+}
+
 const CALENDAR_THEME = Object.freeze({
   calendarBackground: "#161B22",
   textSectionTitleColor: "#8B949E",
@@ -30,6 +37,9 @@ const CALENDAR_THEME = Object.freeze({
 const EVENT_DOT_COLOR = "#1E88E5";
 
 const EventCard = React.memo(function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
+  const startDateDisplay = event.startDate ? format(parseISO(event.startDate), "h:mm") : "--:--";
+  const amPmDisplay = event.startDate ? format(parseISO(event.startDate), "a") : "";
+
   return (
     <TouchableOpacity onPress={onPress} className="mb-4">
       <Card className="flex-row items-center p-0 overflow-hidden bg-surface-raised border border-surface-border/30">
@@ -37,12 +47,12 @@ const EventCard = React.memo(function EventCard({ event, onPress }: { event: Eve
           colors={["#21262D", "#161B22"]}
           className="w-16 items-center justify-center border-r border-surface-overlay h-full py-4"
         >
-          <Text className="text-txt-primary font-black text-base">{format(parseISO(event.startDate), "h:mm")}</Text>
-          <Text className="text-primary-300 text-[10px] font-black uppercase">{format(parseISO(event.startDate), "a")}</Text>
+          <Text className="text-txt-primary font-black text-base">{startDateDisplay}</Text>
+          <Text className="text-primary-300 text-[10px] font-black uppercase">{amPmDisplay}</Text>
         </LinearGradient>
         <View className="flex-1 p-4">
           <Text className="text-txt-primary font-black text-base" numberOfLines={1}>{event.title}</Text>
-          <Text className="text-txt-secondary text-sm font-semi mt-0.5">{event.teamName}</Text>
+          <Text className="text-txt-secondary text-sm font-semi mt-0.5">{event.teamName ?? "Team TBD"}</Text>
         </View>
         <View className="pr-4">
           <Ionicons name="chevron-forward" size={18} color="#30363D" />
@@ -60,30 +70,32 @@ export default function ScheduleScreen() {
   const eventDates = useMemo(() => {
     const dates = new Set<string>();
     for (const ev of events) {
-      dates.add(format(parseISO(ev.startDate), "yyyy-MM-dd"));
+      if (ev.startDate) {
+        dates.add(format(parseISO(ev.startDate), "yyyy-MM-dd"));
+      }
     }
     return dates;
   }, [events]);
 
   const markedDates = useMemo(() => {
     const marks: Record<string, { marked?: boolean; dotColor?: string; selected?: boolean; selectedColor?: string }> = {};
-    
+
     for (const dateStr of eventDates) {
       marks[dateStr] = { marked: true, dotColor: EVENT_DOT_COLOR };
     }
-    
+
     const selected = marks[selectedDate];
     marks[selectedDate] = {
       ...(selected || {}),
       selected: true,
       selectedColor: "#1E88E5",
     };
-    
+
     return marks;
   }, [eventDates, selectedDate]);
 
-  const selectedEvents = useMemo(() => 
-    events.filter(e => isSameDay(parseISO(e.startDate), parseISO(selectedDate))), 
+  const selectedEvents = useMemo(() =>
+    events.filter(e => e.startDate && isSameDayLocal(e.startDate, selectedDate)),
   [events, selectedDate]);
 
   const onRefresh = useCallback(async () => {

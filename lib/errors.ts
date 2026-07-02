@@ -9,6 +9,7 @@ export const ErrorCode = {
   RATE_LIMITED: "RATE_LIMITED",
   TOKEN_EXPIRED: "TOKEN_EXPIRED",
   TOKEN_INVALID: "TOKEN_INVALID",
+  CSRF_INVALID: "CSRF_INVALID",
   REFRESH_FAILED: "REFRESH_FAILED",
   UNKNOWN: "UNKNOWN",
 } as const;
@@ -43,6 +44,7 @@ const errorDetailsMap: Record<string, ErrorDetails> = {
   [ErrorCode.RATE_LIMITED]: { code: ErrorCode.RATE_LIMITED, strategy: RecoveryStrategy.NONE },
   [ErrorCode.TOKEN_EXPIRED]: { code: ErrorCode.TOKEN_EXPIRED, strategy: RecoveryStrategy.REFRESH_TOKEN },
   [ErrorCode.TOKEN_INVALID]: { code: ErrorCode.TOKEN_INVALID, strategy: RecoveryStrategy.LOGOUT },
+  [ErrorCode.CSRF_INVALID]: { code: ErrorCode.CSRF_INVALID, strategy: RecoveryStrategy.RETRY },
   [ErrorCode.REFRESH_FAILED]: { code: ErrorCode.REFRESH_FAILED, strategy: RecoveryStrategy.LOGOUT },
 };
 
@@ -50,33 +52,44 @@ export class ApiError extends Error {
   public readonly code: ErrorCodeType;
   public readonly status?: number;
   public readonly strategy: RecoveryStrategyType;
+  public readonly field?: string | null;
+  public readonly data?: unknown;
 
   constructor(
     message: string,
     status?: number,
-    code: ErrorCodeType = ErrorCode.UNKNOWN
+    code: ErrorCodeType = ErrorCode.UNKNOWN,
+    field?: string | null,
+    data?: unknown
   ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.code = code;
-    
+    this.field = field;
+    this.data = data;
+
     const details = errorDetailsMap[code] || { code, strategy: RecoveryStrategy.NONE };
     this.strategy = details.strategy;
   }
 
-  static fromStatus(status: number, message?: string): ApiError {
+  static fromStatus(status: number, message?: string, field?: string | null, data?: unknown): ApiError {
     const code = status === 401 ? ErrorCode.UNAUTHORIZED
       : status === 403 ? ErrorCode.FORBIDDEN
       : status === 404 ? ErrorCode.NOT_FOUND
+      : status === 419 ? ErrorCode.CSRF_INVALID
+      : status === 422 ? ErrorCode.VALIDATION_ERROR
       : status === 429 ? ErrorCode.RATE_LIMITED
       : status >= 500 ? ErrorCode.SERVER_ERROR
-      : ErrorCode.UNKNOWN;
-    
+      : ErrorCode.VALIDATION_ERROR;
+
     const defaultMessages: Record<number, string> = {
+      400: "Invalid request format.",
       401: "Session expired. Please log in again.",
       403: "You don't have permission to perform this action.",
       404: "The requested resource was not found.",
+      419: "Request signature is invalid or expired. Please try again.",
+      422: "Validation failed. Please check your input.",
       429: "Too many requests. Please wait a moment.",
       500: "Server error. Please try again later.",
       502: "Service unavailable. Please try again later.",
@@ -86,7 +99,9 @@ export class ApiError extends Error {
     return new ApiError(
       message || defaultMessages[status] || "An API error occurred",
       status,
-      code
+      code,
+      field,
+      data
     );
   }
 }

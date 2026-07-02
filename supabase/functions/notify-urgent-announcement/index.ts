@@ -15,6 +15,18 @@ interface AnnouncementRecord {
   is_urgent: boolean;
 }
 
+function escapeHtml(str: string): string {
+  const escapeMap: Record<string, string> = {
+    "&": "&",
+    "<": "<",
+    ">": ">",
+    "\"": """,
+    "'": "'",
+    "/": "&#x2F;",
+  };
+  return str.replace(/[&<>"'\/]/g, (char) => escapeMap[char] ?? char);
+}
+
 interface PushTokenRecord {
   topscore_person_id: string;
   push_token: string;
@@ -117,8 +129,8 @@ serve(async (req) => {
     const messages = enabledTokens.map(t => ({
       to: t.push_token,
       sound: "default",
-      title: announcement.is_urgent ? "🚨 " + announcement.title : announcement.title,
-      body: announcement.content.slice(0, 200),
+      title: announcement.is_urgent ? "🚨 " + escapeHtml(announcement.title) : escapeHtml(announcement.title),
+      body: escapeHtml(announcement.content.slice(0, 200)),
       data: { announcementId: announcement.id, type: announcementType },
       badge: badgeCount,
       channelId: announcement.is_urgent ? "urgent" : "default",

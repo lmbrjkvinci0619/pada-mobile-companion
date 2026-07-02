@@ -2,6 +2,7 @@ import React from 'react';
 import { ScrollView, View, Text, SafeAreaView } from 'react-native';
 import { Stack } from 'expo-router';
 import { Button } from '@/components/ui/Button';
+import { useAuthRedirect } from '@/hooks/useAuthRedirect';
 import { Card, CardSection } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
@@ -9,6 +10,7 @@ import { ReadOnlyBanner } from '@/components/ui/ReadOnlyBanner';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function UIGallery() {
+  useAuthRedirect();
   return (
     <SafeAreaView className="flex-1 bg-bg">
       <Stack.Screen options={{ title: "UI Gallery", headerShadowVisible: false }} />

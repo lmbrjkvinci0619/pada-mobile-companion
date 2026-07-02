@@ -22,6 +22,10 @@ function statusBadge(status: RegistrationStatus) {
     incomplete: { label: "Incomplete", variant: "danger" },
     inactive:   { label: "Inactive",  variant: "ghost" },
     interested: { label: "Interested", variant: "ghost" },
+    active:     { label: "Active",     variant: "success" },
+    paid:       { label: "Paid",       variant: "success" },
+    refunded:   { label: "Refunded",   variant: "danger" },
+    partial:    { label: "Partial",   variant: "warning" },
   };
   const { label, variant } = map[status];
   return <Badge label={label} variant={variant} />;
@@ -47,7 +51,7 @@ function typeColor(type: RegistrationType): string {
 
 const RegistrationCard = React.memo(function RegistrationCard({ reg }: { reg: Registration }) {
   const handlePress = () => {
-    openRegistrationInBrowser(reg.id, reg.eventId, reg.teamId);
+    openRegistrationInBrowser(reg.id, reg.eventId, reg.teamId, reg.leagueId);
   };
 
   return (
@@ -111,8 +115,20 @@ export default function RegistrationsScreen() {
   }, [refetch]);
 
   const sections = useMemo(() => {
-    const current    = regs.filter((r) => r.status === "accepted" || r.status === "pending" || r.status === "waitlisted" || r.status === "interested");
-    const historical = regs.filter((r) => r.status === "inactive" || r.status === "incomplete");
+    const current = regs.filter((r) =>
+      r.status === "accepted" ||
+      r.status === "pending" ||
+      r.status === "waitlisted" ||
+      r.status === "interested" ||
+      r.status === "incomplete" ||
+      r.status === "active" ||
+      r.status === "paid" ||
+      r.status === "partial"
+    );
+    const historical = regs.filter((r) =>
+      r.status === "inactive" ||
+      r.status === "refunded"
+    );
 
     return [
       { title: "Current", data: current },

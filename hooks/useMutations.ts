@@ -23,7 +23,7 @@ export function useCreateAnnouncement(userId: string) {
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.announcements.all(userId),
+        queryKey: queryKeys.announcements.all(userId || "none"),
       });
     },
   });
@@ -38,16 +38,16 @@ export function useMarkAnnouncementRead(userId: string) {
 
     onMutate: async ({ announcementId }) => {
       await queryClient.cancelQueries({
-        queryKey: queryKeys.announcements.all(userId),
+        queryKey: queryKeys.announcements.all(userId || "none"),
       });
 
       const previousAnnouncements = queryClient.getQueryData<Announcement[]>(
-        queryKeys.announcements.all(userId)
+        queryKeys.announcements.all(userId || "none")
       );
 
       if (previousAnnouncements) {
         queryClient.setQueryData<Announcement[]>(
-          queryKeys.announcements.all(userId),
+          queryKeys.announcements.all(userId || "none"),
           (old) =>
             old?.map((ann) =>
               ann.id === announcementId ? { ...ann, isRead: true } : ann
@@ -61,7 +61,7 @@ export function useMarkAnnouncementRead(userId: string) {
     onError: (_err, _variables, context) => {
       if (context?.previousAnnouncements) {
         queryClient.setQueryData<Announcement[]>(
-          queryKeys.announcements.all(userId),
+          queryKeys.announcements.all(userId || "none"),
           context.previousAnnouncements
         );
       }
@@ -69,7 +69,7 @@ export function useMarkAnnouncementRead(userId: string) {
 
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.announcements.all(userId),
+        queryKey: queryKeys.announcements.all(userId || "none"),
       });
     },
   });

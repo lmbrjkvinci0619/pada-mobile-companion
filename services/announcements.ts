@@ -3,7 +3,6 @@ import { supabase } from "./supabase";
 import type { Announcement, AnnouncementTargetType, AnnouncementType, FetchAnnouncementsResult, FetchAnnouncementsOptions, NotificationPreferences } from "@/types";
 import { getValidAccessToken } from "./auth";
 import { sanitizeString, sanitizeAnnouncementContent } from "@/lib/validation";
-import { MOCK_ANNOUNCEMENTS, USE_MOCK_DATA } from "@/constants/mockData";
 
 const HIDDEN_ANNOUNCEMENTS_KEY = "hidden_announcements";
 
@@ -93,11 +92,6 @@ export async function fetchAnnouncements(
   const limit = clampLimit(options?.limit ?? FETCH_ANNOUNCEMENTS_PAGE_SIZE);
   const offset = Math.max(0, options?.offset ?? 0);
 
-  if (USE_MOCK_DATA) {
-    const hiddenIds = await getHiddenAnnouncementIds();
-    return fetchAnnouncementsByPageFromList(MOCK_ANNOUNCEMENTS, hiddenIds, userId, options);
-  }
-
   const hiddenIds = await getHiddenAnnouncementIds();
 
   const { data: memberData } = await supabase
@@ -108,9 +102,14 @@ export async function fetchAnnouncements(
   const teamIds: string[] = [];
   if (Array.isArray(memberData)) {
     for (const m of memberData) {
-      if (m?.teams && typeof m.teams === 'object' && 'topscore_id' in m.teams) {
+      if (
+        m?.team_id != null &&
+        m?.teams &&
+        typeof m.teams === "object" &&
+        "topscore_id" in m.teams
+      ) {
         const topscoreId = (m.teams as { topscore_id?: unknown }).topscore_id;
-        if (typeof topscoreId === 'string' && topscoreId.length > 0) {
+        if (typeof topscoreId === "string" && topscoreId.length > 0) {
           teamIds.push(topscoreId);
         }
       }
@@ -123,14 +122,12 @@ export async function fetchAnnouncements(
   const expiryActive = "expires_at.gt.now()";
   const expiryEither = `or(${expiryOpen},${expiryActive})`;
 
-  const audienceFilters: string[] = [];
-  audienceFilters.push(expiryEither);
-  audienceFilters.push(`and(${expiryEither},target_type.in.(league,division))`);
+  // All PADA members see league/division-wide announcements.
+  const audienceFilters: string[] = [
+    `and(${expiryEither},target_type.in.(league,division))`,
+  ];
   if (safeTeamIds.length > 0) {
     const joined = safeTeamIds.map((id) => `"${id}"`).join(",");
-    audienceFilters.push(
-      `and(${expiryEither},target_type.in.(league,division),target_id.in.(${joined}))`
-    );
     audienceFilters.push(
       `and(${expiryEither},target_type.eq.team,target_id.in.(${joined}))`
     );
@@ -198,9 +195,6 @@ function clampLimit(value: number): number {
 }
 
 export async function markAnnouncementAsRead(announcementId: string, userId: string): Promise<void> {
-  if (USE_MOCK_DATA) {
-    return;
-  }
   const { error } = await supabase
     .from("announcement_reads")
     .upsert(
@@ -225,10 +219,6 @@ export async function createAnnouncement(payload: {
   announcementType?: AnnouncementType;
   expiresAt?: string;
 }): Promise<boolean> {
-  if (USE_MOCK_DATA) {
-    return true;
-  }
-
   const token = await getValidAccessToken();
   if (!token) return false;
 
@@ -257,25 +247,23 @@ export async function createAnnouncement(payload: {
   }
 }
 
-export async function fetchAnnouncementById(id: string): Promise<Announcement | null> {
-  if (USE_MOCK_DATA) {
-    const found = MOCK_ANNOUNCEMENTS.find((a) => a.id === id);
-    if (!found) return null;
-    const hiddenIds = await getHiddenAnnouncementIds();
-    return {
-      ...found,
-      isRead: true,
-      isHidden: hiddenIds.has(found.id),
-    };
-  }
-
+export async function fetchAnnouncementById(
+  id: string,
+  userId?: string
+): Promise<Announcement | null> {
   const { data, error } = await supabase
     .from("announcements")
-    .select("*")
+    .select("*, announcement_reads(user_id)")
     .eq("id", id)
     .single();
 
   if (error || !data) return null;
+
+  const isRead = userId
+    ? (data.announcement_reads as { user_id: string }[] | undefined)?.some(
+        (read) => read.user_id === userId
+      ) ?? false
+    : false;
 
   return {
     id: data.id,
@@ -288,7 +276,7 @@ export async function fetchAnnouncementById(id: string): Promise<Announcement | 
     targetType: data.target_type as Announcement["targetType"],
     targetId: data.target_id,
     isUrgent: data.is_urgent,
-    isRead: true,
+    isRead,
     createdAt: data.created_at,
     expiresAt: data.expires_at,
   };

@@ -19,7 +19,8 @@ interface SettingsState {
   isLoadingPreferences: boolean;
   isSyncing: boolean;
   preferencesError: string | null;
-  
+  hasPendingChanges: boolean;
+
   setNotifications: (notifications: Partial<NotificationPreferences>) => void;
   togglePushNotifications: () => void;
   toggleAnnouncementsNotifications: () => void;
@@ -33,7 +34,8 @@ interface SettingsState {
   completeOnboarding: () => void;
   updateLastSync: () => void;
   resetSettings: () => void;
-  
+  markChangesPending: (pending: boolean) => void;
+
   loadPreferences: (userId: string) => Promise<void>;
   savePreferences: (userId: string) => Promise<boolean>;
   syncPreferences: (userId: string) => Promise<void>;
@@ -59,6 +61,7 @@ const initialState = {
   isLoadingPreferences: false,
   isSyncing: false,
   preferencesError: null,
+  hasPendingChanges: false,
 };
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -67,6 +70,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   setNotifications: (updates) => {
     set((state) => ({
       notifications: { ...state.notifications, ...updates },
+      hasPendingChanges: true,
     }));
   },
 
@@ -149,13 +153,17 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   updateLastSync: () => set({ lastSyncTimestamp: Date.now() }),
 
-  resetSettings: () => set(initialState),
+  resetSettings: () => set({ ...initialState, hasPendingChanges: false }),
+
+  markChangesPending: (pending: boolean) => set({ hasPendingChanges: pending }),
 
   loadPreferences: async (userId: string) => {
     set({ isLoadingPreferences: true, preferencesError: null });
     try {
       const success = await loadAndSyncPreferences(userId);
-      if (!success) {
+      if (success) {
+        set({ hasPendingChanges: false });
+      } else {
         set({ preferencesError: "Failed to load preferences" });
       }
     } catch (err) {
@@ -170,7 +178,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     set({ isSyncing: true, preferencesError: null });
     try {
       const success = await saveAndSyncPreferences(userId, get().notifications);
-      if (!success) {
+      if (success) {
+        set({ hasPendingChanges: false });
+      } else {
         set({ preferencesError: "Failed to save preferences" });
       }
       return success;
@@ -184,18 +194,28 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   },
 
   syncPreferences: async (userId: string) => {
-    const { notifications, lastSyncTimestamp } = get();
-    
+    const { lastSyncTimestamp, hasPendingChanges } = get();
+
+    if (hasPendingChanges) {
+      const success = await get().savePreferences(userId);
+      if (success) {
+        set({ lastSyncTimestamp: Date.now() });
+      }
+      return;
+    }
+
     if (!lastSyncTimestamp) {
       await get().loadPreferences(userId);
+      set({ lastSyncTimestamp: Date.now() });
       return;
     }
 
     const timeSinceLastSync = Date.now() - lastSyncTimestamp;
     const fiveMinutes = 5 * 60 * 1000;
-    
+
     if (timeSinceLastSync > fiveMinutes) {
       await get().loadPreferences(userId);
+      set({ lastSyncTimestamp: Date.now() });
     }
   },
 }));

@@ -4,8 +4,11 @@ import { useLocalSearchParams, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { format, formatDistanceToNow, isPast } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/authStore";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { fetchAnnouncementById, markAnnouncementAsRead } from "@/services/announcements";
+import { queryKeys } from "@/lib/queryKeys";
 import type { Announcement, AnnouncementType } from "@/types";
 
 const TYPE_COLORS: Record<AnnouncementType, { bg: string; text: string; label: string }> = {
@@ -15,8 +18,10 @@ const TYPE_COLORS: Record<AnnouncementType, { bg: string; text: string; label: s
 };
 
 export default function AnnouncementDetail() {
+  useAuthRedirect();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,23 +33,40 @@ export default function AnnouncementDetail() {
       return;
     }
 
-    fetchAnnouncementById(id)
+    let cancelled = false;
+    fetchAnnouncementById(id, user.id)
       .then(data => {
+        if (cancelled) return;
         if (!data) {
           setError("Announcement not found");
-        } else {
-          setAnnouncement(data);
-          if (user?.id) {
-            markAnnouncementAsRead(id, user.id).catch(console.error);
-          }
+          setIsLoading(false);
+          return;
         }
+        setAnnouncement(data);
+        if (data.isRead) {
+          setIsLoading(false);
+          return;
+        }
+        markAnnouncementAsRead(id, user.id)
+          .catch((err) => console.error("Failed to mark announcement as read:", err))
+          .finally(() => {
+            if (cancelled) return;
+            queryClient.invalidateQueries({
+              queryKey: queryKeys.announcements.all(user.id),
+            });
+            setIsLoading(false);
+          });
       })
       .catch(err => {
+        if (cancelled) return;
         setError("Failed to load announcement");
         console.error(err);
-      })
-      .finally(() => setIsLoading(false));
-  }, [id, user?.id]);
+        setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id, user?.id, queryClient]);
 
   if (isLoading) {
     return (

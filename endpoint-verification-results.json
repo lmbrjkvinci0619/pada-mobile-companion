@@ -1,0 +1,138 @@
+{
+  "timestamp": "2026-07-02T23:05:01.933Z",
+  "summary": {
+    "total": 11,
+    "working": 5,
+    "broken": 6
+  },
+  "findings": {
+    "critical": [
+      "/api/events/{id} does not exist - 404 - MUST USE: /api/events?id={id}",
+      "/api/persons/{id} does not exist - 404 - ONLY /api/persons/me is available",
+      "/api/teams/{id} does not exist - 404 - MUST USE: /api/teams/show?id={id}",
+      "/api/schedule does not exist - 404",
+      "/api/teams requires mandatory parameters (event_id, person_id, or id)",
+      "/api/registrations requires parameters and authentication"
+    ],
+    "working": [
+      "/api/persons/me works correctly",
+      "/api/events works for list with pagination",
+      "/api/teams works with event_id or person_id parameters",
+      "/api/games works with event_id parameter"
+    ],
+    "notes": [
+      "TopScore uses NON-STANDARD REST patterns - single resource endpoints use query params NOT path params",
+      "GET /api/events - list with pagination (page, per_page)",
+      "GET /api/events?id=X - single event (uses query param)",
+      "GET /api/teams/show?id=X - single team (uses /teams/show endpoint)",
+      "GET /api/games?event_id=X - games/schedule for an event"
+    ]
+  },
+  "results": [
+    {
+      "path": "/api/persons/me",
+      "method": "GET",
+      "description": "Current user",
+      "status": 200,
+      "works": true,
+      "count": 22,
+      "notes": "Returns current authenticated user's profile"
+    },
+    {
+      "path": "/api/events?per_page=1",
+      "method": "GET",
+      "description": "List events",
+      "status": 200,
+      "works": true,
+      "count": 620,
+      "notes": "Returns paginated list of events"
+    },
+    {
+      "path": "/api/teams?event_id=100000&per_page=1",
+      "method": "GET",
+      "description": "Teams for event",
+      "status": 200,
+      "works": true,
+      "count": 16,
+      "notes": "Teams filtered by event"
+    },
+    {
+      "path": "/api/teams?person_id=223042",
+      "method": "GET",
+      "description": "Teams for person",
+      "status": 200,
+      "works": true,
+      "count": 22,
+      "notes": "Teams the person is member of"
+    },
+    {
+      "path": "/api/games?event_id=100000&per_page=1",
+      "method": "GET",
+      "description": "Games for event",
+      "status": 200,
+      "works": true,
+      "count": 94,
+      "notes": "Game schedule/results for event - NOT /api/schedule"
+    },
+    {
+      "path": "/api/registrations?event_id=100000",
+      "method": "GET",
+      "description": "Registrations for event",
+      "status": 403,
+      "works": false,
+      "count": 0,
+      "notes": "Requires authentication - returns 403 Forbidden"
+    },
+    {
+      "path": "/api/registrations?person_id=223042",
+      "method": "GET",
+      "description": "Registrations for person",
+      "status": 400,
+      "works": false,
+      "count": 0,
+      "notes": "Requires authentication - returns 400 Bad Request"
+    },
+    {
+      "path": "/api/events/100000",
+      "method": "GET",
+      "description": "Single event (DOES NOT EXIST)",
+      "status": 404,
+      "works": false,
+      "count": 0,
+      "notes": "BROKEN - Use /api/events?id=100000 instead"
+    },
+    {
+      "path": "/api/persons/223042",
+      "method": "GET",
+      "description": "Single person (DOES NOT EXIST)",
+      "status": 404,
+      "works": false,
+      "count": 0,
+      "notes": "BROKEN - TopScore does not allow fetching arbitrary users by ID, only /api/persons/me"
+    },
+    {
+      "path": "/api/teams/1",
+      "method": "GET",
+      "description": "Single team (DOES NOT EXIST)",
+      "status": 404,
+      "works": false,
+      "count": 0,
+      "notes": "BROKEN - Use /api/teams/show?id=1 instead"
+    },
+    {
+      "path": "/api/schedule",
+      "method": "GET",
+      "description": "Schedule (DOES NOT EXIST)",
+      "status": 404,
+      "works": false,
+      "count": 0,
+      "notes": "BROKEN - Use /api/games?event_id=X for game schedule"
+    }
+  ],
+  "correctUsage": {
+    "eventById": "/api/events?id=100000",
+    "teamById": "/api/teams/show?id=1",
+    "personById": "NOT POSSIBLE - only /api/persons/me works",
+    "scheduleForEvent": "/api/games?event_id=100000"
+  }
+}

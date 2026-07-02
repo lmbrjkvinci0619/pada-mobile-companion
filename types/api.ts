@@ -1,11 +1,23 @@
+import type {
+  SitePermission,
+  OrgPermission,
+  RegistrationStatus,
+  TeamRole,
+  UserRole as ApiUserRole,
+} from "./index";
+
 export interface ApiPerson {
-  id: number;
+  person_id: number;
   first_name: string;
   last_name: string;
+  full_name?: string;
   email: string;
   avatar_url?: string;
-  role?: "player" | "captain" | "coach" | "league_admin";
+  profile_picture?: string;
+  role?: ApiUserRole;
   phone?: string;
+  phone_number?: string;
+  emergency_contact?: string;
   is_admin?: boolean;
   is_youth?: boolean;
   date_of_birth?: string;
@@ -13,29 +25,24 @@ export interface ApiPerson {
   city?: string;
   state?: string;
   zip?: string;
+  address?: string;
   about?: string;
   family_id?: number;
   site_permission?: SitePermission;
+  site_permissions?: SitePermission[];
   org_permissions?: OrgPermission[];
+  organization_id?: number;
+  organization_name?: string;
+  status?: "active" | "pending" | "suspended";
+  created_at?: string;
+  last_login?: string;
 }
 
-export type SitePermission = 
-  | "account_holder" 
-  | "editor" 
-  | "score_reporter" 
-  | "coordinator" 
-  | "lite_admin" 
-  | "admin" 
-  | "trusted_admin";
-
-export type OrgPermission = "admin" | "trusted_admin";
-
-export type RegistrationStatus = "accepted" | "pending" | "waitlisted" | "incomplete" | "inactive" | "interested";
-
 export interface ApiRegistration {
-  id: number;
+  registration_id?: number;
+  id?: number;
   type?: string;
-  status?: RegistrationStatus;
+  status?: string;
   organization_name?: string;
   name?: string;
   season_name?: string;
@@ -51,16 +58,6 @@ export interface ApiRegistration {
   amount_paid?: number;
 }
 
-export type TeamRole = 
-  | "player" 
-  | "captain" 
-  | "coach" 
-  | "assistant_coach" 
-  | "admin" 
-  | "chaperone" 
-  | "volunteer" 
-  | "staff";
-
 export interface ApiTeam {
   id: number;
   name: string;
@@ -74,15 +71,20 @@ export interface ApiTeam {
     losses?: number;
     ties?: number;
   };
-  roster?: ApiRosterMember[];
-  standing_roster?: ApiRosterMember[];
-  active_roster?: ApiRosterMember[];
-  locations?: ApiLocation[];
+  roster?: ApiRosterMember[] | null;
+  standing_roster?: ApiRosterMember[] | null;
+  active_roster?: ApiRosterMember[] | null;
+  locations?: ApiLocation[] | null;
   trueskill_rating?: number;
   rank?: number;
   is_registered?: boolean;
   event_count?: number;
   captain_id?: number;
+  my_membership?: {
+    role: TeamRole;
+    joined_at?: string;
+    status?: "active" | "inactive" | "pending";
+  };
 }
 
 export interface ApiRosterMember {
@@ -121,6 +123,30 @@ export interface ApiEvent {
   round_number?: number;
   game_number?: number;
   division?: string;
+}
+
+export interface ApiGame {
+  id: number;
+  event_id?: number;
+  home_team_id?: number;
+  home_team_name?: string;
+  home_score?: number;
+  away_team_id?: number;
+  away_team_name?: string;
+  away_score?: number;
+  scheduled_date?: string;
+  start_date?: string;
+  end_date?: string;
+  location?: ApiLocation;
+  status?: string;
+  is_overtime?: boolean;
+  is_final?: boolean;
+  round_number?: number;
+  game_number?: number;
+  bracket_name?: string;
+  pool_name?: string;
+  division?: string;
+  notes?: string;
 }
 
 export interface ApiLocation {
@@ -185,8 +211,8 @@ export interface ApiAnnouncementCreate {
 
 export interface ApiSchedule {
   team_id: number;
-  ics_url: string;
-  html_url: string;
+  ics_url?: string;
+  html_url?: string;
   google_calendar_url?: string;
   outlook_calendar_url?: string;
 }
@@ -194,6 +220,14 @@ export interface ApiSchedule {
 export interface ApiStandings {
   event_id: number;
   event_name: string;
+  standings: ApiStandingEntry[];
+}
+
+export interface ApiPoolStandings {
+  event_id: number;
+  event_name: string;
+  pool_name: string;
+  pool_id?: number;
   standings: ApiStandingEntry[];
 }
 
@@ -291,10 +325,21 @@ export interface ApiNotification {
   type: string;
   title: string;
   body: string;
-  data?: Record<string, unknown>;
+  data?: ApiNotificationData;
   read_at?: string;
   created_at: string;
 }
+
+export type ApiNotificationData =
+  | { type: "event"; event_id: number; event_name?: string }
+  | { type: "team"; team_id: number; team_name?: string }
+  | { type: "division"; division_id: number; division_name?: string }
+  | { type: "league"; league_id: number; league_name?: string }
+  | { type: "registration"; registration_id: number; status?: string }
+  | { type: "announcement"; announcement_id: number; target_type?: string }
+  | { type: "score"; event_id: number; home_score?: number; away_score?: number }
+  | { type: "attendance"; event_id: number; status?: string }
+  | Record<string, unknown>;
 
 export interface ApiPractice {
   id: number;
@@ -311,8 +356,11 @@ export interface ApiPoll {
   id: number;
   question: string;
   options: ApiPollOption[];
+  team_id?: number;
+  event_id?: number;
   expires_at?: string;
   total_votes?: number;
+  status?: "active" | "closed" | "draft";
 }
 
 export interface ApiPollOption {

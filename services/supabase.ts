@@ -1,7 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { SUPABASE_URL, SUPABASE_ANON_KEY, APP_NAME } from "@/constants/config";
 import { secureStoreAdapter } from "@/lib/secureStoreAdapter";
-import { USE_MOCK_DATA } from "@/constants/mockData";
 
 let _client: SupabaseClient | null = null;
 let _warnedMissingConfig = false;
@@ -25,7 +24,7 @@ function initClient(): SupabaseClient {
 
   const cfg = getSupabaseConfig();
   if (!cfg) {
-    if (!USE_MOCK_DATA) warnMissingConfig();
+    warnMissingConfig();
     throw new Error("Supabase is not configured (set EXPO_PUBLIC_SUPABASE_URL/_ANON_KEY)");
   }
 

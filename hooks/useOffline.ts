@@ -8,12 +8,21 @@ interface UseOfflineResult {
 }
 
 function deriveState(state: NetInfoState): { isConnected: boolean | null; isOffline: boolean } {
-  const isConnected = state.isConnected;
+  const isConnected = state.isConnected ?? null;
   const isOffline = isConnected === false;
-  return {
-    isConnected,
-    isOffline,
-  };
+  return { isConnected, isOffline };
+}
+
+function logTransition(
+  prev: boolean | null,
+  next: boolean | null
+): void {
+  if (prev === null) return;
+  if (prev === false && next === true) {
+    console.log("Network restored");
+  } else if (prev === true && next === false) {
+    console.log("Network lost");
+  }
 }
 
 export function useOffline(): UseOfflineResult {
@@ -22,42 +31,34 @@ export function useOffline(): UseOfflineResult {
     isOffline: boolean;
   }>(() => ({ isConnected: null, isOffline: false }));
 
+  const applyState = useCallback((next: NetInfoState) => {
+    setState((prev) => {
+      const derived = deriveState(next);
+      logTransition(prev.isConnected, derived.isConnected);
+      return derived;
+    });
+  }, []);
+
   const refresh = useCallback(async () => {
     try {
       const next = await NetInfo.fetch();
-      setState((prev) => {
-        const derived = deriveState(next);
-        if (prev.isConnected === false && derived.isConnected === true) {
-          console.log("Network restored");
-        } else if (prev.isConnected === true && derived.isConnected === false) {
-          console.log("Network lost");
-        }
-        return derived;
-      });
+      applyState(next);
     } catch (err) {
       console.warn("Failed to query connectivity:", err);
     }
-  }, []);
+  }, [applyState]);
 
   useEffect(() => {
     refresh();
 
     const unsubscribe = NetInfo.addEventListener((next) => {
-      setState((prev) => {
-        const derived = deriveState(next);
-        if (prev.isConnected === false && derived.isConnected === true) {
-          console.log("Network restored");
-        } else if (prev.isConnected === true && derived.isConnected === false) {
-          console.log("Network lost");
-        }
-        return derived;
-      });
+      applyState(next);
     });
 
     return () => {
       unsubscribe();
     };
-  }, [refresh]);
+  }, [refresh, applyState]);
 
   return {
     isOffline: state.isOffline,

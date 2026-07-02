@@ -1,6 +1,9 @@
 // ─── Mock Data Fixtures ──────────────────────────────────────────────────────
-// Swap USE_MOCK_DATA to false and set real credentials in .env to go live.
+// NOTE: Mock data is DISABLED by default. All data is fetched from live TopScore API.
+// To enable mock data for development, set EXPO_PUBLIC_USE_MOCK_DATA=true in .env
+// WARNING: Enabling mock data will cause the app to not work with real API endpoints.
 
+import { addDays as dateFnsAddDays } from "date-fns";
 import type {
   User,
   Team,
@@ -11,7 +14,10 @@ import type {
   Article,
 } from "@/types";
 
-export const USE_MOCK_DATA = process.env.EXPO_PUBLIC_USE_MOCK_DATA === "true";
+export const USE_MOCK_DATA = false;
+
+// Wrapper that properly handles DST and returns ISO string
+const addDays = (d: Date, n: number): string => dateFnsAddDays(d, n).toISOString();
 
 // ─── Current User ────────────────────────────────────────────────────────────
 
@@ -97,8 +103,6 @@ export const MOCK_TEAMS: Team[] = [
 // ─── Events ──────────────────────────────────────────────────────────────────
 
 const now = new Date();
-const addDays = (d: Date, n: number) =>
-  new Date(d.getTime() + n * 86400000).toISOString();
 
 export const MOCK_EVENTS: Event[] = [
   {

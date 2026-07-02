@@ -1,14 +1,14 @@
 // ─── User / Auth ────────────────────────────────────────────────────────────
 
-export type UserRole = "player" | "captain" | "coach" | "league_admin";
+export type UserRole = "player" | "captain" | "coach" | "assistant_coach" | "admin" | "team_admin" | "league_admin" | "site_admin";
 
-export type SitePermission = 
-  | "account_holder" 
-  | "editor" 
-  | "score_reporter" 
-  | "coordinator" 
-  | "lite_admin" 
-  | "admin" 
+export type SitePermission =
+  | "account_holder"
+  | "editor"
+  | "score_reporter"
+  | "coordinator"
+  | "lite_admin"
+  | "admin"
   | "trusted_admin";
 
 export type OrgPermission = "admin" | "trusted_admin";
@@ -21,7 +21,6 @@ export interface User {
   avatarUrl?: string;
   role: UserRole;
   phone?: string;
-  isAdmin?: boolean;
   isYouth?: boolean;
   dateOfBirth?: string;
   gender?: string;
@@ -29,14 +28,23 @@ export interface User {
   state?: string;
   zip?: string;
   about?: string;
+  address?: string;
+  emergencyContact?: string;
   familyId?: string;
   sitePermission?: SitePermission;
+  sitePermissions?: SitePermission[];
   orgPermissions?: OrgPermission[];
   isSiteEditor?: boolean;
   isScoreReporter?: boolean;
   isCoordinator?: boolean;
   isLiteAdmin?: boolean;
+  isAdmin?: boolean;
   isTrustedAdmin?: boolean;
+  organizationId?: number;
+  organizationName?: string;
+  status?: "active" | "pending" | "suspended";
+  createdAt?: string;
+  lastLogin?: string;
 }
 
 export interface AuthTokens {
@@ -77,7 +85,11 @@ export type RegistrationStatus =
   | "waitlisted"
   | "incomplete"
   | "inactive"
-  | "interested";
+  | "interested"
+  | "active"
+  | "paid"
+  | "refunded"
+  | "partial";
 
 export type RegistrationType = "team" | "league" | "event";
 
@@ -92,6 +104,7 @@ export interface Registration {
   teamId?: string;
   leagueId?: string;
   eventId?: string;
+  division?: string;
 }
 
 // ─── Teams ───────────────────────────────────────────────────────────────────
@@ -119,7 +132,7 @@ export interface TeamMember {
   lastName: string;
   jerseyNumber?: string;
   position?: string;
-  role: TeamRole | TeamRole[];
+  role: TeamRole;
   avatarUrl?: string;
   email?: string;
   phone?: string;
@@ -155,7 +168,14 @@ export interface Team {
   ties?: number;
   trueskillRating?: number;
   rank?: number;
+  isRegistered?: boolean;
   locations?: Location[];
+  eventCount?: number;
+  myMembership?: {
+    role: TeamRole;
+    joinedAt?: string;
+    status?: "active" | "inactive" | "pending";
+  };
 }
 
 export interface TeamStanding {
@@ -255,11 +275,11 @@ export interface Event {
   type: EventType;
   status: EventStatus;
   title: string;
-  startDate: string;  // ISO 8601
+  startDate?: string;  // ISO 8601
   endDate?: string;
   location?: Location;
-  teamId: string;
-  teamName: string;
+  teamId?: string;
+  teamName?: string;
   opponentId?: string;
   opponentName?: string;
   notes?: string;
@@ -270,6 +290,7 @@ export interface Event {
   poolName?: string;
   roundNumber?: number;
   gameNumber?: number;
+  division?: string;
 }
 
 export interface ScheduleExport {
@@ -311,7 +332,7 @@ export interface AttendanceRecord {
 }
 
 export interface AttendanceSurveyResponse {
-  questionId: string;
+  questionId: number;
   answer: string | boolean;
   points?: number;
 }
@@ -345,17 +366,22 @@ export type AnnouncementAuthorRole = "league_admin" | "team_captain";
 export type AnnouncementType = "pada_org" | "league_longterm" | "game";
 
 export interface PaginationParams {
-  limit?: number; // Default: 50, max: 100
-  offset?: number; // For cursor-based pagination
+  page?: number;
+  per_page?: number;
+  limit?: number;
+  offset?: number;
 }
 
 export interface FetchAnnouncementsResult<T> {
   data: T[];
   pagination?: {
     total: number;
-    limit: number;
-    offset: number;
-    hasMore: boolean;
+    limit?: number;
+    offset?: number;
+    hasMore?: boolean;
+    page?: number;
+    per_page?: number;
+    total_pages?: number;
   };
 }
 

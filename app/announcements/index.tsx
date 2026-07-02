@@ -3,10 +3,13 @@ import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshContr
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import { format, formatDistanceToNow, isPast } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
 import { Badge } from "@/components/ui/Badge";
 import { useAuthStore } from "@/store/authStore";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { fetchAnnouncements, hideAnnouncement } from "@/services/announcements";
+import { queryKeys } from "@/lib/queryKeys";
 import { Announcement, AnnouncementType } from "@/types";
 
 const PAGE_SIZE = 20;
@@ -101,8 +104,10 @@ const AnnouncementItem = React.memo(function AnnouncementItem({
 });
 
 export default function AnnouncementsListScreen() {
+  useAuthRedirect();
   const { user } = useAuthStore();
-  const canPost = user?.role === "league_admin" || user?.role === "captain";
+  const queryClient = useQueryClient();
+  const canPost = user?.isCoordinator || user?.isAdmin || user?.role === "captain";
   
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -112,7 +117,7 @@ export default function AnnouncementsListScreen() {
   const [hasMore, setHasMore] = useState(true);
   const [offset, setOffset] = useState(0);
 
-  const loadAnnouncements = async (reset = false) => {
+  const loadAnnouncements = async (reset: boolean) => {
     try {
       if (!user?.id) {
         setAnnouncements([]);
@@ -142,19 +147,36 @@ export default function AnnouncementsListScreen() {
     }
   };
 
-  const load = async () => {
-    if (!user?.id) {
-      setIsLoading(false);
-      return;
-    }
-    await loadAnnouncements(true);
-    setIsLoading(false);
-  };
-
   useFocusEffect(
     useCallback(() => {
+      let active = true;
+      if (!user?.id) {
+        setIsLoading(false);
+        setAnnouncements([]);
+        setHasMore(false);
+        return () => { active = false; };
+      }
+
       setIsLoading(true);
-      load();
+      setOffset(0);
+      (async () => {
+        try {
+          const result = await fetchAnnouncements(user.id, { limit: PAGE_SIZE, offset: 0 });
+          if (!active) return;
+          setAnnouncements(result.data);
+          setHasMore(result.pagination?.hasMore ?? false);
+          setOffset(result.data.length);
+          setError(null);
+        } catch (err) {
+          if (!active) return;
+          setError("Failed to load announcements");
+          console.error("Error loading announcements:", err);
+        } finally {
+          if (active) setIsLoading(false);
+        }
+      })();
+
+      return () => { active = false; };
     }, [user?.id])
   );
 
@@ -185,6 +207,11 @@ export default function AnnouncementsListScreen() {
   const handleDismiss = async (id: string) => {
     await hideAnnouncement(id);
     setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+    if (user?.id) {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.announcements.all(user.id),
+      });
+    }
   };
 
   return (
@@ -213,10 +240,10 @@ export default function AnnouncementsListScreen() {
           <Text className="text-txt-primary text-center mt-2">{error}</Text>
           <TouchableOpacity
             className="mt-4 bg-primary-500 px-4 py-2 rounded-lg"
-            onPress={load}
+            onPress={onRefresh}
           >
             <Text className="text-white font-bold">Retry</Text>
-          </TouchableOpacity>
+         </TouchableOpacity>
         </View>
       ) : (
         <FlatList
