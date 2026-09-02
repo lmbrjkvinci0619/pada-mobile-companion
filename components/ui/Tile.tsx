@@ -1,0 +1,128 @@
+import React from "react";
+import { View, Text, TouchableOpacity, type ViewStyle } from "react-native";
+import { cn } from "@/utils/cn";
+
+type Accent = "primary" | "secondary" | "success" | "warning" | "danger" | "magenta" | "purple" | "black";
+
+const FILL: Record<Accent, string> = {
+  primary:   "#00ABA9",
+  secondary: "#1BA1E2",
+  success:   "#339933",
+  warning:   "#F09609",
+  danger:    "#E51400",
+  magenta:   "#D80073",
+  purple:    "#A200FF",
+  black:     "#000000",
+};
+
+interface TileProps {
+  title?: string;
+  subtitle?: string;
+  eyebrow?: string;
+  meta?: string;
+  icon?: React.ReactNode;
+  accent?: Accent;
+  size?: "small" | "medium" | "wide";
+  onPress?: () => void;
+  badge?: string;
+  className?: string;
+  style?: ViewStyle;
+  children?: React.ReactNode;
+}
+
+const sizeClass: Record<NonNullable<TileProps["size"]>, string> = {
+  small:  "h-24 px-3 py-3",
+  medium: "h-32 px-4 py-4",
+  wide:   "min-h-40 px-4 py-4",
+};
+
+export const Tile = React.memo(function Tile({
+  title,
+  subtitle,
+  eyebrow,
+  meta,
+  icon,
+  accent = "primary",
+  size = "medium",
+  onPress,
+  badge,
+  className,
+  style,
+  children,
+}: TileProps) {
+  const fill = FILL[accent];
+  const Wrapper: any = onPress ? TouchableOpacity : View;
+
+  return (
+    <Wrapper
+      {...(onPress ? { onPress, activeOpacity: 0.85 } : {})}
+      className={cn(
+        "justify-between",
+        sizeClass[size],
+        className,
+      )}
+      style={[{ backgroundColor: fill }, style]}
+    >
+      <View className="flex-row items-start justify-between">
+        <View className="flex-1 pr-2">
+          {eyebrow && (
+            <Text className="text-txt-inverse/80 text-[10px] font-bold uppercase tracking-[0.18em]">
+              {eyebrow}
+            </Text>
+          )}
+          {icon ? <View className="mt-1">{icon}</View> : null}
+        </View>
+        {badge && (
+          <View className="bg-white px-2 py-0.5">
+            <Text className="text-txt-primary text-[10px] font-bold uppercase tracking-wider">
+              {badge}
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <View>
+        {title && (
+          <Text
+            numberOfLines={2}
+            className="text-txt-inverse text-lg font-bold leading-tight"
+          >
+            {title}
+          </Text>
+        )}
+        {subtitle && (
+          <Text
+            numberOfLines={1}
+            className="text-txt-inverse/85 text-xs font-medium mt-1"
+          >
+            {subtitle}
+          </Text>
+        )}
+        {meta && (
+          <Text
+            numberOfLines={1}
+            className="text-txt-inverse/70 text-[10px] font-bold uppercase tracking-widest mt-2"
+          >
+            {meta}
+          </Text>
+        )}
+      </View>
+
+      {children}
+    </Wrapper>
+  );
+});
+
+export function TileGrid({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <View className={cn("flex-row flex-wrap gap-2", className)}>{children}</View>;
+}
+
+export function TileCell({ children, basis = "1/2" }: { children: React.ReactNode; basis?: "1/2" | "1/3" | "2/3" | "full" }) {
+  const basisMap: Record<string, string> = {
+    "1/2":  "w-[calc(50%-4px)]",
+    "1/3":  "w-[calc(33.333%-5.33px)]",
+    "2/3":  "w-[calc(66.666%-2.66px)]",
+    full:   "w-full",
+  };
+  return <View className={basisMap[basis]}>{children}</View>;
+}

@@ -9,68 +9,76 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Brand
         primary: {
-          DEFAULT: "#388BFD",   // Electric blue
-          50:  "#E3F2FD",
-          100: "#BBDEFB",
-          200: "#79C0FF",       // Lighter electric
-          300: "#58A6FF",
-          400: "#388BFD",
-          500: "#1F6FEB",       // Solid primary
-          600: "#1158C7",
-          700: "#0D419D",
-          800: "#092F73",
-          900: "#051D4D",
+          DEFAULT: "#00ABA9",
+          50:  "#E0F7F7",
+          100: "#B3EBEA",
+          200: "#80DEDC",
+          300: "#4DCFCD",
+          400: "#26C6C4",
+          500: "#00ABA9",
+          600: "#008C8A",
+          700: "#006D6B",
+          800: "#004E4D",
+          900: "#002F2E",
         },
-        // Accent
-        accent: {
-          DEFAULT: "#3FB950",   // Frisbee green
-          light: "#56D364",
-          dark: "#2EA043",
+        secondary: {
+          DEFAULT: "#1BA1E2",
+          50: "#E3F4FC",
+          100: "#BFE2F8",
+          200: "#8ACBF3",
+          300: "#54B3EE",
+          400: "#2AADE8",
+          500: "#1BA1E2",
+          600: "#1380BB",
+          700: "#0D5F8B",
+          800: "#073E5C",
+          900: "#031F30",
         },
-        // Warning
-        warning: {
-          DEFAULT: "#D29922",
-          light: "#E3B341",
-          dark: "#9E6A03",
-        },
-        // Danger / Urgent
-        danger: {
-          DEFAULT: "#F85149",   // Vibrant red
-          light: "#FF7B72",
-          dark: "#DA3633",
-        },
-        // Neutrals / Background
+        success:  { DEFAULT: "#339933", light: "#60A960", dark: "#1A591A" },
+        warning:  { DEFAULT: "#F09609", light: "#FAAA24", dark: "#B87000" },
+        danger:   { DEFAULT: "#E51400", light: "#FF3322", dark: "#A51000" },
+        magenta:  { DEFAULT: "#D80073", light: "#FF3399", dark: "#A30058" },
+        purple:   { DEFAULT: "#A200FF", light: "#C155FF", dark: "#7A00BF" },
         surface: {
-          DEFAULT: "#161B22",   // card bg
-          raised: "#21262D",    // elevated card
-          overlay: "#30363D",   // overlays, inputs
-          border: "#424D5B",    // subtle borders
+          DEFAULT: "#F4F4F4",
+          raised: "#FFFFFF",
+          overlay: "#E6E6E6",
+          border: "#D8D8D8",
+          inverse: "#1A1A1A",
         },
         bg: {
-          DEFAULT: "#0D1117",   // main background
-          secondary: "#010409", // deepest background
+          DEFAULT: "#FFFFFF",
+          secondary: "#F4F4F4",
+          inverse: "#000000",
         },
-        // Text
         txt: {
-          primary:   "#F0F6FC",
-          secondary: "#8B949E",
-          muted:     "#484F58",
-          inverse:   "#0D1117",
+          primary:   "#000000",
+          secondary: "#5C5C5C",
+          muted:     "#8A8A8A",
+          inverse:   "#FFFFFF",
         },
       },
       fontFamily: {
-        sans:  ["Inter_400Regular", "System"],
-        mid:   ["Inter_500Medium", "System"],
-        semi:  ["Inter_600SemiBold", "System"],
-        bold:  ["Inter_700Bold", "System"],
-        black: ["Inter_900Black", "System"],
+        sans:  ["Inter_400Regular", "Segoe UI", "System"],
+        mid:   ["Inter_500Medium",  "Segoe UI", "System"],
+        semi:  ["Inter_600SemiBold","Segoe UI", "System"],
+        bold:  ["Inter_700Bold",    "Segoe UI", "System"],
+        black: ["Inter_900Black",   "Segoe UI", "System"],
+        light: ["Inter_300Light",   "Segoe UI", "System"],
       },
       borderRadius: {
-        "2xl": "16px",
-        "3xl": "24px",
-        "4xl": "32px",
+        none: "0px",
+        xs: "0px",
+        sm: "0px",
+        DEFAULT: "0px",
+        md: "0px",
+        lg: "0px",
+        xl: "0px",
+        "2xl": "0px",
+        "3xl": "0px",
+        "4xl": "0px",
+        full: "0px",
       },
       spacing: {
         "4.5": "18px",

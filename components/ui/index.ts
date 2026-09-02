@@ -1,5 +1,10 @@
 export { Avatar } from "./Avatar";
 export { Badge } from "./Badge";
 export { Button } from "./Button";
-export { Card } from "./Card";
+export { Card, CardSection } from "./Card";
 export { ReadOnlyBanner } from "./ReadOnlyBanner";
+export { Tile, TileGrid, TileCell } from "./Tile";
+export { Hub, HubPanel } from "./Hub";
+export { Pivot, PivotContent, PivotPanorama } from "./Pivot";
+export { PageHeader, Divider, IconChip, SectionLabel } from "./Page";
+export { Segmented } from "./SegmentedControl";

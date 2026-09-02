@@ -3,62 +3,60 @@ import { FlatList, View, Text, TouchableOpacity, RefreshControl, ActivityIndicat
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useAuthStore } from "@/store/authStore";
 import { useTeams } from "@/hooks/useApi";
 import { Badge } from "@/components/ui/Badge";
 import { ReadOnlyBanner } from "@/components/ui/ReadOnlyBanner";
+import { PageHeader } from "@/components/ui/Page";
 import type { Team } from "@/types";
 
+const TEAM_ACCENTS = ["#00ABA9", "#1BA1E2", "#339933", "#F09609", "#D80073", "#A200FF"];
+
+function teamAccent(id: string): string {
+  let code = 0;
+  for (let i = 0; i < id.length; i++) code += id.charCodeAt(i);
+  return TEAM_ACCENTS[code % TEAM_ACCENTS.length];
+}
+
 const TeamCard = React.memo(function TeamCard({ team, onPress }: { team: Team; onPress: () => void }) {
-  const accentColor = team.color ?? "#1F6FEB";
+  const accent = team.color ?? teamAccent(team.id);
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      className="mb-5 shadow-lg"
-      activeOpacity={0.9}
-    >
-      <View className="rounded-3xl overflow-hidden bg-surface-raised border border-surface-border/40">
-        <View className="p-5">
-          <View className="flex-row items-center justify-between mb-4">
-            <View
-              className="px-2 py-1 rounded-lg mr-3"
-              style={{ backgroundColor: `${accentColor}20` }}
-            >
-              <Text style={{ color: accentColor }} className="text-[10px] font-black uppercase tracking-widest">
-                {team.sport ?? "Ultimate"}
+    <TouchableOpacity onPress={onPress} activeOpacity={0.9} className="mb-4">
+      <View className="bg-surface-raised border-2 border-surface-border">
+        <View className="flex-row" style={{ backgroundColor: accent }}>
+          <View className="flex-1 p-4">
+            <Text className="text-txt-inverse text-[10px] font-bold uppercase tracking-[0.2em]">
+              {team.sport ?? "Ultimate"}
+            </Text>
+            <Text className="text-txt-inverse text-2xl font-light lowercase tracking-tight mt-1" numberOfLines={1}>
+              {team.name}
+            </Text>
+          </View>
+          {team.season && (
+            <View className="bg-white px-3 self-start m-3">
+              <Text className="text-txt-primary text-[10px] font-bold uppercase tracking-wider">
+                {team.season}
               </Text>
             </View>
-            <Badge label={team.season ?? "Season"} variant="primary" />
-          </View>
+          )}
+        </View>
 
-          <Text className="text-txt-primary text-2xl font-black mb-1" numberOfLines={1}>
-            {team.name}
-          </Text>
-          <Text className="text-txt-secondary text-sm font-semi mb-4" numberOfLines={1}>
+        <View className="p-4">
+          <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-wider">
             {team.division ?? "Division Not Set"}
           </Text>
 
-          <View className="flex-row items-center gap-4 mb-5 pt-4 border-t border-surface-overlay">
+          <View className="flex-row items-center gap-4 mt-3 pt-3 border-t-2 border-surface-border">
             <View className="flex-row items-center gap-1.5">
-              <Ionicons name="people" size={14} color="#8B949E" />
+              <Ionicons name="people" size={14} color="#5C5C5C" />
               <Text className="text-txt-secondary text-xs font-bold">
-                {team.roster?.length || 0} Members
+                {team.roster?.length || 0} members
               </Text>
             </View>
             <View className="flex-row items-center gap-1.5">
-              <Ionicons name="location" size={14} color="#8B949E" />
-              <Text className="text-txt-secondary text-xs font-bold">PADA Org</Text>
+              <Ionicons name="location" size={14} color="#5C5C5C" />
+              <Text className="text-txt-secondary text-xs font-bold uppercase tracking-wider">PADA</Text>
             </View>
-          </View>
-
-          <View className="flex-row gap-3">
-            <TouchableOpacity
-              onPress={onPress}
-              className="flex-1 bg-primary-500 rounded-2xl py-3 items-center justify-center shadow-md shadow-primary-500/20"
-            >
-              <Text className="text-white text-xs font-black uppercase tracking-wider">View Details</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -84,23 +82,14 @@ export default function TeamsScreen() {
   if (isLoading && !refreshing) {
     return (
       <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <ActivityIndicator size="large" color="#1E88E5" />
+        <ActivityIndicator size="large" color="#00ABA9" />
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
-      <LinearGradient
-        colors={["#161B22", "#0D1117"]}
-        className="px-5 pt-6 pb-6 rounded-b-[40px] shadow-2xl"
-      >
-        <Text className="text-primary-300 text-xs font-bold tracking-[2px] uppercase mb-1">PADA.org</Text>
-        <Text className="text-txt-primary text-3xl font-black">My Teams</Text>
-        <Text className="text-txt-secondary text-sm font-semi mt-1 opacity-80">
-          All teams you're currently registered with
-       </Text>
-     </LinearGradient>
+      <PageHeader title="my teams" subtitle="pada.org" />
 
       <ReadOnlyBanner />
 
@@ -108,25 +97,22 @@ export default function TeamsScreen() {
         data={teams}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <TeamCard
-            team={item}
-            onPress={() => router.push(`/teams/${item.id}`)}
-          />
+          <TeamCard team={item} onPress={() => router.push(`/teams/${item.id}`)} />
         )}
-        contentContainerClassName="px-5 pb-8"
+        contentContainerClassName="px-5 pb-8 pt-2"
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1E88E5" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00ABA9" />
         }
         initialNumToRender={5}
         maxToRenderPerBatch={5}
         windowSize={5}
-        removeClippedSubviews={true}
+        removeClippedSubviews
         ListEmptyComponent={
           <View className="mt-20 items-center gap-3">
-            <Ionicons name="people-outline" size={48} color="#484F58" />
-            <Text className="text-txt-muted text-base font-mid text-center">
-              No teams found.{"\n"}Register on the Pada.org website.
+            <Ionicons name="people-outline" size={48} color="#8A8A8A" />
+            <Text className="text-txt-secondary text-sm font-bold text-center lowercase">
+              no teams found.{"\n"}register on the pada.org website.
             </Text>
           </View>
         }

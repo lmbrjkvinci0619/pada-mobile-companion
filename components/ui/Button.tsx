@@ -3,47 +3,50 @@ import {
   TouchableOpacity,
   Text,
   ActivityIndicator,
+  View,
   type TouchableOpacityProps,
 } from "react-native";
 import { cn } from "@/utils/cn";
 
+type Variant = "primary" | "secondary" | "ghost" | "danger" | "success" | "outline";
+type Size = "sm" | "md" | "lg";
+
 interface ButtonProps extends TouchableOpacityProps {
-  variant?: "primary" | "secondary" | "ghost" | "danger" | "success" | "outline";
-  size?: "sm" | "md" | "lg";
+  variant?: Variant;
+  size?: Size;
   loading?: boolean;
   label: string;
   icon?: React.ReactNode;
-  activeOpacity?: number;
 }
 
-const variantClass: Record<string, string> = {
-  primary: "bg-primary-500 active:bg-primary-600",
-  secondary: "bg-surface-raised border border-surface-overlay active:bg-surface-overlay",
-  ghost: "bg-transparent active:bg-surface-raised",
-  danger: "bg-danger active:bg-danger-dark",
-  success: "bg-accent active:bg-accent-dark",
-  outline: "bg-transparent border border-primary-500/40 active:bg-primary-500/10",
+const variantContainer: Record<Variant, string> = {
+  primary:   "bg-primary active:bg-primary-700 border-2 border-primary",
+  secondary: "bg-surface active:bg-surface-overlay border-2 border-surface-border",
+  ghost:     "bg-transparent active:bg-surface-overlay border-2 border-transparent",
+  danger:    "bg-danger active:opacity-90 border-2 border-danger",
+  success:   "bg-success active:opacity-90 border-2 border-success",
+  outline:   "bg-transparent active:bg-primary-50 border-2 border-primary",
 };
 
-const textClass: Record<string, string> = {
-  primary: "text-white font-semi",
-  secondary: "text-txt-primary font-semi",
-  ghost: "text-primary font-semi",
-  danger: "text-white font-semi",
-  success: "text-white font-semi",
-  outline: "text-primary-300 font-semi",
+const variantText: Record<Variant, string> = {
+  primary:   "text-txt-inverse",
+  secondary: "text-txt-primary",
+  ghost:     "text-primary",
+  danger:    "text-txt-inverse",
+  success:   "text-txt-inverse",
+  outline:   "text-primary",
 };
 
-const sizeClass: Record<string, string> = {
-  sm: "px-3 py-1.5 rounded-xl",
-  md: "px-5 py-3 rounded-2xl",
-  lg: "px-6 py-4 rounded-2xl",
+const containerSize: Record<Size, string> = {
+  sm: "px-3 py-1.5",
+  md: "px-5 py-3",
+  lg: "px-6 py-4",
 };
 
-const textSizeClass: Record<string, string> = {
-  sm: "text-sm",
-  md: "text-base",
-  lg: "text-lg",
+const textSize: Record<Size, string> = {
+  sm: "text-xs",
+  md: "text-sm",
+  lg: "text-base",
 };
 
 export const Button = React.memo(function Button({
@@ -56,14 +59,15 @@ export const Button = React.memo(function Button({
   className,
   ...props
 }: ButtonProps) {
+  const isMuted = variant === "ghost" || variant === "secondary" || variant === "outline";
   return (
     <TouchableOpacity
       {...props}
       disabled={disabled || loading}
       className={cn(
         "flex-row items-center justify-center gap-2",
-        variantClass[variant],
-        sizeClass[size],
+        variantContainer[variant],
+        containerSize[size],
         (disabled || loading) && "opacity-50",
         className,
       )}
@@ -71,12 +75,14 @@ export const Button = React.memo(function Button({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === "ghost" || variant === "secondary" || variant === "outline" ? "#1E88E5" : "#fff"}
+          color={isMuted ? "#00ABA9" : "#FFFFFF"}
         />
       ) : (
-        icon
+        icon ? <View>{icon}</View> : null
       )}
-      <Text className={cn(textClass[variant], textSizeClass[size])}>{label}</Text>
+      <Text className={cn("font-bold uppercase tracking-wider", variantText[variant], textSize[size])}>
+        {label}
+      </Text>
     </TouchableOpacity>
   );
 });

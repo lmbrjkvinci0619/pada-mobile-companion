@@ -9,8 +9,8 @@ import { format, parseISO } from "date-fns";
 import { useAuthStore } from "@/store/authStore";
 import { useRegistrations } from "@/hooks/useApi";
 import { Badge } from "@/components/ui/Badge";
-import { Card } from "@/components/ui/Card";
 import { ReadOnlyBanner } from "@/components/ui/ReadOnlyBanner";
+import { PageHeader, SectionLabel } from "@/components/ui/Page";
 import { openRegistrationInBrowser } from "@/lib/urlUtils";
 import type { Registration, RegistrationStatus, RegistrationType } from "@/types";
 
@@ -31,70 +31,59 @@ function statusBadge(status: RegistrationStatus) {
   return <Badge label={label} variant={variant} />;
 }
 
-function typeIcon(type: RegistrationType): keyof typeof Ionicons.glyphMap {
-  const icons: Record<RegistrationType, keyof typeof Ionicons.glyphMap> = {
-    team:   "people",
-    league: "trophy",
-    event:  "flag",
-  };
-  return icons[type];
-}
+const TYPE_ACCENTS: Record<RegistrationType, string> = {
+  team:   "#1BA1E2",
+  league: "#F09609",
+  event:  "#339933",
+};
 
-function typeColor(type: RegistrationType): string {
-  const colors: Record<RegistrationType, string> = {
-    team:   "#1E88E5",
-    league: "#FFA000",
-    event:  "#43A047",
-  };
-  return colors[type];
-}
+const TYPE_ICONS: Record<RegistrationType, keyof typeof Ionicons.glyphMap> = {
+  team:   "people",
+  league: "trophy",
+  event:  "flag",
+};
 
 const RegistrationCard = React.memo(function RegistrationCard({ reg }: { reg: Registration }) {
-  const handlePress = () => {
-    openRegistrationInBrowser(reg.id, reg.eventId, reg.teamId, reg.leagueId);
-  };
-
+  const accent = TYPE_ACCENTS[reg.type];
   return (
     <TouchableOpacity
-      onPress={handlePress}
+      onPress={() => openRegistrationInBrowser(reg.id, reg.eventId, reg.teamId, reg.leagueId)}
+      activeOpacity={0.85}
       className="mb-3"
     >
-      <Card elevated className="gap-3">
-        <View className="flex-row items-start gap-3">
-          <View
-            className="w-10 h-10 rounded-xl items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: `${typeColor(reg.type)}22` }}
-          >
-            <Ionicons name={typeIcon(reg.type)} size={20} color={typeColor(reg.type)} />
-          </View>
-          <View className="flex-1">
-            <Text className="text-txt-primary font-semi text-base" numberOfLines={1}>
-              {reg.organizationName}
-            </Text>
-            {reg.seasonName && (
-              <Text className="text-txt-secondary text-sm font-mid mt-0.5">
-                {reg.seasonName}
-              </Text>
-            )}
-          </View>
-          {statusBadge(reg.status)}
-          <Ionicons name="open-outline" size={18} color="#8B949E" />
+      <View className="flex-row items-start gap-3 bg-surface border-2 border-surface-border p-4">
+        <View
+          className="w-10 h-10 items-center justify-center"
+          style={{ backgroundColor: accent }}
+        >
+          <Ionicons name={TYPE_ICONS[reg.type]} size={20} color="#FFFFFF" />
         </View>
-
-        <View className="flex-row items-center gap-4 border-t border-surface-overlay pt-2">
-          <View className="flex-row items-center gap-1.5">
-            <Ionicons name="pricetag-outline" size={13} color="#8B949E" />
-            <Text className="text-txt-muted text-xs font-mid capitalize">{reg.type}</Text>
-          </View>
-          <View className="flex-row items-center gap-1.5">
-            <Ionicons name="calendar-outline" size={13} color="#8B949E" />
-            <Text className="text-txt-muted text-xs font-mid">
-              {format(parseISO(reg.startDate), "MMM d, yyyy")}
-              {reg.endDate ? ` – ${format(parseISO(reg.endDate), "MMM d, yyyy")}` : ""}
+        <View className="flex-1">
+          <Text className="text-txt-primary font-bold text-base" numberOfLines={1}>
+            {reg.organizationName}
+          </Text>
+          {reg.seasonName && (
+            <Text className="text-txt-secondary text-xs mt-0.5">
+              {reg.seasonName}
             </Text>
-          </View>
+          )}
         </View>
-      </Card>
+        {statusBadge(reg.status)}
+        <Ionicons name="open-outline" size={18} color="#5C5C5C" />
+      </View>
+      <View className="flex-row items-center gap-4 px-4 py-2 bg-surface-overlay border-t-2 border-surface-border">
+        <View className="flex-row items-center gap-1.5">
+          <Ionicons name="pricetag-outline" size={13} color="#5C5C5C" />
+          <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-wider">{reg.type}</Text>
+        </View>
+        <View className="flex-row items-center gap-1.5">
+          <Ionicons name="calendar-outline" size={13} color="#5C5C5C" />
+          <Text className="text-txt-secondary text-[11px] font-bold">
+            {format(parseISO(reg.startDate), "MMM d, yyyy").toLowerCase()}
+            {reg.endDate ? ` – ${format(parseISO(reg.endDate), "MMM d, yyyy").toLowerCase()}` : ""}
+          </Text>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 });
@@ -123,58 +112,44 @@ export default function RegistrationsScreen() {
       r.status === "incomplete" ||
       r.status === "active" ||
       r.status === "paid" ||
-      r.status === "partial"
+      r.status === "partial",
     );
-    const historical = regs.filter((r) =>
-      r.status === "inactive" ||
-      r.status === "refunded"
-    );
-
+    const historical = regs.filter((r) => r.status === "inactive" || r.status === "refunded");
     return [
-      { title: "Current", data: current },
-      { title: "Past Seasons", data: historical },
+      { title: "current", data: current },
+      { title: "past seasons", data: historical },
     ].filter((s) => s.data.length > 0);
   }, [regs]);
 
   if (isLoading && !refreshing) {
     return (
       <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <ActivityIndicator size="large" color="#1E88E5" />
+        <ActivityIndicator size="large" color="#00ABA9" />
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
-      <View className="px-5 pt-4 pb-4">
-        <Text className="text-txt-primary text-2xl font-black">Registrations</Text>
-        <Text className="text-txt-secondary text-sm font-mid mt-1">
-          Your Pada.org league, team & event registrations
-        </Text>
-      </View>
-
+      <PageHeader title="registrations" subtitle="your pada.org registrations" />
       <ReadOnlyBanner message="Registrations are read-only. To register or make changes, visit Pada.org." />
 
       <ScrollView
-        className="flex-1 px-5"
+        className="flex-1 px-5 pt-2"
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1E88E5" />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00ABA9" />}
       >
         {sections.length === 0 ? (
           <View className="mt-20 items-center gap-3">
-            <Ionicons name="document-text-outline" size={48} color="#484F58" />
-            <Text className="text-txt-muted text-base font-mid text-center">
-              No registrations found.{"\n"}Register on the Pada.org website.
+            <Ionicons name="document-text-outline" size={48} color="#8A8A8A" />
+            <Text className="text-txt-secondary text-sm font-bold text-center lowercase">
+              no registrations found.{"\n"}register on the pada.org website.
             </Text>
           </View>
         ) : (
           sections.map((section) => (
-            <View key={section.title} className="mb-4">
-              <Text className="text-txt-secondary text-xs font-semi uppercase tracking-widest mb-3">
-                {section.title}
-              </Text>
+            <View key={section.title} className="mb-5">
+              <SectionLabel>{section.title}</SectionLabel>
               {section.data.map((reg) => (
                 <RegistrationCard key={reg.id} reg={reg} />
               ))}

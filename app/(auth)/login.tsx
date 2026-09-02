@@ -19,25 +19,22 @@ import { openUrl } from "@/lib/urlUtils";
 
 export default function LoginScreen() {
   const { login, isLoading, error } = useAuthStore();
-  const [email, setEmail]         = useState("");
-  const [password, setPassword]   = useState("");
-  const [showPass, setShowPass]   = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
   const [rememberMe, setRemember] = useState(true);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleLogin = async () => {
     const trimmedEmail = email.trim();
-
     if (!trimmedEmail || !password) {
       setValidationError("Please enter both email and password.");
       return;
     }
-
     if (!isValidEmail(trimmedEmail)) {
       setValidationError("Please enter a valid email address.");
       return;
     }
-
     setValidationError(null);
     const ok = await login(trimmedEmail, password, rememberMe);
     if (ok) router.replace("/(tabs)");
@@ -53,41 +50,38 @@ export default function LoginScreen() {
         contentContainerClassName="flex-grow items-center justify-center px-6 py-12"
         keyboardShouldPersistTaps="handled"
       >
-        {/* Logo / Brand */}
         <View className="items-center mb-10">
-          <View className="w-20 h-20 rounded-3xl bg-primary-500 items-center justify-center mb-4 shadow-lg">
-            <Text className="text-4xl">{SPORT_EMOJI}</Text>
+          <View className="w-24 h-24 bg-primary items-center justify-center mb-5 border-2 border-primary-700">
+            <Text className="text-5xl">{SPORT_EMOJI}</Text>
           </View>
-          <Text className="text-txt-primary text-3xl font-black tracking-tight">
+          <Text className="text-primary text-5xl font-light lowercase tracking-tight">
             {APP_NAME}
           </Text>
-          <Text className="text-txt-secondary text-base font-mid mt-1">
-            Your Pada.org Ultimate Frisbee companion
+          <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-[0.2em] mt-2 text-center">
+            your pada.org ultimate frisbee companion
           </Text>
         </View>
 
-        {/* Card */}
-        <View className="w-full bg-surface rounded-3xl p-6 gap-5 shadow-xl border border-surface-overlay/30">
-          <Text className="text-txt-primary text-xl font-bold text-center">
-            Sign in to PadaHub
+        <View className="w-full bg-surface border-2 border-surface-border p-6 gap-5">
+          <Text className="text-txt-primary text-xl font-bold uppercase tracking-[0.2em] text-center">
+            Sign In
           </Text>
 
-          {/* Error */}
           {(error || validationError) && (
-            <View className="bg-danger/10 border border-danger/30 rounded-xl px-4 py-3">
-              <Text className="text-danger-light text-sm font-mid">{validationError || error}</Text>
+            <View className="flex-row items-start gap-3 bg-danger/10 border-2 border-danger px-4 py-3">
+              <Ionicons name="alert-circle" size={18} color="#E51400" />
+              <Text className="text-danger text-sm font-bold flex-1">{validationError || error}</Text>
             </View>
           )}
 
-          {/* Email */}
           <View className="gap-2">
-            <Text className="text-txt-secondary text-sm font-semi">Email</Text>
-            <View className="flex-row items-center bg-surface-raised border border-surface-overlay rounded-xl px-4 py-3 gap-3">
-              <Ionicons name="mail-outline" size={18} color="#8B949E" />
+            <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-[0.18em]">Email</Text>
+            <View className="flex-row items-center bg-surface border-2 border-surface-border px-4 py-3 gap-3">
+              <Ionicons name="mail-outline" size={18} color="#5C5C5C" />
               <TextInput
-                className="flex-1 text-txt-primary text-base font-mid"
+                className="flex-1 text-txt-primary text-sm"
                 placeholder="your@email.com"
-                placeholderTextColor="#484F58"
+                placeholderTextColor="#8A8A8A"
                 value={email}
                 onChangeText={(text) => { setEmail(text); setValidationError(null); }}
                 keyboardType="email-address"
@@ -98,15 +92,14 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          {/* Password */}
           <View className="gap-2">
-            <Text className="text-txt-secondary text-sm font-semi">Password</Text>
-            <View className="flex-row items-center bg-surface-raised border border-surface-overlay rounded-xl px-4 py-3 gap-3">
-              <Ionicons name="lock-closed-outline" size={18} color="#8B949E" />
+            <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-[0.18em]">Password</Text>
+            <View className="flex-row items-center bg-surface border-2 border-surface-border px-4 py-3 gap-3">
+              <Ionicons name="lock-closed-outline" size={18} color="#5C5C5C" />
               <TextInput
-                className="flex-1 text-txt-primary text-base font-mid"
+                className="flex-1 text-txt-primary text-sm"
                 placeholder="Your password"
-                placeholderTextColor="#484F58"
+                placeholderTextColor="#8A8A8A"
                 value={password}
                 onChangeText={(text) => { setPassword(text); setValidationError(null); }}
                 secureTextEntry={!showPass}
@@ -115,37 +108,27 @@ export default function LoginScreen() {
                 onSubmitEditing={handleLogin}
               />
               <TouchableOpacity onPress={() => setShowPass((v) => !v)}>
-                <Ionicons
-                  name={showPass ? "eye-off-outline" : "eye-outline"}
-                  size={18}
-                  color="#8B949E"
-                />
+                <Ionicons name={showPass ? "eye-off-outline" : "eye-outline"} size={18} color="#5C5C5C" />
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* Remember Me */}
           <TouchableOpacity
             className="flex-row items-center gap-3"
             onPress={() => setRemember((v) => !v)}
           >
             <View
-              className={`w-5 h-5 rounded-md border-2 items-center justify-center ${
-                rememberMe
-                  ? "bg-primary-500 border-primary-500"
-                  : "border-surface-overlay"
+              className={`w-5 h-5 border-2 items-center justify-center ${
+                rememberMe ? "bg-primary border-primary" : "border-surface-border"
               }`}
             >
-              {rememberMe && (
-                <Ionicons name="checkmark" size={12} color="#fff" />
-              )}
+              {rememberMe && <Ionicons name="checkmark" size={12} color="#FFFFFF" />}
             </View>
-            <Text className="text-txt-secondary text-sm font-mid">
+            <Text className="text-txt-secondary text-xs font-bold uppercase tracking-wider">
               Stay signed in for 30 days
             </Text>
           </TouchableOpacity>
 
-          {/* Login Button */}
           <Button
             label={isLoading ? "" : "Sign In"}
             loading={isLoading}
@@ -154,18 +137,16 @@ export default function LoginScreen() {
             className="mt-1"
           />
 
-          {/* Forgot Password */}
           <TouchableOpacity
             className="items-center"
             onPress={() => openUrl("https://pada.usetopscore.com/password_resets/new")}
           >
-            <Text className="text-primary-400 text-sm font-semi">
-              Forgot your password?
+            <Text className="text-primary text-[11px] font-bold uppercase tracking-[0.2em]">
+              forgot password?
             </Text>
           </TouchableOpacity>
         </View>
-
-        </ScrollView>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }

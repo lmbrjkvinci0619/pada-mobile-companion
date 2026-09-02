@@ -1,9 +1,10 @@
 import "../global.css";
-import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_900Black } from "@expo-google-fonts/inter";
+import React from "react";
+import { useFonts, Inter_300Light, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_900Black } from "@expo-google-fonts/inter";
 import { Slot } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState, Component, ReactNode } from "react";
-import { View, ActivityIndicator, Text, TouchableOpacity, LogBox } from "react-native";
+import { View, ActivityIndicator, Text, TouchableOpacity, LogBox, StatusBar } from "react-native";
 import { useAuthStore } from "@/store/authStore";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -19,8 +20,8 @@ SplashScreen.preventAutoHideAsync();
 function MockDataWarning() {
   if (!USE_MOCK_DATA) return null;
   return (
-    <View className="absolute top-12 left-0 right-0 z-50 bg-yellow-500/90 py-2 px-4">
-      <Text className="text-yellow-900 text-xs font-bold text-center">
+    <View className="absolute top-12 left-0 right-0 z-50 bg-warning py-2 px-4">
+      <Text className="text-txt-primary text-[10px] font-bold uppercase tracking-[0.2em] text-center">
         DEVELOPMENT MODE — Using mock data. Set EXPO_PUBLIC_USE_MOCK_DATA=false for production.
       </Text>
     </View>
@@ -35,13 +36,9 @@ const requiredEnvVars = [
 
 function validateEnvironment(): string[] {
   const errors: string[] = [];
-  
   for (const envVar of requiredEnvVars) {
-    if (!envVar.value && envVar.critical) {
-      errors.push(`Missing required environment variable: ${envVar.key}`);
-    }
+    if (!envVar.value && envVar.critical) errors.push(`Missing required environment variable: ${envVar.key}`);
   }
-  
   return errors;
 }
 
@@ -54,16 +51,8 @@ function logErrorToStorage(error: Error, context?: string): void {
     stack: error.stack,
   };
   errorLog.push(entry);
-  
-  if (errorLog.length > 50) {
-    errorLog.shift();
-  }
-  
+  if (errorLog.length > 50) errorLog.shift();
   console.error("Error logged:", entry);
-}
-
-function getErrorLog(): string {
-  return errorLog.map(e => `[${e.timestamp}] ${e.error}`).join("\n");
 }
 
 interface ErrorBoundaryState {
@@ -86,28 +75,22 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
     console.error("ErrorBoundary caught:", error.message, errorInfo.componentStack);
   }
 
-  handleRetry = () => {
-    this.setState({ hasError: false, error: undefined });
-  };
+  handleRetry = () => this.setState({ hasError: false, error: undefined });
 
   render() {
     if (this.state.hasError) {
       return (
         <View className="flex-1 items-center justify-center bg-bg p-6">
-          <Text className="text-danger text-xl font-black mb-2">Something went wrong</Text>
+          <Text className="text-danger text-xl font-bold uppercase tracking-wider mb-2">Something went wrong</Text>
           <Text className="text-txt-secondary text-center mb-4">
             {this.state.error?.message || "An unexpected error occurred"}
           </Text>
-          <TouchableOpacity
-            className="bg-primary-500 px-6 py-3 rounded-xl"
-            onPress={this.handleRetry}
-          >
-            <Text className="text-white font-bold">Try Again</Text>
+          <TouchableOpacity className="bg-primary px-6 py-3" onPress={this.handleRetry} activeOpacity={0.85}>
+            <Text className="text-txt-inverse font-bold uppercase tracking-wider text-xs">Try Again</Text>
           </TouchableOpacity>
         </View>
       );
     }
-
     return this.props.children;
   }
 }
@@ -115,20 +98,31 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
 function InitialLoading() {
   return (
     <View className="flex-1 items-center justify-center bg-bg">
-      <ActivityIndicator size="large" color="#1E88E5" />
-      <Text className="text-txt-secondary mt-4">Loading...</Text>
+      <ActivityIndicator size="large" color="#00ABA9" />
     </View>
   );
 }
 
 export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({
+  const [fontsLoaded] = useFonts({
+    Inter_300Light,
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
     Inter_900Black,
   });
+  const [fontsTimedOut, setFontsTimedOut] = React.useState(false);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!fontsLoaded) {
+        console.warn("[Startup] _layout: Font loading timed out, proceeding");
+        setFontsTimedOut(true);
+      }
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, [fontsLoaded]);
 
   const { initialize, isLoading: authLoading, user } = useAuthStore();
   const [isReady, setIsReady] = useState(false);
@@ -136,77 +130,68 @@ export default function RootLayout() {
   const [envErrors] = useState(() => validateEnvironment());
 
   useEffect(() => {
-    if (fontsLoaded && !fontError) {
-      initialize()
-        .then(() => setIsReady(true))
+    if (fontsLoaded) {
+      const initPromise = initialize();
+      const timeout = setTimeout(() => {
+        console.warn("[Startup] _layout: Auth initialization timed out");
+        setIsReady(true);
+        setError("Initialization timed out. Try force-quitting and reopening the app.");
+      }, 15000);
+      initPromise
+        .then(() => {
+          clearTimeout(timeout);
+          setIsReady(true);
+        })
         .catch((e) => {
+          clearTimeout(timeout);
           logErrorToStorage(e, "Auth initialization");
           setError(e?.message ?? "Failed to initialize app");
           setIsReady(true);
         });
-    } else if (fontError) {
-      logErrorToStorage(fontError, "Font loading");
-      setError("Failed to load fonts");
-      setIsReady(true);
     }
-  }, [fontsLoaded, fontError]);
+  }, [fontsLoaded]);
 
   useEffect(() => {
-    if (isReady && !authLoading) {
-      SplashScreen.hideAsync();
-    }
+    if (isReady && !authLoading) SplashScreen.hideAsync();
   }, [isReady, authLoading]);
 
   useEffect(() => {
-    if (!isReady || authLoading || !user?.id) {
-      return;
-    }
-
+    if (!isReady || authLoading || !user?.id) return;
     let cancelled = false;
     registerForPushNotificationsAsync(user.id).catch((e) => {
       if (!cancelled) console.error("Push registration failed:", e);
     });
-
     const cleanup = setupNotificationListeners(
       (notification) => {
         if (!cancelled) console.log("Notification received in app:", notification);
       },
       (notification, data) => {
         if (cancelled) return;
-        if (data?.announcementId) {
-          router.push(`/announcements/${data.announcementId}`);
-        }
-      }
+        if (data?.announcementId) router.push(`/announcements/${data.announcementId}`);
+      },
     );
-
-    return () => {
-      cancelled = true;
-      cleanup();
-    };
+    return () => { cancelled = true; cleanup(); };
   }, [isReady, authLoading, user?.id]);
 
   useEffect(() => {
-    if (envErrors.length > 0) {
-      console.warn("Environment validation errors:", envErrors);
-    }
+    if (envErrors.length > 0) console.warn("Environment validation errors:", envErrors);
   }, [envErrors]);
 
-  if (!fontsLoaded || !isReady) {
-    return <InitialLoading />;
-  }
+  if ((!fontsLoaded && !fontsTimedOut) || !isReady) return <InitialLoading />;
 
   if (error) {
     return (
       <View className="flex-1 items-center justify-center bg-bg p-6">
-        <Text className="text-danger text-lg font-bold mb-2">Something went wrong</Text>
+        <Text className="text-danger text-lg font-bold uppercase tracking-wider mb-2">Something went wrong</Text>
         <Text className="text-txt-secondary text-center mb-4">{error}</Text>
-        <Text className="text-txt-muted text-sm">Please restart the app</Text>
+        <Text className="text-txt-muted text-xs uppercase tracking-wider font-bold">Please restart the app</Text>
       </View>
     );
   }
 
   return (
     <ErrorBoundary>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       <QueryClientProvider client={queryClient}>
         <MockDataWarning />
         <Slot />

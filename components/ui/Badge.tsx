@@ -2,58 +2,67 @@ import React from "react";
 import { View, Text } from "react-native";
 import { cn } from "@/utils/cn";
 
-type BadgeVariant =
+type Variant =
   | "default"
   | "primary"
+  | "secondary"
   | "success"
   | "warning"
   | "danger"
-  | "ghost"
-  | "disc";
+  | "ghost";
 
 interface BadgeProps {
   label: string;
-  variant?: BadgeVariant;
+  variant?: Variant;
   size?: "sm" | "md";
   className?: string;
+  accent?: string;
 }
 
-const variantClass: Record<BadgeVariant, string> = {
-  default:  "bg-surface-overlay",
-  primary:  "bg-primary-500/20 border border-primary-500/40",
-  success:  "bg-accent/20 border border-accent/40",
-  warning:  "bg-warning/20 border border-warning/40",
-  danger:   "bg-danger/20 border border-danger/40",
-  ghost:    "bg-transparent border border-surface-overlay",
-  disc:     "bg-disc/20 border border-disc/40",
+const containerVariant: Record<Variant, string> = {
+  default:   "bg-surface-overlay border-2 border-surface-border",
+  primary:   "bg-primary-50 border-2 border-primary",
+  secondary: "bg-secondary-50 border-2 border-secondary",
+  success:   "bg-success/10 border-2 border-success",
+  warning:   "bg-warning/10 border-2 border-warning",
+  danger:    "bg-danger/10 border-2 border-danger",
+  ghost:     "bg-transparent border-2 border-surface-border",
 };
 
-const textClass: Record<BadgeVariant, string> = {
-  default: "text-txt-secondary",
-  primary: "text-primary-300",
-  success: "text-disc-light",
-  warning: "text-warning",
-  danger:  "text-danger-light",
-  ghost:   "text-txt-secondary",
-  disc:    "text-disc-light",
+const textVariant: Record<Variant, string> = {
+  default:   "text-txt-secondary",
+  primary:   "text-primary-700",
+  secondary: "text-secondary-700",
+  success:   "text-success",
+  warning:   "text-warning",
+  danger:    "text-danger",
+  ghost:     "text-txt-secondary",
 };
 
-export const Badge = React.memo(function Badge({ label, variant = "default", size = "sm", className }: BadgeProps) {
+export const Badge = React.memo(function Badge({
+  label,
+  variant = "default",
+  size = "sm",
+  className,
+  accent,
+}: BadgeProps) {
   return (
     <View
       className={cn(
-        "rounded-full items-center justify-center",
-        size === "sm" ? "px-2.5 py-0.5" : "px-3.5 py-1",
-        variantClass[variant],
+        "items-center justify-center self-start",
+        size === "sm" ? "px-2 py-0.5" : "px-3 py-1",
+        containerVariant[variant],
         className,
       )}
+      style={accent ? { backgroundColor: `${accent}1A`, borderColor: accent } : undefined}
     >
       <Text
         className={cn(
-          "font-semi",
-          size === "sm" ? "text-xs" : "text-sm",
-          textClass[variant],
+          "font-bold uppercase tracking-wider",
+          size === "sm" ? "text-[10px]" : "text-xs",
+          textVariant[variant],
         )}
+        style={accent ? { color: accent } : undefined}
       >
         {label}
       </Text>

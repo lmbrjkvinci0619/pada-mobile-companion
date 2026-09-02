@@ -9,6 +9,7 @@ interface AvatarProps {
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   className?: string;
   border?: boolean;
+  accent?: string;
 }
 
 const sizeMap = {
@@ -27,30 +28,37 @@ function getInitials(name?: string): string {
     : name[0].toUpperCase();
 }
 
-const COLORS = [
-  "bg-primary-500",
-  "bg-accent",
-  "bg-warning",
-  "bg-surface-overlay",
-  "bg-primary-700",
+const FALLBACK_FILLS = [
+  "#00ABA9",
+  "#1BA1E2",
+  "#339933",
+  "#F09609",
+  "#D80073",
+  "#A200FF",
 ];
 
 function seedColor(name?: string): string {
-  if (!name) return COLORS[0];
-  const first = name.charCodeAt(0) || 0;
-  const second = name.length > 1 ? (name.charCodeAt(1) || 0) : 0;
-  const code = first + second;
-  return COLORS[code % COLORS.length] ?? COLORS[0];
+  if (!name) return FALLBACK_FILLS[0];
+  let code = 0;
+  for (let i = 0; i < name.length; i++) code += name.charCodeAt(i);
+  return FALLBACK_FILLS[code % FALLBACK_FILLS.length] ?? FALLBACK_FILLS[0];
 }
 
-export const Avatar = React.memo(function Avatar({ uri, name, size = "md", className, border = false }: AvatarProps) {
+export const Avatar = React.memo(function Avatar({
+  uri,
+  name,
+  size = "md",
+  className,
+  border = false,
+  accent,
+}: AvatarProps) {
   const { container, text } = sizeMap[size];
 
   const commonClasses = cn(
     container,
-    "rounded-full overflow-hidden",
+    "overflow-hidden",
     border && "border-2 border-surface-border",
-    className
+    className,
   );
 
   if (uri) {
@@ -70,16 +78,12 @@ export const Avatar = React.memo(function Avatar({ uri, name, size = "md", class
 
   return (
     <View
-      className={cn(
-        commonClasses,
-        seedColor(name),
-        "items-center justify-center",
-      )}
+      className={cn(commonClasses, "items-center justify-center")}
+      style={{ backgroundColor: accent ?? seedColor(name) }}
     >
-      <Text className={cn("text-white font-bold", text)}>
+      <Text className={cn("text-txt-inverse font-bold", text)}>
         {getInitials(name)}
       </Text>
     </View>
   );
 });
-

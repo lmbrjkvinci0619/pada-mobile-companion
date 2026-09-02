@@ -10,32 +10,38 @@ import { useAuthStore } from "@/store/authStore";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { fetchAnnouncements, hideAnnouncement } from "@/services/announcements";
 import { queryKeys } from "@/lib/queryKeys";
+import { PageHeader } from "@/components/ui/Page";
 import { Announcement, AnnouncementType } from "@/types";
 
 const PAGE_SIZE = 20;
 
 const keyExtractor = (item: Announcement) => item.id;
 
-const TYPE_COLORS: Record<AnnouncementType, { bg: string; text: string; label: string }> = {
-  pada_org: { bg: "#7C3AED", text: "white", label: "PADA Org" },
-  league_longterm: { bg: "#1E88E5", text: "white", label: "League" },
-  game: { bg: "#F57C00", text: "white", label: "Game" },
+const TYPE_ACCENTS: Record<AnnouncementType, string> = {
+  pada_org: "#A200FF",
+  league_longterm: "#1BA1E2",
+  game: "#F09609",
+};
+
+const TYPE_LABELS: Record<AnnouncementType, string> = {
+  pada_org: "PADA Org",
+  league_longterm: "League",
+  game: "Game",
 };
 
 const AnnouncementItem = React.memo(function AnnouncementItem({
   item,
-  onDismiss
+  onDismiss,
 }: {
   item: Announcement;
   onDismiss: (id: string) => void;
 }) {
-  const typeInfo = TYPE_COLORS[item.announcementType] || TYPE_COLORS.league_longterm;
+  const accent = TYPE_ACCENTS[item.announcementType] ?? TYPE_ACCENTS.league_longterm;
+  const label = TYPE_LABELS[item.announcementType] ?? "League";
   const isExpired = item.expiresAt && isPast(new Date(item.expiresAt));
   const [showDismiss, setShowDismiss] = useState(false);
 
-  const handleLongPress = () => {
-    setShowDismiss(true);
-  };
+  const handleLongPress = () => setShowDismiss(true);
 
   const handleDismiss = () => {
     Alert.alert(
@@ -51,37 +57,39 @@ const AnnouncementItem = React.memo(function AnnouncementItem({
             setShowDismiss(false);
           },
         },
-      ]
+      ],
     );
   };
 
   return (
     <TouchableOpacity
-      className={`bg-surface rounded-2xl p-4 gap-2 ${isExpired ? "opacity-50" : ""}`}
+      className={`bg-surface border-2 border-surface-border p-4 gap-2 ${isExpired ? "opacity-50" : ""}`}
       onLongPress={handleLongPress}
       onPress={() => {
-        if (showDismiss) {
-          setShowDismiss(false);
-        } else {
-          router.push(`/announcements/${item.id}`);
-        }
+        if (showDismiss) setShowDismiss(false);
+        else router.push(`/announcements/${item.id}`);
       }}
       delayLongPress={300}
+      activeOpacity={0.85}
     >
       <View className="flex-row items-center justify-between">
-        <View className="flex-row items-center gap-2">
-          {!item.isRead && <View className="w-2 h-2 rounded-full bg-primary-500" />}
-          <View className="px-2 py-1 rounded-md" style={{ backgroundColor: typeInfo.bg }}>
-            <Text className="text-white text-xs font-bold">{typeInfo.label}</Text>
+        <View className="flex-row items-center gap-2 flex-1">
+          {!item.isRead && <View className="w-2 h-2 bg-primary" />}
+          <View className="px-2 py-0.5 border-2" style={{ borderColor: accent, backgroundColor: `${accent}1A` }}>
+            <Text style={{ color: accent }} className="text-[10px] font-bold uppercase tracking-wider">
+              {label}
+            </Text>
           </View>
           {item.isUrgent && <Badge label="Urgent" variant="danger" />}
-          <Text className="text-txt-secondary text-xs">{format(new Date(item.createdAt), "MMM d, yyyy")}</Text>
+          <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-wider">
+            {format(new Date(item.createdAt), "MMM d, yyyy").toLowerCase()}
+          </Text>
         </View>
         <View className="flex-row items-center gap-2">
           {item.expiresAt && (
             <View className="flex-row items-center gap-1">
-              <Ionicons name="time-outline" size={12} color="#8B949E" />
-              <Text className="text-txt-muted text-xs">
+              <Ionicons name="time-outline" size={12} color="#5C5C5C" />
+              <Text className="text-txt-secondary text-[10px] uppercase font-bold tracking-wider">
                 {isExpired ? "Expired" : `Expires ${formatDistanceToNow(new Date(item.expiresAt), { addSuffix: true })}`}
               </Text>
             </View>
@@ -89,16 +97,16 @@ const AnnouncementItem = React.memo(function AnnouncementItem({
           {showDismiss && (
             <TouchableOpacity
               onPress={handleDismiss}
-              className="w-7 h-7 rounded-full bg-danger/20 items-center justify-center"
+              className="w-7 h-7 bg-danger items-center justify-center"
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Ionicons name="close" size={14} color="#E53935" />
+              <Ionicons name="close" size={14} color="#FFFFFF" />
             </TouchableOpacity>
           )}
         </View>
       </View>
       <Text className="text-txt-primary font-bold text-base">{item.title}</Text>
-      <Text className="text-txt-muted text-sm" numberOfLines={2}>{item.content}</Text>
+      <Text className="text-txt-secondary text-sm" numberOfLines={2}>{item.content}</Text>
     </TouchableOpacity>
   );
 });
@@ -108,7 +116,7 @@ export default function AnnouncementsListScreen() {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const canPost = user?.isCoordinator || user?.isAdmin || user?.role === "captain";
-  
+
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -125,18 +133,11 @@ export default function AnnouncementsListScreen() {
         setError(null);
         return;
       }
-
       const currentOffset = reset ? 0 : offset;
-      const result = await fetchAnnouncements(user.id, {
-        limit: PAGE_SIZE,
-        offset: currentOffset,
-      });
+      const result = await fetchAnnouncements(user.id, { limit: PAGE_SIZE, offset: currentOffset });
 
-      if (reset) {
-        setAnnouncements(result.data);
-      } else {
-        setAnnouncements(prev => [...prev, ...result.data]);
-      }
+      if (reset) setAnnouncements(result.data);
+      else setAnnouncements((prev) => [...prev, ...result.data]);
 
       setHasMore(result.pagination?.hasMore ?? false);
       setOffset(currentOffset + result.data.length);
@@ -170,14 +171,13 @@ export default function AnnouncementsListScreen() {
         } catch (err) {
           if (!active) return;
           setError("Failed to load announcements");
-          console.error("Error loading announcements:", err);
         } finally {
           if (active) setIsLoading(false);
         }
       })();
 
       return () => { active = false; };
-    }, [user?.id])
+    }, [user?.id]),
   );
 
   const onRefresh = async () => {
@@ -189,7 +189,6 @@ export default function AnnouncementsListScreen() {
 
   const loadMore = async () => {
     if (isLoadingMore || !hasMore || !user?.id) return;
-
     setIsLoadingMore(true);
     await loadAnnouncements(false);
     setIsLoadingMore(false);
@@ -199,7 +198,7 @@ export default function AnnouncementsListScreen() {
     if (!isLoadingMore) return null;
     return (
       <View className="py-4 items-center">
-        <ActivityIndicator size="small" color="#1E88E5" />
+        <ActivityIndicator size="small" color="#00ABA9" />
       </View>
     );
   };
@@ -208,50 +207,42 @@ export default function AnnouncementsListScreen() {
     await hideAnnouncement(id);
     setAnnouncements((prev) => prev.filter((a) => a.id !== id));
     if (user?.id) {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.announcements.all(user.id),
-      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.announcements.all(user.id) });
     }
   };
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
-      <View className="px-5 py-4 border-b border-surface-overlay flex-row items-center justify-between">
-        <View className="flex-row items-center gap-3">
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#E6EDF3" />
+      <PageHeader
+        title="announcements"
+        subtitle="alerts & updates"
+        back={() => router.back()}
+        right={canPost ? (
+          <TouchableOpacity onPress={() => router.push("/announcements/create")} className="w-10 h-10 items-center justify-center bg-primary">
+            <Ionicons name="add" size={24} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text className="text-txt-primary text-2xl font-black">Announcements</Text>
-        </View>
-        {canPost && (
-          <TouchableOpacity onPress={() => router.push("/announcements/create")}>
-            <Ionicons name="create-outline" size={24} color="#1E88E5" />
-          </TouchableOpacity>
-        )}
-      </View>
+        ) : undefined}
+      />
 
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#1E88E5" />
+          <ActivityIndicator size="large" color="#00ABA9" />
         </View>
       ) : error ? (
         <View className="flex-1 justify-center items-center px-5">
-          <Ionicons name="alert-circle-outline" size={48} color="#E53935" />
+          <Ionicons name="alert-circle-outline" size={48} color="#E51400" />
           <Text className="text-txt-primary text-center mt-2">{error}</Text>
-          <TouchableOpacity
-            className="mt-4 bg-primary-500 px-4 py-2 rounded-lg"
-            onPress={onRefresh}
-          >
-            <Text className="text-white font-bold">Retry</Text>
-         </TouchableOpacity>
+          <TouchableOpacity className="mt-4 bg-primary px-5 py-3" onPress={onRefresh} activeOpacity={0.85}>
+            <Text className="text-txt-inverse font-bold uppercase tracking-wider text-xs">Retry</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <FlatList
           data={announcements}
-          contentContainerClassName="px-5 py-4 gap-4"
+          contentContainerClassName="px-5 py-4 gap-3"
           keyExtractor={keyExtractor}
           renderItem={({ item }) => <AnnouncementItem item={item} onDismiss={handleDismiss} />}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1E88E5" />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00ABA9" />}
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
           ListFooterComponent={renderFooter}
@@ -263,7 +254,7 @@ export default function AnnouncementsListScreen() {
           initialNumToRender={8}
           maxToRenderPerBatch={8}
           windowSize={5}
-          removeClippedSubviews={true}
+          removeClippedSubviews
         />
       )}
     </SafeAreaView>

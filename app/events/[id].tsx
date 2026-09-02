@@ -20,6 +20,7 @@ import { useAuthStore } from "@/store/authStore";
 import { Ionicons } from "@expo/vector-icons";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { PageHeader, SectionLabel } from "@/components/ui/Page";
 import { openUrl } from "@/lib/urlUtils";
 import { format, parseISO } from "date-fns";
 import type { ScheduleExport } from "@/types";
@@ -53,39 +54,26 @@ export default function EventDetailScreen() {
   });
 
   useEffect(() => {
-    if (scheduleQuery.error) {
-      setShareError("Calendar sync is unavailable right now.");
-    } else if (scheduleQuery.data) {
-      setShareError(null);
-    }
+    if (scheduleQuery.error) setShareError("Calendar sync is unavailable right now.");
+    else if (scheduleQuery.data) setShareError(null);
   }, [scheduleQuery.data, scheduleQuery.error]);
 
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <ActivityIndicator size="large" color="#1E88E5" />
-     </SafeAreaView>
+        <ActivityIndicator size="large" color="#00ABA9" />
+      </SafeAreaView>
     );
   }
 
   if (!event) {
     return (
       <SafeAreaView className="flex-1 bg-bg" edges={["bottom"]}>
-        <View className="px-5 py-4 border-b border-surface-overlay flex-row items-center gap-3">
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#E6EDF3" />
-         </TouchableOpacity>
-          <Text
-            className="text-txt-primary text-xl font-bold flex-1"
-            numberOfLines={1}
-          >
-            Event Details
-         </Text>
-       </View>
+        <PageHeader title="Event Details" back={() => router.back()} />
         <View className="flex-1 items-center justify-center">
           <Text className="text-txt-muted">Event not found</Text>
-       </View>
-     </SafeAreaView>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -95,9 +83,9 @@ export default function EventDetailScreen() {
       event.location.latitude != null && event.location.longitude != null
         ? `${event.location.latitude},${event.location.longitude}`
         : encodeURIComponent(event.location.address || event.location.name || "");
-    Linking.openURL(
-      `https://www.google.com/maps/dir/?api=1&destination=${destination}`
-    ).catch(() => Alert.alert("Error", "Unable to open maps right now."));
+    Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${destination}`).catch(() =>
+      Alert.alert("Error", "Unable to open maps right now."),
+    );
   };
 
   const handleAddToCalendar = async () => {
@@ -106,11 +94,10 @@ export default function EventDetailScreen() {
     if (!icsUrl && !htmlUrl) {
       Alert.alert(
         "Calendar Export",
-        "ICal feed URL is not yet available. Once the team calendar is generated, it can be added to Google Calendar, Outlook, or Apple Calendar."
+        "ICal feed URL is not yet available. Once the team calendar is generated, it can be added to Google Calendar, Outlook, or Apple Calendar.",
       );
       return;
     }
-
     setIsOpeningCalendar(true);
     try {
       const candidate = htmlUrl || icsUrl!;
@@ -121,7 +108,7 @@ export default function EventDetailScreen() {
           url: candidate,
         });
       } catch {
-        // User dismissed or share unavailable; fall back to opening the URL.
+        // dismissed
       }
       openUrl(candidate);
     } finally {
@@ -131,47 +118,35 @@ export default function EventDetailScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["bottom"]}>
-      <View className="px-5 py-4 border-b border-surface-overlay flex-row items-center gap-3">
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#E6EDF3" />
-       </TouchableOpacity>
-        <Text
-          className="text-txt-primary text-xl font-bold flex-1"
-          numberOfLines={1}
-        >
-          Event Details
-       </Text>
-     </View>
+      <PageHeader title="event" subtitle={event.teamName ?? ""} back={() => router.back()} />
 
-      <ScrollView
-        className="flex-1 px-5 pt-4"
-        contentContainerClassName="pb-8"
-      >
-        <Text className="text-txt-primary text-2xl font-black mb-1">
-{event.title}
-        </Text>
-        <Text className="text-txt-secondary text-base mb-6">
-          {event.startDate ? format(parseISO(event.startDate), "EEEE, MMMM d 'at' h:mm a") : "Date TBD"}
-        </Text>
+      <ScrollView className="flex-1" contentContainerClassName="px-5 pt-4 pb-8" showsVerticalScrollIndicator={false}>
+        <View className="bg-primary p-5 border-2 border-primary-700">
+          <Text className="text-txt-inverse text-[10px] font-bold uppercase tracking-[0.2em]">
+            {event.type}
+          </Text>
+          <Text className="text-txt-inverse text-2xl font-light lowercase tracking-tight mt-1">
+            {event.title}
+          </Text>
+          <Text className="text-txt-inverse/85 text-sm mt-2">
+            {event.startDate ? format(parseISO(event.startDate), "EEEE, MMMM d 'at' h:mm a") : "Date TBD"}
+          </Text>
+        </View>
 
-        <Card elevated className="mb-4">
-          <Text className="text-txt-secondary text-sm font-bold uppercase mb-2">
-            Location
-         </Text>
-          <Text className="text-txt-primary text-base font-semi">
-            {event.location?.name ?? "TBD"}
-         </Text>
-          {event.location?.address ? (
-            <Text className="text-txt-muted text-sm mb-3">
-              {event.location.address}
-           </Text>
-          ) : null}
+        <View className="h-5" />
 
-          {event.location?.latitude != null &&
-            event.location.longitude != null && (
-              <View className="rounded-xl overflow-hidden mb-3 border border-surface-overlay bg-surface-overlay">
+        <SectionLabel>location</SectionLabel>
+        <Card>
+          <Card.Content>
+            <Text className="text-txt-primary text-base font-bold">{event.location?.name ?? "TBD"}</Text>
+            {event.location?.address && (
+              <Text className="text-txt-secondary text-xs mt-1">{event.location.address}</Text>
+            )}
+
+            {event.location?.latitude != null && event.location.longitude != null && (
+              <View className="mt-3 border-2 border-surface-border overflow-hidden">
                 <MapView
-                  style={{ height: 150, width: "100%" }}
+                  style={{ height: 160, width: "100%" }}
                   initialRegion={{
                     latitude: event.location.latitude,
                     longitude: event.location.longitude,
@@ -188,86 +163,88 @@ export default function EventDetailScreen() {
                     }}
                     title={event.location.name}
                   />
-               </MapView>
-             </View>
+                </MapView>
+              </View>
             )}
 
-          {event.location &&
-            (event.location.latitude != null || event.location.address) && (
+            {event.location && (event.location.latitude != null || event.location.address) && (
               <TouchableOpacity
-                className="bg-primary-500/10 border border-primary-500/20 rounded-xl py-3 items-center flex-row justify-center gap-2"
+                className="mt-3 flex-row items-center justify-center gap-2 bg-primary border-2 border-primary py-3"
                 onPress={handleOpenDirections}
+                activeOpacity={0.85}
               >
-                <Ionicons name="navigate" size={18} color="#388BFD" />
-                <Text className="text-primary-300 font-bold">
-                  Directions to Field
-               </Text>
-             </TouchableOpacity>
+                <Ionicons name="navigate" size={18} color="#FFFFFF" />
+                <Text className="text-txt-inverse text-xs font-bold uppercase tracking-wider">Directions</Text>
+              </TouchableOpacity>
             )}
-       </Card>
+          </Card.Content>
+        </Card>
 
         {event.notes && (
-          <Card elevated className="mb-4">
-            <Text className="text-txt-secondary text-sm font-bold uppercase mb-2">
-              Notes
-           </Text>
-            <Text className="text-txt-primary text-sm">{event.notes}</Text>
-         </Card>
+          <View className="mt-5">
+            <SectionLabel>notes</SectionLabel>
+            <Card>
+              <Card.Content>
+                <Text className="text-txt-primary text-sm leading-6">{event.notes}</Text>
+              </Card.Content>
+            </Card>
+          </View>
         )}
 
         {event.score && (
-          <Card className="mb-4">
-            <Text className="text-txt-secondary text-sm font-bold uppercase mb-2">
-              Score
-           </Text>
-            <View className="flex-row items-center justify-between">
-              <Text className="text-txt-primary text-lg font-bold">
-                {event.score.homeTeamName}
-             </Text>
-              <Text className="text-primary-400 text-2xl font-black">
-                {event.score.homeScore}
-             </Text>
-           </View>
-            <View className="flex-row items-center justify-between mt-2">
-              <Text className="text-txt-primary text-lg font-bold">
-                {event.score.awayTeamName}
-             </Text>
-              <Text className="text-primary-400 text-2xl font-black">
-                {event.score.awayScore}
-             </Text>
-           </View>
-         </Card>
+          <View className="mt-5">
+            <SectionLabel>score</SectionLabel>
+            <Card>
+              <Card.Content className="gap-3">
+                <ScoreRow
+                  name={event.score.homeTeamName}
+                  score={event.score.homeScore}
+                  accent
+                />
+                <ScoreRow
+                  name={event.score.awayTeamName}
+                  score={event.score.awayScore}
+                />
+              </Card.Content>
+            </Card>
+          </View>
         )}
 
         {canReportScore && (
-          <View className="mb-6">
+          <View className="mt-6">
             <Button
               label={event.score ? "Update Score" : "Report Score"}
-              onPress={() =>
-                router.push(`/events/${event.id}/report-score`)
-              }
+              onPress={() => router.push(`/events/${event.id}/report-score`)}
               variant="primary"
             />
-         </View>
+          </View>
         )}
 
         <TouchableOpacity
-          className="bg-surface-raised border border-surface-overlay rounded-xl py-4 flex-row items-center justify-center gap-2"
+          className="mt-4 bg-surface border-2 border-surface-border py-4 flex-row items-center justify-center gap-2"
           onPress={handleAddToCalendar}
           disabled={isOpeningCalendar}
+          activeOpacity={0.85}
         >
-          <Ionicons name="calendar-outline" size={20} color="#E6EDF3" />
-          <Text className="text-txt-primary font-bold text-base">
+          <Ionicons name="calendar-outline" size={20} color="#000000" />
+          <Text className="text-txt-primary text-sm font-bold uppercase tracking-wider">
             {isOpeningCalendar ? "Opening Calendar..." : "Add to Calendar"}
-         </Text>
-       </TouchableOpacity>
+          </Text>
+        </TouchableOpacity>
 
         {shareError && (
-          <Text className="text-txt-muted text-xs text-center mt-2">
-            {shareError}
-         </Text>
+          <Text className="text-txt-muted text-xs text-center mt-2">{shareError}</Text>
         )}
-     </ScrollView>
-   </SafeAreaView>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function ScoreRow({ name, score, accent }: { name: string; score: number; accent?: boolean }) {
+  return (
+    <View className="flex-row items-center justify-between">
+      <Text className="text-txt-primary text-base font-bold flex-1">{name}</Text>
+      <Text className={`text-3xl font-light ${accent ? "text-primary" : "text-txt-primary"}`}>{score}</Text>
+    </View>
   );
 }

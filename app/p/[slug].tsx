@@ -5,8 +5,8 @@ import { useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { format, parseISO } from "date-fns";
 import { useArticles } from "@/hooks/useApi";
-import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { PageHeader } from "@/components/ui/Page";
 
 export default function PageDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -17,7 +17,7 @@ export default function PageDetailScreen() {
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <ActivityIndicator size="large" color="#1E88E5" />
+        <ActivityIndicator size="large" color="#00ABA9" />
       </SafeAreaView>
     );
   }
@@ -25,10 +25,11 @@ export default function PageDetailScreen() {
   if (!page) {
     return (
       <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
+        <PageHeader title="article" back />
         <View className="flex-1 items-center justify-center p-6">
-          <Ionicons name="alert-circle-outline" size={48} color="#484F58" />
-          <Text className="text-txt-primary text-lg font-bold mt-4">Page not found</Text>
-          <Text className="text-txt-secondary text-sm font-mid mt-2 text-center">
+          <Ionicons name="alert-circle-outline" size={48} color="#8A8A8A" />
+          <Text className="text-txt-primary text-2xl font-light lowercase tracking-tight mt-4">page not found</Text>
+          <Text className="text-txt-secondary text-sm mt-2 text-center">
             This page may have been removed or the link is invalid.
           </Text>
         </View>
@@ -38,13 +39,11 @@ export default function PageDetailScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
-      <ScrollView
-        className="flex-1"
-        showsVerticalScrollIndicator={false}
-      >
+      <PageHeader title="article" subtitle={page.category ?? ""} back />
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {page.imageUrl && (
-          <View className="h-48 bg-surface-raised items-center justify-center">
-            <Ionicons name="image-outline" size={48} color="#484F58" />
+          <View className="h-48 bg-surface-overlay items-center justify-center border-b-2 border-surface-border">
+            <Ionicons name="image-outline" size={48} color="#8A8A8A" />
           </View>
         )}
 
@@ -52,27 +51,27 @@ export default function PageDetailScreen() {
           <View className="flex-row items-center gap-2 mb-3">
             {page.category && <Badge label={page.category} variant="primary" />}
             {page.publishedAt && (
-              <Text className="text-txt-muted text-sm">
-                {format(parseISO(page.publishedAt), "MMMM d, yyyy")}
+              <Text className="text-txt-secondary text-[10px] font-bold uppercase tracking-wider">
+                {format(parseISO(page.publishedAt), "MMMM d, yyyy").toLowerCase()}
               </Text>
             )}
           </View>
 
-          <Text className="text-txt-primary text-2xl font-black leading-tight mb-4">
+          <Text className="text-txt-primary text-3xl font-light lowercase tracking-tight mb-4 leading-tight">
             {page.title}
           </Text>
 
           {page.authorName && (
-            <Text className="text-txt-secondary text-sm font-mid mb-6">
+            <Text className="text-txt-secondary text-xs uppercase tracking-wider font-bold mb-6">
               By {page.authorName}
             </Text>
           )}
 
-          <Card className="bg-surface-raised">
-            <Text className="text-txt-primary text-base leading-relaxed">
+          <View className="bg-surface border-2 border-surface-border p-4">
+            <Text className="text-txt-primary text-sm leading-6">
               {page.content || page.summary || "No content available."}
             </Text>
-          </Card>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

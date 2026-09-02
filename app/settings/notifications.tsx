@@ -9,6 +9,7 @@ import { useSettingsStore } from "@/store/settingsStore";
 import { fetchUserPreferences, saveUserPreferences } from "@/services/preferences";
 import { clearHiddenAnnouncements, getHiddenAnnouncementCount } from "@/services/announcements";
 import * as Notifications from "expo-notifications";
+import { PageHeader, SectionLabel, IconChip } from "@/components/ui/Page";
 import type { NotificationPreferences } from "@/types";
 
 const TIME_OPTIONS = [
@@ -22,7 +23,7 @@ const TimePickerModal = ({
   visible,
   currentTime,
   onSelect,
-  onClose
+  onClose,
 }: {
   visible: boolean;
   currentTime?: string;
@@ -30,55 +31,48 @@ const TimePickerModal = ({
   onClose: () => void;
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(
-    currentTime ? TIME_OPTIONS.indexOf(currentTime) : -1
+    currentTime ? TIME_OPTIONS.indexOf(currentTime) : -1,
   );
 
   useEffect(() => {
     if (visible && currentTime) {
       const index = TIME_OPTIONS.indexOf(currentTime);
       if (index >= 0) setSelectedIndex(index);
-    } else if (!currentTime) {
-      setSelectedIndex(-1);
-    }
+    } else if (!currentTime) setSelectedIndex(-1);
   }, [visible, currentTime]);
 
   const handleDone = () => {
-    if (selectedIndex >= 0) {
-      onSelect(TIME_OPTIONS[selectedIndex]);
-    }
+    if (selectedIndex >= 0) onSelect(TIME_OPTIONS[selectedIndex]);
     onClose();
   };
 
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View className="flex-1 bg-black/60 justify-end">
-        <View className="bg-surface rounded-t-3xl overflow-hidden">
-          <View className="flex-row justify-between items-center px-4 py-4 border-b border-surface-overlay">
+        <View className="bg-bg border-t-4 border-primary">
+          <View className="flex-row justify-between items-center px-4 py-4 border-b-2 border-surface-border">
             <TouchableOpacity onPress={onClose}>
-              <Text className="text-txt-muted text-base">Cancel</Text>
+              <Text className="text-txt-secondary text-xs font-bold uppercase tracking-wider">Cancel</Text>
             </TouchableOpacity>
-            <Text className="text-txt-primary font-bold text-base">Select Time</Text>
+            <Text className="text-txt-primary font-bold text-sm uppercase tracking-wider">Select Time</Text>
             <TouchableOpacity onPress={handleDone}>
-              <Text className="text-primary-500 font-bold text-base">Done</Text>
+              <Text className="text-primary text-xs font-bold uppercase tracking-wider">Done</Text>
             </TouchableOpacity>
           </View>
           <ScrollView className="max-h-[300px]" showsVerticalScrollIndicator={false}>
             {TIME_OPTIONS.map((time, index) => (
               <TouchableOpacity
                 key={time}
-                className={`px-4 py-4 flex-row justify-between items-center ${
-                  selectedIndex === index ? "bg-primary-500/10" : ""
+                className={`px-4 py-4 flex-row justify-between items-center border-b-2 border-surface-border ${
+                  selectedIndex === index ? "bg-primary-50" : ""
                 }`}
                 onPress={() => setSelectedIndex(index)}
+                activeOpacity={0.85}
               >
-                <Text className={`text-lg ${
-                  selectedIndex === index ? "text-primary-500 font-bold" : "text-txt-primary"
-                }`}>
+                <Text className={`text-base ${selectedIndex === index ? "text-primary font-bold" : "text-txt-primary"}`}>
                   {time}
                 </Text>
-                {selectedIndex === index && (
-                  <Ionicons name="checkmark-circle" size={22} color="#1E88E5" />
-                )}
+                {selectedIndex === index && <Ionicons name="checkmark-circle" size={22} color="#00ABA9" />}
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -95,31 +89,31 @@ const ToggleRow = ({
   onValueChange,
   iconName,
   iconColor,
-  disabled = false
+  iconBackground,
+  disabled = false,
 }: {
   title: string;
   subtitle?: string;
   value: boolean;
   onValueChange: (val: boolean) => void;
-  iconName: string;
+  iconName: keyof typeof Ionicons.glyphMap;
   iconColor: string;
+  iconBackground: string;
   disabled?: boolean;
 }) => (
-  <View className="flex-row items-center justify-between px-4 py-4 border-b border-surface-overlay">
+  <View className={`flex-row items-center justify-between px-4 py-4 border-b-2 border-surface-border ${disabled ? "opacity-50" : ""}`}>
     <View className="flex-row items-center gap-3 flex-1">
-      <View className="w-10 h-10 rounded-xl items-center justify-center" style={{ backgroundColor: iconColor + "20" }}>
-        <Ionicons name={iconName as any} size={18} color={iconColor} />
-      </View>
+      <IconChip name={iconName} color={iconColor} background={iconBackground} />
       <View className="flex-1">
-        <Text className={`text-base ${disabled ? "text-txt-muted" : "text-txt-primary"} font-semi`}>{title}</Text>
-        {subtitle && <Text className="text-txt-muted text-xs mt-0.5">{subtitle}</Text>}
+        <Text className={`text-sm font-bold ${disabled ? "text-txt-muted" : "text-txt-primary"}`}>{title}</Text>
+        {subtitle && <Text className="text-txt-secondary text-xs mt-0.5">{subtitle}</Text>}
       </View>
     </View>
     <Switch
       value={value}
       onValueChange={onValueChange}
-      trackColor={{ false: "#30363D", true: "#1F6FEB" }}
-      thumbColor="#F0F6FC"
+      trackColor={{ false: "#D8D8D8", true: "#00ABA9" }}
+      thumbColor="#FFFFFF"
       disabled={disabled}
     />
   </View>
@@ -129,7 +123,7 @@ const QuietHoursButton = ({
   label,
   time,
   onPress,
-  disabled = false
+  disabled = false,
 }: {
   label: string;
   time?: string;
@@ -137,18 +131,19 @@ const QuietHoursButton = ({
   disabled?: boolean;
 }) => (
   <TouchableOpacity
-    className={`flex-1 px-4 py-4 rounded-xl flex-row items-center justify-between ${
-      disabled ? "bg-surface/50" : "bg-surface-raised"
+    className={`flex-1 px-4 py-4 flex-row items-center justify-between border-2 border-surface-border ${
+      disabled ? "bg-surface" : "bg-surface-raised"
     }`}
     onPress={onPress}
     disabled={disabled}
+    activeOpacity={0.85}
   >
-    <Text className={`text-base font-semi ${disabled ? "text-txt-muted" : "text-txt-primary"}`}>{label}</Text>
+    <Text className={`text-sm font-bold uppercase tracking-wider ${disabled ? "text-txt-muted" : "text-txt-primary"}`}>{label}</Text>
     <View className="flex-row items-center gap-2">
-      <Text className={`text-sm ${disabled ? "text-txt-muted/50" : "text-txt-muted"}`}>
+      <Text className={`text-xs ${disabled ? "text-txt-muted" : "text-txt-secondary"}`}>
         {time || "Not set"}
       </Text>
-      <Ionicons name="time-outline" size={18} color={disabled ? "#484F58" : "#8B949E"} />
+      <Ionicons name="time-outline" size={18} color={disabled ? "#8A8A8A" : "#5C5C5C"} />
     </View>
   </TouchableOpacity>
 );
@@ -189,9 +184,7 @@ export default function NotificationSettingsScreen() {
     loadHiddenCount();
   }, [isRefreshing]);
 
-  useEffect(() => {
-    setLocalNotifications(notifications);
-  }, [notifications]);
+  useEffect(() => setLocalNotifications(notifications), [notifications]);
 
   useEffect(() => {
     const changed =
@@ -212,14 +205,10 @@ export default function NotificationSettingsScreen() {
       Alert.alert("Error", "You must be logged in to save settings");
       return;
     }
-
     setNotifications(localNotifications);
     const success = await savePreferences(user.id);
-    if (success) {
-      Alert.alert("Success", "Notification settings saved");
-    } else {
-      Alert.alert("Error", "Failed to save settings. Please try again.");
-    }
+    if (success) Alert.alert("Success", "Notification settings saved");
+    else Alert.alert("Error", "Failed to save settings. Please try again.");
   };
 
   const handleRefresh = useCallback(async () => {
@@ -229,7 +218,7 @@ export default function NotificationSettingsScreen() {
     setIsRefreshing(false);
   }, [user?.id, hasChanges, loadPreferences]);
 
-  const handleReset = async () => {
+  const handleReset = () => {
     Alert.alert(
       "Reset Settings",
       "Are you sure you want to reset all notification settings to defaults?",
@@ -257,17 +246,12 @@ export default function NotificationSettingsScreen() {
             }
           },
         },
-      ]
+      ],
     );
   };
 
-  const handleStartTimeSelect = (time: string) => {
-    setLocalNotifications(prev => ({ ...prev, quietHoursStart: time }));
-  };
-
-  const handleEndTimeSelect = (time: string) => {
-    setLocalNotifications(prev => ({ ...prev, quietHoursEnd: time }));
-  };
+  const handleStartTimeSelect = (time: string) => setLocalNotifications((prev) => ({ ...prev, quietHoursStart: time }));
+  const handleEndTimeSelect = (time: string) => setLocalNotifications((prev) => ({ ...prev, quietHoursEnd: time }));
 
   const handleClearHiddenAnnouncements = () => {
     Alert.alert(
@@ -280,10 +264,10 @@ export default function NotificationSettingsScreen() {
           onPress: async () => {
             await clearHiddenAnnouncements();
             setHiddenCount(0);
-            setIsRefreshing(prev => !prev);
+            setIsRefreshing((prev) => !prev);
           },
         },
-      ]
+      ],
     );
   };
 
@@ -304,14 +288,13 @@ export default function NotificationSettingsScreen() {
       Alert.alert("Success", "Test notification sent!");
     } catch (err) {
       Alert.alert("Error", "Failed to send test notification.");
-      console.error(err);
     }
   };
 
   if (isLoadingPreferences && !user) {
     return (
       <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <ActivityIndicator size="large" color="#1E88E5" />
+        <ActivityIndicator size="large" color="#00ABA9" />
         <Text className="text-txt-muted mt-4">Loading settings...</Text>
       </SafeAreaView>
     );
@@ -319,137 +302,131 @@ export default function NotificationSettingsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
-      <View className="px-5 py-4 border-b border-surface-overlay flex-row items-center justify-between">
-        <View className="flex-row items-center gap-3">
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#E6EDF3" />
-          </TouchableOpacity>
-          <Text className="text-txt-primary text-xl font-bold">Notifications</Text>
-        </View>
-        <View className="flex-row items-center gap-3">
-          {hasChanges && (
-            <TouchableOpacity onPress={handleReset}>
-              <Text className="text-txt-muted text-sm">Reset</Text>
-            </TouchableOpacity>
-          )}
-          {isSyncing ? (
-            <ActivityIndicator color="#1E88E5" size="small" />
-          ) : (
-            <TouchableOpacity
-              onPress={handleSave}
-              disabled={!hasChanges}
-            >
-              <Text className={`font-bold text-base ${hasChanges ? "text-primary-500" : "text-txt-muted"}`}>
-                Save
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
+      <PageHeader
+        title="notifications"
+        subtitle="preferences"
+        back={() => router.back()}
+        right={
+          <View className="flex-row items-center gap-3">
+            {hasChanges && (
+              <TouchableOpacity onPress={handleReset}>
+                <Text className="text-txt-secondary text-xs font-bold uppercase tracking-wider">Reset</Text>
+              </TouchableOpacity>
+            )}
+            {isSyncing ? (
+              <ActivityIndicator color="#00ABA9" size="small" />
+            ) : (
+              <TouchableOpacity onPress={handleSave} disabled={!hasChanges}>
+                <Text className={`font-bold text-xs uppercase tracking-wider ${hasChanges ? "text-primary" : "text-txt-muted"}`}>
+                  Save
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        }
+      />
 
       <ScrollView
         className="flex-1"
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            tintColor="#1E88E5"
-          />
-        }
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor="#00ABA9" />}
       >
         <View className="px-5 py-4">
-          <Text className="text-txt-secondary text-xs font-bold uppercase mb-3">GENERAL</Text>
-          <View className="bg-surface rounded-2xl overflow-hidden border border-surface-border">
+          <SectionLabel>general</SectionLabel>
+          <View className="bg-surface border-2 border-surface-border">
             <View className="flex-row items-center justify-between px-4 py-4">
-              <View className="flex-row items-center gap-3">
-                <View className="w-10 h-10 rounded-xl bg-primary-500/20 items-center justify-center">
-                  <Ionicons name="notifications" size={18} color="#388BFD" />
-                </View>
-                <View>
-                  <Text className="text-txt-primary font-semi text-base">Push Notifications</Text>
-                  <Text className="text-txt-muted text-xs">Receive notifications on your device</Text>
+              <View className="flex-row items-center gap-3 flex-1">
+                <IconChip name="notifications" color="#00ABA9" background="#00ABA922" />
+                <View className="flex-1">
+                  <Text className="text-txt-primary text-sm font-bold">Push Notifications</Text>
+                  <Text className="text-txt-secondary text-xs mt-0.5">Receive notifications on your device</Text>
                 </View>
               </View>
               <Switch
                 value={localNotifications.pushEnabled}
-                onValueChange={(val) => setLocalNotifications(prev => ({ ...prev, pushEnabled: val }))}
-                trackColor={{ false: "#30363D", true: "#1F6FEB" }}
-                thumbColor="#F0F6FC"
+                onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, pushEnabled: val }))}
+                trackColor={{ false: "#D8D8D8", true: "#00ABA9" }}
+                thumbColor="#FFFFFF"
               />
             </View>
           </View>
         </View>
 
         <View className="px-5 pb-4">
-          <Text className="text-txt-secondary text-xs font-bold uppercase mb-3">ANNOUNCEMENTS</Text>
-          <View className="bg-surface rounded-2xl overflow-hidden border border-surface-border">
+          <SectionLabel>announcements</SectionLabel>
+          <View className="bg-surface border-2 border-surface-border">
             <ToggleRow
               title="All Announcements"
               subtitle="Receive notifications for all announcements"
               value={localNotifications.announcementsEnabled}
-              onValueChange={(val) => setLocalNotifications(prev => ({ ...prev, announcementsEnabled: val }))}
+              onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, announcementsEnabled: val }))}
               iconName="megaphone"
-              iconColor="#F57C00"
+              iconColor="#F09609"
+              iconBackground="#F0960922"
               disabled={!localNotifications.pushEnabled}
             />
             <ToggleRow
               title="League Announcements"
               subtitle="Long-term league updates and info"
               value={localNotifications.leagueAnnouncementsEnabled}
-              onValueChange={(val) => setLocalNotifications(prev => ({ ...prev, leagueAnnouncementsEnabled: val }))}
+              onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, leagueAnnouncementsEnabled: val }))}
               iconName="trophy"
-              iconColor="#1E88E5"
+              iconColor="#1BA1E2"
+              iconBackground="#1BA1E222"
               disabled={!localNotifications.pushEnabled || !localNotifications.announcementsEnabled}
             />
             <ToggleRow
               title="Game Announcements"
               subtitle="Game updates (weather, cancellations)"
               value={localNotifications.gameAnnouncementsEnabled}
-              onValueChange={(val) => setLocalNotifications(prev => ({ ...prev, gameAnnouncementsEnabled: val }))}
+              onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, gameAnnouncementsEnabled: val }))}
               iconName="calendar"
-              iconColor="#F57C00"
+              iconColor="#F09609"
+              iconBackground="#F0960922"
               disabled={!localNotifications.pushEnabled || !localNotifications.announcementsEnabled}
             />
             <ToggleRow
               title="PADA Organization"
               subtitle="Organization-wide announcements"
               value={localNotifications.padaOrgAnnouncementsEnabled}
-              onValueChange={(val) => setLocalNotifications(prev => ({ ...prev, padaOrgAnnouncementsEnabled: val }))}
+              onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, padaOrgAnnouncementsEnabled: val }))}
               iconName="business"
-              iconColor="#7C3AED"
+              iconColor="#A200FF"
+              iconBackground="#A200FF22"
               disabled={!localNotifications.pushEnabled || !localNotifications.announcementsEnabled}
             />
           </View>
         </View>
 
         <View className="px-5 pb-4">
-          <Text className="text-txt-secondary text-xs font-bold uppercase mb-3">GAMES & SCHEDULING</Text>
-          <View className="bg-surface rounded-2xl overflow-hidden border border-surface-border">
+          <SectionLabel>games & scheduling</SectionLabel>
+          <View className="bg-surface border-2 border-surface-border">
             <ToggleRow
               title="Score Notifications"
               subtitle="Game score updates and results"
               value={localNotifications.scoreNotificationsEnabled}
-              onValueChange={(val) => setLocalNotifications(prev => ({ ...prev, scoreNotificationsEnabled: val }))}
+              onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, scoreNotificationsEnabled: val }))}
               iconName="ribbon"
-              iconColor="#3FB950"
+              iconColor="#339933"
+              iconBackground="#33993322"
               disabled={!localNotifications.pushEnabled}
             />
             <ToggleRow
               title="Schedule Reminders"
               subtitle="Upcoming game and practice reminders"
               value={localNotifications.scheduleRemindersEnabled}
-              onValueChange={(val) => setLocalNotifications(prev => ({ ...prev, scheduleRemindersEnabled: val }))}
+              onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, scheduleRemindersEnabled: val }))}
               iconName="alarm"
-              iconColor="#D29922"
+              iconColor="#F09609"
+              iconBackground="#F0960922"
               disabled={!localNotifications.pushEnabled}
             />
           </View>
         </View>
 
         <View className="px-5 pb-4">
-          <Text className="text-txt-secondary text-xs font-bold uppercase mb-3">QUIET HOURS</Text>
-          <View className="bg-surface rounded-2xl p-4 border border-surface-border gap-3">
-            <Text className="text-txt-muted text-sm">Notifications will be silenced during these hours</Text>
+          <SectionLabel>quiet hours</SectionLabel>
+          <View className="bg-surface border-2 border-surface-border p-4 gap-3">
+            <Text className="text-txt-secondary text-xs">Notifications will be silenced during these hours</Text>
             <View className="flex-row gap-3">
               <QuietHoursButton
                 label="Start"
@@ -467,46 +444,42 @@ export default function NotificationSettingsScreen() {
             {(localNotifications.quietHoursStart || localNotifications.quietHoursEnd) && (
               <TouchableOpacity
                 className="items-center py-3"
-                onPress={() => setLocalNotifications(prev => ({
+                onPress={() => setLocalNotifications((prev) => ({
                   ...prev,
                   quietHoursStart: undefined,
-                  quietHoursEnd: undefined
+                  quietHoursEnd: undefined,
                 }))}
+                activeOpacity={0.85}
               >
-                <Text className="text-danger text-sm font-semi">Clear Quiet Hours</Text>
+                <Text className="text-danger text-xs font-bold uppercase tracking-wider">Clear Quiet Hours</Text>
               </TouchableOpacity>
             )}
           </View>
         </View>
 
         <View className="px-5 pb-4">
-          <Text className="text-txt-secondary text-xs font-bold uppercase mb-3">HIDDEN ANNOUNCEMENTS</Text>
-          <View className="bg-surface rounded-2xl p-4 border border-surface-border gap-3">
+          <SectionLabel>hidden announcements</SectionLabel>
+          <View className="bg-surface border-2 border-surface-border p-4 gap-3">
             {hiddenCount > 0 ? (
               <>
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center gap-3">
-                    <View className="w-10 h-10 rounded-xl bg-danger/10 items-center justify-center">
-                      <Ionicons name="eye-off" size={18} color="#E53935" />
-                    </View>
-                    <View>
-                      <Text className="text-txt-primary font-semi">{hiddenCount} hidden</Text>
-                      <Text className="text-txt-muted text-xs">Announcements dismissed from feed</Text>
-                    </View>
+                <View className="flex-row items-center gap-3">
+                  <IconChip name="eye-off" color="#E51400" background="#E5140022" />
+                  <View className="flex-1">
+                    <Text className="text-txt-primary text-sm font-bold">{hiddenCount} hidden</Text>
+                    <Text className="text-txt-secondary text-xs mt-0.5">Announcements dismissed from feed</Text>
                   </View>
                 </View>
                 <TouchableOpacity
-                  className="items-center py-3 border-t border-surface-overlay"
+                  className="items-center py-3 border-t-2 border-surface-border"
                   onPress={handleClearHiddenAnnouncements}
+                  activeOpacity={0.85}
                 >
-                  <Text className="text-primary-400 text-sm font-semi">Show All Announcements</Text>
+                  <Text className="text-primary text-xs font-bold uppercase tracking-wider">Show All Announcements</Text>
                 </TouchableOpacity>
               </>
             ) : (
               <View className="flex-row items-center gap-3">
-                <View className="w-10 h-10 rounded-xl bg-success/10 items-center justify-center">
-                  <Ionicons name="checkmark-circle" size={18} color="#43A047" />
-                </View>
+                <IconChip name="checkmark-circle" color="#339933" background="#33993322" />
                 <Text className="text-txt-secondary text-sm">No hidden announcements</Text>
               </View>
             )}
@@ -514,19 +487,20 @@ export default function NotificationSettingsScreen() {
         </View>
 
         <View className="px-5 pb-4">
-          <Text className="text-txt-secondary text-xs font-bold uppercase mb-3">NOTIFICATION TEST</Text>
+          <SectionLabel>notification test</SectionLabel>
           <TouchableOpacity
-            className="bg-surface rounded-2xl p-4 border border-surface-border flex-row items-center justify-center gap-3"
+            className="bg-surface border-2 border-surface-border p-4 flex-row items-center justify-center gap-3"
             onPress={handleTestNotification}
+            activeOpacity={0.85}
           >
-            <Ionicons name="notifications" size={20} color="#1E88E5" />
-            <Text className="text-primary-400 font-semi">Send Test Notification</Text>
+            <Ionicons name="notifications" size={20} color="#00ABA9" />
+            <Text className="text-primary text-xs font-bold uppercase tracking-wider">Send Test Notification</Text>
           </TouchableOpacity>
         </View>
 
         {lastSyncTimestamp && (
           <View className="px-5 pb-4">
-            <Text className="text-txt-muted text-xs text-center">
+            <Text className="text-txt-muted text-[10px] font-bold uppercase tracking-wider text-center">
               Last synced: {new Date(lastSyncTimestamp).toLocaleString()}
             </Text>
           </View>

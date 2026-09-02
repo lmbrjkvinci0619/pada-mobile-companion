@@ -9,17 +9,19 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
 import { useAuthStore } from "@/store/authStore";
 import { useEvents, useAnnouncements, useRegistrations, useArticles } from "@/hooks/useApi";
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Tile, TileGrid, TileCell } from "@/components/ui/Tile";
+import { Hub, HubPanel } from "@/components/ui/Hub";
+import { PivotPanorama } from "@/components/ui/Pivot";
+import { SectionLabel, IconChip } from "@/components/ui/Page";
 import type { Event, Article } from "@/types";
-import { SPORT_EMOJI } from "@/constants/config";
 import { EXTERNAL_URLS, openUrl } from "@/lib/urlUtils";
+import { cn } from "@/utils/cn";
 
 function eventDateLabel(dateStr: string): string {
   const d = parseISO(dateStr);
@@ -28,166 +30,101 @@ function eventDateLabel(dateStr: string): string {
   return format(d, "EEE, MMM d");
 }
 
-const MyNextGameCard = React.memo(function MyNextGameCard({ event }: { event: Event }) {
-  const eventDate = event.startDate ? parseISO(event.startDate) : new Date();
-  const dateLabel = event.startDate ? eventDateLabel(event.startDate) : "Date TBD";
-  const timeLabel = event.startDate ? format(eventDate, "h:mm a") : "";
-
+const PanelTitle = React.memo(function PanelTitle({ children }: { children: string }) {
   return (
-    <Card className="p-0 overflow-hidden border border-primary-500/30">
-      <LinearGradient
-        colors={["#1E88E5", "#1565C0"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        className="p-5"
-      >
-        <View className="flex-row items-center justify-between mb-3">
-          <Text className="text-white/70 text-xs font-bold uppercase tracking-widest">
-            My Next Game
-          </Text>
-          <Badge label={dateLabel} variant="ghost" className="bg-white/20 border-white/40" />
-        </View>
-
-        <View className="mb-3">
-          <Text className="text-white text-xl font-black leading-tight mb-1">
-            {event.opponentName ? `vs. ${event.opponentName}` : event.title}
-          </Text>
-          <Text className="text-white/70 text-sm font-semi">
-            {event.teamName}
-          </Text>
-        </View>
-
-        <View className="flex-row gap-4">
-          <View className="flex-row items-center gap-1.5">
-            <Ionicons name="time-outline" size={14} color="#fff" />
-            <Text className="text-white text-sm font-semi">{timeLabel}</Text>
-          </View>
-
-          {event.location && (
-            <View className="flex-row items-center gap-1.5">
-              <Ionicons name="location-outline" size={14} color="#fff" />
-              <Text className="text-white text-sm font-semi" numberOfLines={1}>
-                {event.location.name}
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {event.attendance !== undefined && (
-          <View className="flex-row items-center gap-1.5 mt-2">
-            <Ionicons name="people-outline" size={14} color="#fff" />
-            <Text className="text-white/70 text-xs font-mid">
-              {event.attendance} players attending
-            </Text>
-          </View>
-        )}
-      </LinearGradient>
-    </Card>
+    <View className="mb-3">
+      <View className="h-1 w-10 bg-primary mb-3" />
+      <Text className="text-txt-primary text-[28px] font-light lowercase tracking-tight leading-tight">
+        {children}
+      </Text>
+    </View>
   );
 });
 
-const PublicEventCard = React.memo(function PublicEventCard({ event }: { event: Event }) {
-  const eventDate = event.startDate ? parseISO(event.startDate) : new Date();
-  const dateLabel = event.startDate ? eventDateLabel(event.startDate) : "Date TBD";
-
-  return (
-    <TouchableOpacity
-      onPress={() => router.push(`/events/${event.id}`)}
-      activeOpacity={0.8}
-    >
-      <Card className="p-4 mr-4 bg-surface-raised border border-surface-border/30" style={{ width: 180 }}>
-        <View className="mb-2">
-          <Badge label={dateLabel} variant="primary" />
-        </View>
-        <Text className="text-txt-primary text-base font-black leading-tight mb-1" numberOfLines={2}>
-          {event.title}
-        </Text>
-        {event.location && (
-          <View className="flex-row items-center gap-1 mt-1">
-            <Ionicons name="location-outline" size={10} color="#8B949E" />
-            <Text className="text-txt-muted text-xs" numberOfLines={1}>
-              {event.location.name}
-            </Text>
-          </View>
-        )}
-      </Card>
-    </TouchableOpacity>
-  );
-});
-
-const ArticleCard = React.memo(function ArticleCard({ article }: { article: Article }) {
-  return (
-    <TouchableOpacity
-      onPress={() => router.push(`/p/${article.slug || article.id}`)}
-      className="mr-4"
-      activeOpacity={0.8}
-      style={{ width: 280 }}
-    >
-      <Card className="p-0 overflow-hidden border border-surface-border/30">
-        {article.imageUrl && (
-          <View className="h-32 bg-surface-raised">
-            <Text className="text-txt-muted text-xs p-2">Image: {article.imageUrl}</Text>
-          </View>
-        )}
-        <View className="p-4">
-          {article.category && (
-            <Badge label={article.category} variant="primary" className="mb-2 self-start" />
-          )}
-          <Text className="text-txt-primary text-base font-black leading-tight mb-1" numberOfLines={2}>
-            {article.title}
-          </Text>
-          {article.summary && (
-            <Text className="text-txt-secondary text-sm font-mid mt-1" numberOfLines={2}>
-              {article.summary}
-            </Text>
-          )}
-          {article.publishedAt && (
-            <Text className="text-txt-muted text-xs font-mid mt-2">
-              {format(parseISO(article.publishedAt), "MMM d, yyyy")}
-            </Text>
-          )}
-        </View>
-      </Card>
-    </TouchableOpacity>
-  );
-});
-
-const AnnouncementRow = React.memo(function AnnouncementRow({ ann }: { ann: { id: string; title: string; content: string; isUrgent: boolean; isRead?: boolean; createdAt: string } }) {
+const AnnouncementRow = React.memo(function AnnouncementRow({
+  ann,
+}: {
+  ann: { id: string; title: string; content: string; isUrgent: boolean; isRead?: boolean; createdAt: string };
+}) {
+  const accent = ann.isUrgent ? "danger" : "secondary";
+  const iconName = ann.isUrgent ? "warning" : "megaphone";
+  const accentColor = ann.isUrgent ? "#E51400" : "#1BA1E2";
   return (
     <TouchableOpacity
       onPress={() => router.push(`/announcements/${ann.id}`)}
-      className="flex-row items-start gap-3 py-3 border-b border-surface-overlay"
+      activeOpacity={0.85}
+      className="flex-row items-start gap-3 py-4 border-b-2 border-surface-border"
     >
-      <View
-        className={`w-8 h-8 rounded-full items-center justify-center flex-shrink-0 ${
-          ann.isUrgent ? "bg-danger/20" : "bg-primary-500/20"
-        }`}
-      >
-        <Ionicons
-          name={ann.isUrgent ? "warning" : "megaphone"}
-          size={16}
-          color={ann.isUrgent ? "#E53935" : "#64B5F6"}
-        />
+      <View className="w-9 h-9 items-center justify-center bg-surface-overlay border-2 border-surface-border">
+        <Ionicons name={iconName} size={18} color={accentColor} />
       </View>
       <View className="flex-1">
-        <View className="flex-row items-center gap-2 mb-0.5">
-          {!ann.isRead && <View className="w-2 h-2 rounded-full bg-primary-500" />}
+        <View className="flex-row items-center gap-2 mb-1">
+          {!ann.isRead && <View className="w-2 h-2 bg-primary" />}
           {ann.isUrgent && <Badge label="Urgent" variant="danger" />}
-          <Text className="text-txt-secondary text-xs font-mid">
-            {format(new Date(ann.createdAt), "MMM d")}
+          <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-wider">
+            {format(new Date(ann.createdAt), "MMM d").toLowerCase()}
           </Text>
         </View>
         <Text
-          className={`text-sm font-semi ${
-            ann.isRead ? "text-txt-secondary" : "text-txt-primary"
-          }`}
+          className={cn(
+            "text-sm font-bold leading-snug",
+            ann.isRead ? "text-txt-secondary" : "text-txt-primary",
+          )}
           numberOfLines={1}
         >
           {ann.title}
         </Text>
-        <Text className="text-txt-muted text-xs font-mid mt-0.5" numberOfLines={2}>
+        <Text className="text-txt-secondary text-xs mt-1" numberOfLines={2}>
           {ann.content}
         </Text>
+      </View>
+    </TouchableOpacity>
+  );
+});
+
+const PublicEventCard = React.memo(function PublicEventCard({ event }: { event: Event }) {
+  const dateLabel = event.startDate ? eventDateLabel(event.startDate) : "Date TBD";
+  return (
+    <TouchableOpacity
+      onPress={() => router.push(`/events/${event.id}`)}
+      activeOpacity={0.85}
+      className="mr-3"
+    >
+      <Tile
+        size="medium"
+        accent="secondary"
+        eyebrow={dateLabel}
+        title={event.title}
+        subtitle={event.location?.name}
+        style={{ width: 200, height: 130 }}
+      />
+    </TouchableOpacity>
+  );
+});
+
+const ArticleTile = React.memo(function ArticleTile({ article }: { article: Article }) {
+  return (
+    <TouchableOpacity
+      onPress={() => router.push(`/p/${article.slug || article.id}`)}
+      activeOpacity={0.85}
+      className="mr-3"
+    >
+      <View style={{ width: 240 }} className="bg-surface-raised border-2 border-surface-border">
+        <View className="h-24 bg-primary-50 items-center justify-center border-b-2 border-surface-border">
+          <Ionicons name="newspaper-outline" size={28} color="#00ABA9" />
+        </View>
+        <View className="p-3">
+          {article.category && <Badge label={article.category} variant="primary" className="mb-2" />}
+          <Text className="text-txt-primary text-sm font-bold leading-snug" numberOfLines={2}>
+            {article.title}
+          </Text>
+          {article.publishedAt && (
+            <Text className="text-txt-secondary text-[10px] font-bold uppercase tracking-wider mt-2">
+              {format(parseISO(article.publishedAt), "MMM d, yyyy").toLowerCase()}
+            </Text>
+          )}
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -207,7 +144,7 @@ export default function HomeScreen() {
         .filter((e) => e.type === "game" && (e.status === "scheduled" || e.status === "in_progress") && e.startDate)
         .sort((a, b) => (a.startDate ?? "").localeCompare(b.startDate ?? ""))
         .slice(0, 6),
-    [events]
+    [events],
   );
 
   const publicEvents = useMemo(
@@ -216,7 +153,7 @@ export default function HomeScreen() {
         .filter((e) => e.status === "scheduled" && e.startDate)
         .sort((a, b) => (a.startDate ?? "").localeCompare(b.startDate ?? ""))
         .slice(0, 6),
-    [events]
+    [events],
   );
 
   const recentArticles = useMemo(
@@ -228,23 +165,25 @@ export default function HomeScreen() {
           return dateB - dateA;
         })
         .slice(0, 6),
-    [articles]
+    [articles],
   );
 
   const myNextGame = useMemo(() => {
     if (!isAuthenticated || registrations.length === 0) return null;
 
     const userTeamIds = registrations
-      .filter(r => r.status === "accepted" && r.teamId)
-      .map(r => r.teamId as string);
+      .filter((r) => r.status === "accepted" && r.teamId)
+      .map((r) => r.teamId as string);
 
     if (userTeamIds.length === 0) return null;
 
     const myGames = events.filter(
-      e => e.type === "game" &&
-           e.teamId != null && userTeamIds.includes(e.teamId) &&
-           e.status === "scheduled" &&
-           e.startDate
+      (e) =>
+        e.type === "game" &&
+        e.teamId != null &&
+        userTeamIds.includes(e.teamId) &&
+        e.status === "scheduled" &&
+        e.startDate,
     );
 
     if (myGames.length === 0) return null;
@@ -252,10 +191,7 @@ export default function HomeScreen() {
     return myGames.sort((a, b) => (a.startDate ?? "").localeCompare(b.startDate ?? ""))[0];
   }, [events, registrations, isAuthenticated]);
 
-  const liveEvent = useMemo(
-    () => events.find((e) => e.status === "in_progress"),
-    [events]
-  );
+  const liveEvent = useMemo(() => events.find((e) => e.status === "in_progress"), [events]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -268,345 +204,298 @@ export default function HomeScreen() {
   if (isLoading && !refreshing) {
     return (
       <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <Ionicons name="sync" size={32} color="#1E88E5" />
-    </SafeAreaView>
+        <Ionicons name="sync" size={28} color="#00ABA9" />
+      </SafeAreaView>
     );
   }
 
-  const greeting = isAuthenticated
-    ? `Hey, ${user?.firstName ?? "Player"} ${SPORT_EMOJI}`
-    : `Welcome to PadaHub ${SPORT_EMOJI}`;
+  const greeting = isAuthenticated ? (user?.firstName ?? "player").toLowerCase() : "guest";
+
+  const liveGame = liveEvent
+    ? {
+        eyebrow: "Live now",
+        title: liveEvent.title,
+        subtitle: liveEvent.teamName ?? "",
+        accent: "danger" as const,
+        onPress: () => router.push(`/events/${liveEvent.id}`),
+      }
+    : null;
+
+  const nextGameTile = myNextGame
+    ? {
+        eyebrow: eventDateLabel(myNextGame.startDate!),
+        title: myNextGame.opponentName ? `vs ${myNextGame.opponentName}` : myNextGame.title,
+        subtitle: myNextGame.teamName ?? "",
+        meta: myNextGame.location?.name,
+        accent: "primary" as const,
+        onPress: () => router.push(`/events/${myNextGame.id}`),
+      }
+    : null;
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
-      <ScrollView
-        className="flex-1"
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor="#1E88E5"
-          />
-        }
-      >
-        <LinearGradient
-          colors={["#161B22", "#0D1117"]}
-          className="px-5 pt-6 pb-8 rounded-b-[40px] shadow-2xl"
-        >
-          <View className="flex-row items-center justify-between">
-            <View>
-              <Text className="text-primary-300 text-xs font-bold tracking-[2px] uppercase mb-1">
-                {format(new Date(), "EEEE, MMMM d")}
-              </Text>
-              <Text className="text-txt-primary text-3xl font-black">
-                {greeting}
-              </Text>
-            </View>
-            <TouchableOpacity onPress={() => router.push("/(tabs)/profile")}>
-              <Avatar
-                uri={user?.avatarUrl}
-                name={user ? `${user.firstName} ${user.lastName}` : "Guest"}
-                size="md"
-                className="border-2 border-primary-500/30"
-              />
-            </TouchableOpacity>
-          </View>
-        </LinearGradient>
-
-        {!isAuthenticated && (
-          <View className="mx-5 -mt-4 mb-6">
-            <Card className="bg-primary-500/10 border-primary-500/30 p-4">
-              <View className="flex-row items-center gap-3">
-                <View className="w-10 h-10 rounded-full bg-primary-500/20 items-center justify-center">
-                  <Ionicons name="log-in-outline" size={20} color="#388BFD" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-txt-primary text-sm font-bold">
-                    Sign in to see your games
-                  </Text>
-                  <Text className="text-txt-secondary text-xs font-mid">
-                    View your schedule, team details, and more
-                  </Text>
-                </View>
-              </View>
-              <Button
-                label="Sign In"
-                onPress={() => router.push("/(auth)/login")}
-                className="mt-3"
-              />
-            </Card>
-          </View>
-        )}
-
-        {liveEvent && (
-          <TouchableOpacity
-            className="mx-5 -mt-4 mb-6 bg-danger/10 border border-danger/30 rounded-2xl overflow-hidden"
-            onPress={() => router.push(`/events/${liveEvent.id}`)}
-          >
-            <LinearGradient
-              colors={["rgba(248, 81, 73, 0.15)", "rgba(248, 81, 73, 0.05)"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              className="px-4 py-3 flex-row items-center gap-3"
-            >
-              <View className="w-3 h-3 rounded-full bg-danger shadow-[0_0_8px_rgba(248,81,73,0.8)]" />
-              <View className="flex-1">
-                <Text className="text-danger font-black text-sm uppercase tracking-wider">
-                  Game in progress!
-                </Text>
-                <Text className="text-txt-primary text-xs font-bold mt-0.5">
-                  {liveEvent.title}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color="#F85149" />
-            </LinearGradient>
+      <PivotPanorama
+        title="padahub"
+        subtitle={format(new Date(), "EEEE, MMMM d").toLowerCase()}
+        right={
+          <TouchableOpacity onPress={() => router.push("/(tabs)/profile")} activeOpacity={0.85}>
+            <Avatar
+              uri={user?.avatarUrl}
+              name={user ? `${user.firstName} ${user.lastName}` : "Guest"}
+              size="md"
+              border
+            />
           </TouchableOpacity>
-        )}
+        }
+      />
 
-        {isAuthenticated && myNextGame && (
-          <View className="mx-5 -mt-4 mb-6">
-            <MyNextGameCard event={myNextGame} />
-          </View>
-        )}
+      <Hub className="flex-1">
+        <HubPanel title="home">
+          <ScrollView showsVerticalScrollIndicator={false} className="flex-1" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00ABA9" />}>
+            <Text className="text-txt-secondary text-sm mb-4">
+              hello, {greeting}.
+            </Text>
 
-        {!isAuthenticated && (
-          <View className="mx-5 mb-6">
+            {!isAuthenticated && (
+              <Tile
+                size="wide"
+                accent="secondary"
+                eyebrow="welcome"
+                title="Sign in to see your schedule"
+                subtitle="registrations, teams, and live games"
+                onPress={() => router.push("/(auth)/login")}
+                icon={<Ionicons name="log-in-outline" size={28} color="#FFFFFF" />}
+              />
+            )}
+
+            <View className="h-3" />
+
+            <TileGrid>
+              {liveGame && (
+                <TileCell basis="full">
+                  <Tile
+                    size="wide"
+                    accent={liveGame.accent}
+                    eyebrow={liveGame.eyebrow}
+                    title={liveGame.title}
+                    subtitle={liveGame.subtitle}
+                    onPress={liveGame.onPress}
+                  />
+                </TileCell>
+              )}
+              {nextGameTile && (
+                <TileCell basis="full">
+                  <Tile
+                    size="wide"
+                    accent={nextGameTile.accent}
+                    eyebrow={nextGameTile.eyebrow}
+                    title={nextGameTile.title}
+                    subtitle={nextGameTile.subtitle}
+                    meta={nextGameTile.meta}
+                    onPress={nextGameTile.onPress}
+                  />
+                </TileCell>
+              )}
+              <TileCell basis="1/2">
+                <Tile
+                  size="small"
+                  accent="black"
+                  eyebrow="quick"
+                  title="Schedule"
+                  onPress={() => router.push("/(tabs)/schedule")}
+                />
+              </TileCell>
+              <TileCell basis="1/2">
+                <Tile
+                  size="small"
+                  accent="black"
+                  eyebrow="quick"
+                  title="My Teams"
+                  onPress={() => router.push("/(tabs)/teams")}
+                />
+              </TileCell>
+              <TileCell basis="1/2">
+                <Tile
+                  size="small"
+                  accent="success"
+                  eyebrow="account"
+                  title="registrations"
+                  onPress={() => router.push("/(tabs)/registrations")}
+                />
+              </TileCell>
+              <TileCell basis="1/2">
+                <Tile
+                  size="small"
+                  accent="magenta"
+                  eyebrow="account"
+                  title="Profile"
+                  onPress={() => router.push("/(tabs)/profile")}
+                />
+              </TileCell>
+            </TileGrid>
+
+            <View className="h-5" />
+
+            <SectionLabel
+              action={
+                <TouchableOpacity onPress={() => router.push("/(tabs)/schedule")}>
+                  <Text className="text-primary text-[11px] font-bold uppercase tracking-[0.18em]">all</Text>
+                </TouchableOpacity>
+              }
+            >
+              upcoming
+            </SectionLabel>
+
+            {upcomingGames.length === 0 ? (
+              <View className="bg-surface border-2 border-surface-border py-6 items-center">
+                <Ionicons name="calendar-outline" size={28} color="#8A8A8A" />
+                <Text className="text-txt-secondary text-xs font-bold mt-2 lowercase">no games scheduled.</Text>
+              </View>
+            ) : (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-1">
+                <View className="flex-row px-1">
+                  {upcomingGames.map((g) => (
+                    <View key={g.id} className="mr-3" style={{ width: 200 }}>
+                      <PublicEventCard event={g} />
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+            )}
+          </ScrollView>
+        </HubPanel>
+
+        <HubPanel title="alerts">
+          <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
+            <SectionLabel
+              action={
+                <TouchableOpacity onPress={() => router.push("/announcements")}>
+                  <Text className="text-primary text-[11px] font-bold uppercase tracking-[0.18em]">all</Text>
+                </TouchableOpacity>
+              }
+            >
+              announcements
+            </SectionLabel>
+
+            {announcements.length === 0 ? (
+              <View className="bg-surface border-2 border-surface-border py-8 items-center">
+                <Ionicons name="megaphone-outline" size={32} color="#8A8A8A" />
+                <Text className="text-txt-secondary text-xs font-bold mt-2 lowercase">no active announcements.</Text>
+              </View>
+            ) : (
+              <View className="border-t-2 border-surface-border">
+                {announcements.slice(0, 6).map((ann) => (
+                  <AnnouncementRow key={ann.id} ann={ann} />
+                ))}
+              </View>
+            )}
+
+            <View className="h-5" />
+            <SectionLabel>quick links</SectionLabel>
+            <TileGrid>
+              <TileCell basis="1/2">
+                <Tile
+                  size="small"
+                  accent="secondary"
+                  eyebrow="pada"
+                  title="New to PADA"
+                  onPress={() => openUrl(EXTERNAL_URLS.newToPada)}
+                />
+              </TileCell>
+              <TileCell basis="1/2">
+                <Tile
+                  size="small"
+                  accent="warning"
+                  eyebrow="pada"
+                  title="Youth"
+                  onPress={() => openUrl(EXTERNAL_URLS.youth)}
+                />
+              </TileCell>
+              <TileCell basis="1/2">
+                <Tile
+                  size="small"
+                  accent="success"
+                  eyebrow="pada"
+                  title="Fields"
+                  onPress={() => openUrl(EXTERNAL_URLS.fields)}
+                />
+              </TileCell>
+              <TileCell basis="1/2">
+                <Tile
+                  size="small"
+                  accent="danger"
+                  eyebrow="pada"
+                  title="Donate"
+                  onPress={() => openUrl(EXTERNAL_URLS.donate)}
+                />
+              </TileCell>
+            </TileGrid>
+          </ScrollView>
+        </HubPanel>
+
+        <HubPanel title="explore">
+          <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
             <TouchableOpacity
               onPress={() => openUrl(EXTERNAL_URLS.about)}
               activeOpacity={0.9}
+              className="bg-surface border-2 border-surface-border p-4 mb-5"
             >
-              <Card className="bg-accent/10 border-accent/20 p-5">
-                <View className="flex-row items-center gap-4">
-                  <View className="w-14 h-14 rounded-2xl bg-accent items-center justify-center">
-                    <Ionicons name="information-circle" size={28} color="#fff" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-txt-primary text-lg font-black mb-1">
-                      About PADA
-                    </Text>
-                    <Text className="text-txt-secondary text-sm font-mid" numberOfLines={2}>
-                      Portland Ultimate Frisbee Association - Building community through spirit of the game since 1985.
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color="#8B949E" />
+              <View className="flex-row items-start gap-3">
+                <IconChip name="information-circle" color="#339933" background="#33993322" />
+                <View className="flex-1">
+                  <Text className="text-txt-primary text-sm font-bold uppercase tracking-wider">About PADA</Text>
+                  <Text className="text-txt-secondary text-xs mt-1" numberOfLines={3}>
+                    Portland Ultimate Frisbee Association — building community through spirit of the game since 1985.
+                  </Text>
                 </View>
-              </Card>
+              </View>
             </TouchableOpacity>
-          </View>
-        )}
 
-        {!isAuthenticated && (
-          <View className="mb-6">
-            <View className="px-5 flex-row items-center justify-between mb-3">
-              <Text className="text-txt-primary text-lg font-bold">Upcoming Event Dates</Text>
-            </View>
-
+            <SectionLabel>events</SectionLabel>
             {publicEvents.length === 0 ? (
-              <View className="mx-5 bg-surface rounded-2xl p-6 items-center gap-2">
-                <Ionicons name="calendar-outline" size={32} color="#484F58" />
-                <Text className="text-txt-muted text-sm font-mid text-center">
-                  No upcoming events. Check back later!
-                </Text>
+              <View className="bg-surface border-2 border-surface-border py-6 items-center">
+                <Ionicons name="calendar-outline" size={28} color="#8A8A8A" />
+                <Text className="text-txt-secondary text-xs font-bold mt-2">no upcoming events.</Text>
               </View>
             ) : (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerClassName="px-5"
-              >
-                {publicEvents.map((ev) => (
-                  <PublicEventCard key={ev.id} event={ev} />
-                ))}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-1">
+                <View className="flex-row px-1">
+                  {publicEvents.map((ev) => (
+                    <View key={ev.id} className="mr-3">
+                      <PublicEventCard event={ev} />
+                    </View>
+                  ))}
+                </View>
               </ScrollView>
             )}
-          </View>
-        )}
 
-        {!isAuthenticated && recentArticles.length > 0 && (
-          <View className="mb-6">
-            <View className="px-5 flex-row items-center justify-between mb-3">
-              <Text className="text-txt-primary text-lg font-bold">Recent News</Text>
-              <TouchableOpacity onPress={() => router.push("/p")}>
-                <Text className="text-primary-400 text-sm font-semi">See all</Text>
-              </TouchableOpacity>
-            </View>
+            <View className="h-5" />
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerClassName="px-5"
-            >
-              {recentArticles.map((article) => (
-                <ArticleCard key={article.id} article={article} />
-              ))}
-            </ScrollView>
-          </View>
-        )}
-
-        {isAuthenticated && (
-          <>
-            <View className="mb-6">
-              <View className="px-5 flex-row items-center justify-between mb-3">
-                <Text className="text-txt-primary text-lg font-bold">Upcoming Games</Text>
-                <TouchableOpacity onPress={() => router.push("/(tabs)/schedule")}>
-                  <Text className="text-primary-400 text-sm font-semi">See all</Text>
-                </TouchableOpacity>
-              </View>
-
-              {upcomingGames.length === 0 ? (
-                <View className="mx-5 bg-surface rounded-2xl p-6 items-center gap-2">
-                  <Ionicons name="calendar-outline" size={32} color="#484F58" />
-                  <Text className="text-txt-muted text-sm font-mid text-center">
-                    No upcoming games. Check back later!
-                  </Text>
-                </View>
-              ) : (
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerClassName="px-5"
-                >
-                  {upcomingGames.map((ev) => (
-                    <TouchableOpacity
-                      key={ev.id}
-                      onPress={() => router.push(`/events/${ev.id}`)}
-                      className="mr-4"
-                      activeOpacity={0.8}
-                      style={{ width: 260 }}
-                    >
-                      <Card
-                        className={`p-0 overflow-hidden border border-surface-border/50 ${
-                          ev.status === "in_progress" ? "border-danger/40" : ""
-                        }`}
-                      >
-                        <LinearGradient
-                          colors={ev.status === "in_progress" ? ["#F85149", "#DA3633"] : ["#21262D", "#161B22"]}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
-                          className="p-4"
-                        >
-                          <View className="flex-row items-center justify-between mb-4">
-                            <Badge
-                              label={ev.status === "in_progress" ? "LIVE" : (ev.startDate ? eventDateLabel(ev.startDate) : "Date TBD")}
-                              variant={ev.status === "in_progress" ? "ghost" : "primary"}
-                              className={ev.status === "in_progress" ? "bg-white/20 border-white/40" : ""}
-                            />
-                            {ev.status !== "in_progress" && (
-                              <Text className="text-txt-secondary text-[10px] font-bold uppercase tracking-widest">
-                                {ev.startDate ? format(parseISO(ev.startDate), "h:mm a") : ""}
-                              </Text>
-                            )}
-                          </View>
-
-                          <View className="mb-4">
-                            <Text
-                              className={`text-lg font-black leading-tight ${
-                                ev.status === "in_progress" ? "text-white" : "text-txt-primary"
-                              }`}
-                              numberOfLines={2}
-                            >
-                              {ev.title}
-                            </Text>
-                            <Text
-                              className={`text-sm font-semi mt-1 ${
-                                ev.status === "in_progress" ? "text-white/80" : "text-primary-300"
-                              }`}
-                              numberOfLines={1}
-                            >
-                              {ev.teamName}
-                            </Text>
-                          </View>
-
-                          <View className="flex-row items-center justify-between mt-auto pt-4 border-t border-white/10">
-                            {ev.location ? (
-                              <View className="flex-row items-center gap-1.5 flex-1 mr-2">
-                                <Ionicons
-                                  name="location"
-                                  size={12}
-                                  color={ev.status === "in_progress" ? "#fff" : "#8B949E"}
-                                />
-                                <Text
-                                  className={`text-[10px] font-bold uppercase tracking-wider ${
-                                    ev.status === "in_progress" ? "text-white/70" : "text-txt-muted"
-                                  }`}
-                                  numberOfLines={1}
-                                >
-                                  {ev.location.name}
-                                </Text>
-                              </View>
-                            ) : (
-                              <View className="flex-1" />
-                            )}
-
-                            <Ionicons
-                              name="chevron-forward-circle"
-                              size={20}
-                              color={ev.status === "in_progress" ? "#fff" : "#30363D"}
-                            />
-                          </View>
-                        </LinearGradient>
-                      </Card>
+            {recentArticles.length > 0 && (
+              <>
+                <SectionLabel
+                  action={
+                    <TouchableOpacity onPress={() => router.push("/p")}>
+                      <Text className="text-primary text-[11px] font-bold uppercase tracking-[0.18em]">all</Text>
                     </TouchableOpacity>
-                  ))}
+                  }
+                >
+                  recent news
+                </SectionLabel>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-1">
+                  <View className="flex-row px-1">
+                    {recentArticles.map((article) => (
+                      <View key={article.id} className="mr-3">
+                        <ArticleTile article={article} />
+                      </View>
+                    ))}
+                  </View>
                 </ScrollView>
-              )}
-            </View>
-
-            <View className="mx-5 mb-8">
-              <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-txt-primary text-lg font-bold">Announcements</Text>
-                <TouchableOpacity onPress={() => router.push("/announcements")}>
-                  <Text className="text-primary-400 text-sm font-semi">See all</Text>
-                </TouchableOpacity>
-              </View>
-              {announcements.length === 0 ? (
-                <Card className="items-center py-6">
-                  <Ionicons name="megaphone-outline" size={32} color="#484F58" />
-                  <Text className="text-txt-muted text-sm font-mid mt-2 text-center">
-                    No new announcements.
-                  </Text>
-                </Card>
-              ) : (
-                <Card className="gap-0 divide-y divide-surface-overlay">
-                  {announcements.slice(0, 3).map((ann) => (
-                    <AnnouncementRow key={ann.id} ann={ann} />
-                  ))}
-                </Card>
-              )}
-            </View>
-
-            <View className="mx-5 mb-12">
-              <Text className="text-txt-primary text-lg font-black mb-4">Quick Links</Text>
-              <View className="flex-row gap-4">
-                <TouchableOpacity
-                  className="flex-1 bg-accent/10 border border-accent/20 rounded-3xl p-5 items-center gap-3 shadow-sm"
-                  onPress={() => router.push("/(tabs)/schedule")}
-                >
-                  <View className="w-12 h-12 rounded-2xl bg-accent items-center justify-center shadow-lg shadow-accent/50">
-                    <Ionicons name="calendar" size={24} color="#fff" />
-                  </View>
-                  <Text className="text-txt-primary text-xs font-bold text-center tracking-wide">
-                    Schedule
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  className="flex-1 bg-warning/10 border border-warning/20 rounded-3xl p-5 items-center gap-3 shadow-sm"
-                  onPress={() => router.push("/(tabs)/teams")}
-                >
-                  <View className="w-12 h-12 rounded-2xl bg-warning items-center justify-center shadow-lg shadow-warning/50">
-                    <Ionicons name="people" size={24} color="#fff" />
-                  </View>
-                  <Text className="text-txt-primary text-xs font-bold text-center tracking-wide">
-                    My Teams
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </>
-        )}
-      </ScrollView>
+              </>
+            )}
+          </ScrollView>
+        </HubPanel>
+      </Hub>
     </SafeAreaView>
   );
 }
