@@ -6,6 +6,7 @@ import { format, formatDistanceToNow, isPast } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
 import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoaderBar } from "@/components/ui/LoaderBar";
 import { Body, EyebrowTight, Label } from "@/components/ui";
@@ -66,7 +67,6 @@ const AnnouncementItem = React.memo(function AnnouncementItem({
 
   return (
     <TouchableOpacity
-      className={`bg-surface border border-surface-border p-4 gap-2 ${isExpired ? "opacity-50" : ""}`}
       onLongPress={handleLongPress}
       onPress={() => {
         if (showDismiss) setShowDismiss(false);
@@ -74,44 +74,49 @@ const AnnouncementItem = React.memo(function AnnouncementItem({
       }}
       delayLongPress={300}
       activeOpacity={0.85}
+      className={isExpired ? "opacity-50" : undefined}
     >
-      <View className="flex-row items-center justify-between">
-        <View className="flex-row items-center gap-2 flex-1">
-          {!item.isRead && <View className="w-2 h-2 bg-primary" accessibilityLabel="unread" />}
-          <Badge label={label} accent={accent} />
-          {item.isUrgent && <Badge label="Urgent" variant="danger" />}
-          <EyebrowTight tone="secondary">
-            {format(new Date(item.createdAt), "MMM d, yyyy").toLowerCase()}
-          </EyebrowTight>
-        </View>
-        <View className="flex-row items-center gap-2">
-          {item.expiresAt && (
-            <View className="flex-row items-center gap-1">
-              <Ionicons name="time-outline" size={12} color="#5C5C5C" />
-              <Body tone="secondary" className="text-[10px] font-semibold tracking-[0.12em]">
-                {isExpired ? "Expired" : `Expires ${formatDistanceToNow(new Date(item.expiresAt), { addSuffix: true })}`}
-              </Body>
+      <Card variant="raised">
+        <View className="p-4 gap-2">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center gap-2 flex-1">
+              {!item.isRead && <View className="w-2 h-2 bg-primary" accessibilityLabel="unread" />}
+              <Badge label={label} accent={accent} />
+              {item.isUrgent && <Badge label="Urgent" variant="danger" />}
+              <EyebrowTight tone="secondary">
+                {format(new Date(item.createdAt), "MMM d, yyyy").toLowerCase()}
+              </EyebrowTight>
             </View>
-          )}
-          {showDismiss && (
-            <TouchableOpacity
-              onPress={handleDismiss}
-              className="w-7 h-7 bg-danger items-center justify-center"
-              accessibilityRole="button"
-              accessibilityLabel="hide announcement"
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons name="close" size={14} color="#FFFFFF" />
-            </TouchableOpacity>
-          )}
+            <View className="flex-row items-center gap-2">
+              {item.expiresAt && (
+                <View className="flex-row items-center gap-1">
+                  <Ionicons name="time-outline" size={12} color="#5C5C5C" />
+                  <Body tone="secondary" className="text-[10px] font-semibold tracking-[0.12em]">
+                    {isExpired ? "Expired" : `Expires ${formatDistanceToNow(new Date(item.expiresAt), { addSuffix: true })}`}
+                  </Body>
+                </View>
+              )}
+              {showDismiss && (
+                <TouchableOpacity
+                  onPress={handleDismiss}
+                  className="w-7 h-7 bg-danger items-center justify-center"
+                  accessibilityRole="button"
+                  accessibilityLabel="hide announcement"
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="close" size={14} color="#FFFFFF" />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+          <Body tone="primary" className="font-semibold text-base">
+            {item.title}
+          </Body>
+          <Body tone="secondary" className="text-sm" numberOfLines={2}>
+            {item.content}
+          </Body>
         </View>
-      </View>
-      <Body tone="primary" className="font-semibold text-base">
-        {item.title}
-      </Body>
-      <Body tone="secondary" className="text-sm" numberOfLines={2}>
-        {item.content}
-      </Body>
+      </Card>
     </TouchableOpacity>
   );
 });

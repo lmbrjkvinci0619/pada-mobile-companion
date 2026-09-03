@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { format, parseISO } from "date-fns";
 import { useArticles } from "@/hooks/useApi";
 import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 import { PageHeader, SectionLabel } from "@/components/ui/Page";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoaderBar } from "@/components/ui/LoaderBar";

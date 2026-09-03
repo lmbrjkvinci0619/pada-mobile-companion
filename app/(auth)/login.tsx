@@ -51,7 +51,7 @@ export default function LoginScreen() {
       >
         <View className="items-center mb-10">
           <View className="w-20 h-20 bg-primary items-center justify-center mb-5">
-            <Hero tone="inverse" className="text-4xl leading-none">
+            <Hero tone="inverse" size="sm" className="leading-none">
               p
             </Hero>
           </View>

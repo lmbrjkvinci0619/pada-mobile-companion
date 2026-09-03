@@ -11,6 +11,7 @@ import { invalidateCache } from "@/lib/apiClient";
 import { invalidateQueries } from "@/lib/queryClient";
 import type { EventStatus } from "@/types";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { PageHeader, SectionLabel } from "@/components/ui/Page";
 import { LoaderBar } from "@/components/ui/LoaderBar";
 import { Hero, EyebrowTight, Body, Label } from "@/components/ui";
@@ -25,11 +26,11 @@ function ScoreAdjuster({
   onChange: (s: number) => void;
 }) {
   return (
-    <View className="bg-surface border border-surface-border p-5 items-center flex-1">
+    <Card variant="raised" className="p-5 items-center flex-1">
       <EyebrowTight tone="secondary" className="text-center h-10" numberOfLines={2}>
         {teamName}
       </EyebrowTight>
-      <Hero tone="primary" className="text-6xl my-4">{score}</Hero>
+      <Hero tone="primary" size="2xl" className="my-4">{score}</Hero>
       <View className="flex-row gap-3">
         <TouchableOpacity
           className="w-12 h-12 bg-surface-overlay border border-surface-border items-center justify-center"
@@ -50,7 +51,7 @@ function ScoreAdjuster({
           <Ionicons name="add" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
-    </View>
+    </Card>
   );
 }
 
@@ -205,11 +206,11 @@ export default function ReportScoreScreen() {
         </View>
 
         <SectionLabel>game status</SectionLabel>
-        <View className="bg-surface border border-surface-border mb-8">
+        <Card variant="default" className="mb-8">
           <StatusOption label="In Progress" selected={status === "in_progress"} onPress={() => setStatus("in_progress")} />
           <StatusOption label="Completed (Final)" selected={status === "completed"} onPress={() => setStatus("completed")} />
           <StatusOption label="Cancelled" selected={status === "cancelled"} onPress={() => setStatus("cancelled")} last />
-        </View>
+        </Card>
 
         <Button
           label={isSubmitting ? "Submitting..." : "Submit Score"}

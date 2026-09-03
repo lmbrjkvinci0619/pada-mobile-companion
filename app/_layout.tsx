@@ -4,7 +4,7 @@ import { useFonts, Inter_300Light, Inter_400Regular, Inter_500Medium, Inter_600S
 import { Slot } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState, Component, ReactNode } from "react";
-import { View, TouchableOpacity, LogBox, StatusBar } from "react-native";
+import { View, TouchableOpacity, LogBox, StatusBar, useColorScheme } from "react-native";
 import { useAuthStore } from "@/store/authStore";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -13,6 +13,7 @@ import { registerForPushNotificationsAsync, setupNotificationListeners } from "@
 import { router } from "expo-router";
 import { USE_MOCK_DATA } from "@/constants/mockData";
 import { LoaderBar } from "@/components/ui/LoaderBar";
+import { OfflineBanner } from "@/components/ui/OfflineBanner";
 import { EyebrowTight, Body, Label } from "@/components/ui";
 
 LogBox.ignoreLogs(["Warning: ..."]);
@@ -122,6 +123,8 @@ export default function RootLayout() {
     Inter_600SemiBold,
   });
   const [fontsTimedOut, setFontsTimedOut] = React.useState(false);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -204,11 +207,14 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      <QueryClientProvider client={queryClient}>
-        <MockDataWarning />
-        <Slot />
-      </QueryClientProvider>
+      <View className={isDark ? "flex-1 dark" : "flex-1"}>
+        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={isDark ? "#000000" : "#FFFFFF"} />
+        <OfflineBanner />
+        <QueryClientProvider client={queryClient}>
+          <MockDataWarning />
+          <Slot />
+        </QueryClientProvider>
+      </View>
     </ErrorBoundary>
   );
 }

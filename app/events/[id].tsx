@@ -134,7 +134,7 @@ export default function EventDetailScreen() {
           </Body>
         </View>
 
-        <View className="h-5" />
+        <View className="h-4" />
 
         <SectionLabel>location</SectionLabel>
           <Card>
@@ -149,7 +149,12 @@ export default function EventDetailScreen() {
             )}
 
             {event.location?.latitude != null && event.location.longitude != null && (
-              <View className="mt-3 border border-surface-border overflow-hidden">
+              <View
+                className="mt-3 border border-surface-border overflow-hidden"
+                accessible
+                accessibilityLabel={`Map showing ${event.location?.name ?? "event location"} at ${event.location?.address ?? ""}`}
+                accessibilityRole="image"
+              >
                 <MapView
                   style={{ height: 160, width: "100%" }}
                   initialRegion={{
@@ -160,6 +165,8 @@ export default function EventDetailScreen() {
                   }}
                   scrollEnabled={false}
                   zoomEnabled={false}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
                 >
                   <Marker
                     coordinate={{
@@ -186,7 +193,7 @@ export default function EventDetailScreen() {
         </Card>
 
         {event.notes && (
-          <View className="mt-5">
+          <View className="mt-4">
             <SectionLabel>notes</SectionLabel>
             <Card>
               <Card.Content>
@@ -199,7 +206,7 @@ export default function EventDetailScreen() {
         )}
 
         {event.score && (
-          <View className="mt-5">
+          <View className="mt-4">
             <SectionLabel>score</SectionLabel>
             <Card>
               <Card.Content className="gap-3">

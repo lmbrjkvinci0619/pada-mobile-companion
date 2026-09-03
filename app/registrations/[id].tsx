@@ -93,7 +93,7 @@ export default function RegistrationDetailScreen() {
               {registration.organizationName}
             </Body>
           )}
-          <Section tone="primary" className="text-2xl text-center">
+          <Section tone="primary" size="sm" className="text-center">
             opening registration in your browser...
           </Section>
           <Body tone="muted" className="text-sm text-center">

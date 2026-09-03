@@ -9,11 +9,12 @@ import { format, parseISO } from "date-fns";
 import { useAuthStore } from "@/store/authStore";
 import { useRegistrations } from "@/hooks/useApi";
 import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 import { ReadOnlyBanner } from "@/components/ui/ReadOnlyBanner";
 import { PageHeader, SectionLabel } from "@/components/ui/Page";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Body, EyebrowTight, Eyebrow, Subtitle } from "@/components/ui";
+import { Body, EyebrowTight, MetaSentence, Subtitle } from "@/components/ui";
 import { openRegistrationInBrowser } from "@/lib/urlUtils";
 import type { Registration, RegistrationStatus, RegistrationType } from "@/types";
 
@@ -54,39 +55,41 @@ const RegistrationCard = React.memo(function RegistrationCard({ reg }: { reg: Re
       activeOpacity={0.85}
       className="mb-3"
     >
-      <View className="flex-row items-start gap-3 bg-surface border border-surface-border p-4">
-        <View
-          className="w-10 h-10 items-center justify-center"
-          style={{ backgroundColor: accent }}
-        >
-          <Ionicons name={TYPE_ICONS[reg.type]} size={20} color="#FFFFFF" />
+      <Card variant="raised">
+        <View className="flex-row items-start gap-3 p-4">
+          <View
+            className="w-10 h-10 items-center justify-center"
+            style={{ backgroundColor: accent }}
+          >
+            <Ionicons name={TYPE_ICONS[reg.type]} size={20} color="#FFFFFF" />
+          </View>
+          <View className="flex-1">
+            <Body tone="primary" className="font-semibold text-base" numberOfLines={1}>
+              {reg.organizationName}
+            </Body>
+            {reg.seasonName && (
+              <Subtitle tone="secondary" className="mt-0.5">
+                {reg.seasonName}
+              </Subtitle>
+            )}
+          </View>
+          {statusBadge(reg.status)}
+          <Ionicons name="open-outline" size={18} color="#5C5C5C" />
         </View>
-        <View className="flex-1">
-          <Body tone="primary" className="font-semibold text-base" numberOfLines={1}>
-            {reg.organizationName}
-          </Body>
-          {reg.seasonName && (
-            <Subtitle tone="secondary" className="mt-0.5">
-              {reg.seasonName}
-            </Subtitle>
-          )}
+        <View className="flex-row items-center gap-4 px-4 py-2 bg-surface-overlay border-t border-surface-border">
+          <View className="flex-row items-center gap-1.5">
+            <Ionicons name="pricetag-outline" size={13} color="#5C5C5C" />
+            <EyebrowTight tone="secondary">{reg.type}</EyebrowTight>
+          </View>
+          <View className="flex-row items-center gap-1.5">
+            <Ionicons name="calendar-outline" size={13} color="#5C5C5C" />
+            <MetaSentence tone="secondary">
+              {format(parseISO(reg.startDate), "MMM d, yyyy")}
+              {reg.endDate ? ` – ${format(parseISO(reg.endDate), "MMM d, yyyy")}` : ""}
+            </MetaSentence>
+          </View>
         </View>
-        {statusBadge(reg.status)}
-        <Ionicons name="open-outline" size={18} color="#5C5C5C" />
-      </View>
-      <View className="flex-row items-center gap-4 px-4 py-2 bg-surface-overlay border-t border-surface-border">
-        <View className="flex-row items-center gap-1.5">
-          <Ionicons name="pricetag-outline" size={13} color="#5C5C5C" />
-          <EyebrowTight tone="secondary">{reg.type}</EyebrowTight>
-        </View>
-        <View className="flex-row items-center gap-1.5">
-          <Ionicons name="calendar-outline" size={13} color="#5C5C5C" />
-          <Eyebrow tone="secondary" className="font-semibold normal-case tracking-normal text-[11px]">
-            {format(parseISO(reg.startDate), "MMM d, yyyy").toLowerCase()}
-            {reg.endDate ? ` – ${format(parseISO(reg.endDate), "MMM d, yyyy").toLowerCase()}` : ""}
-          </Eyebrow>
-        </View>
-      </View>
+      </Card>
     </TouchableOpacity>
   );
 });
@@ -156,7 +159,7 @@ export default function RegistrationsScreen() {
           </View>
         ) : (
           sections.map((section) => (
-            <View key={section.title} className="mb-5">
+            <View key={section.title} className="mb-6">
               <SectionLabel>{section.title}</SectionLabel>
               {section.data.map((reg) => (
                 <RegistrationCard key={reg.id} reg={reg} />

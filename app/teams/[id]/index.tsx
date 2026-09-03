@@ -9,10 +9,12 @@ import type { TeamMember, Event } from "@/types";
 import { ReadOnlyBanner } from "@/components/ui/ReadOnlyBanner";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
+import { ListRow } from "@/components/ui/ListRow";
 import { PageHeader } from "@/components/ui/Page";
 import { LoaderBar } from "@/components/ui/LoaderBar";
 import { Pivot, PivotContent } from "@/components/ui/Pivot";
-import { Hero, Eyebrow, EyebrowTight, Body, Subtitle } from "@/components/ui";
+import { Hero, Eyebrow, EyebrowTight, Body, Section } from "@/components/ui";
 import { format, parseISO } from "date-fns";
 import { RefreshControl } from "react-native";
 
@@ -76,7 +78,7 @@ export default function TeamDetailScreen() {
       />
 
       <View className="px-5 pt-4 pb-5 bg-primary border-b border-primary">
-        <Hero tone="inverse" className="text-3xl">
+        <Hero tone="inverse" size="md">
           {team.name}
         </Hero>
         <View className="flex-row items-center justify-between mt-1">
@@ -137,64 +139,68 @@ export default function TeamDetailScreen() {
             if (activeTab === "roster") {
               const member = item as TeamMember;
               return (
-                <View className="flex-row items-center bg-surface border border-surface-border p-4 mb-3">
-                  <Avatar
-                    name={`${member.firstName} ${member.lastName}`}
-                    uri={member.avatarUrl}
-                    size="md"
-                    accent="#00ABA9"
+                <Card variant="raised" className="mb-3">
+                  <ListRow
+                    icon={
+                      <Avatar
+                        name={`${member.firstName} ${member.lastName}`}
+                        uri={member.avatarUrl}
+                        size="md"
+                        accent="#00ABA9"
+                      />
+                    }
+                    title={`${member.firstName} ${member.lastName}`}
+                    subtitle={member.role}
+                    right={
+                      member.jerseyNumber != null ? (
+                        <View className="w-10 h-10 bg-surface-overlay items-center justify-center border border-surface-border">
+                          <Body tone="primary" className="font-semibold">{member.jerseyNumber}</Body>
+                        </View>
+                      ) : undefined
+                    }
                   />
-                  <View className="flex-1 ml-3">
-                    <Body tone="primary" className="font-semibold text-sm">
-                      {member.firstName} {member.lastName}
-                    </Body>
-                    <View className="bg-surface-overlay border border-primary self-start mt-1 px-2 py-0.5">
-                      <EyebrowTight tone="primaryAccent">{member.role}</EyebrowTight>
-                    </View>
-                  </View>
-                  {member.jerseyNumber != null && (
-                    <View className="w-10 h-10 bg-surface-overlay items-center justify-center border border-surface-border">
-                      <Body tone="primary" className="font-semibold">{member.jerseyNumber}</Body>
-                    </View>
-                  )}
-                </View>
+                </Card>
               );
             }
             const ev = item as Event;
             return (
               <TouchableOpacity
-                className="bg-surface border border-surface-border p-4 mb-3"
+                className="mb-3"
                 onPress={() => router.push(`/events/${ev.id}`)}
                 activeOpacity={0.85}
               >
-                <View className="flex-row justify-between items-center mb-2">
-                  <Badge label={ev.startDate ? format(parseISO(ev.startDate), "MMM d") : "TBD"} variant="ghost" />
-                  <EyebrowTight tone="secondary">
-                    {ev.startDate ? format(parseISO(ev.startDate), "h:mm a") : ""}
-                  </EyebrowTight>
-                </View>
-                <Body tone="primary" className="font-semibold text-base mb-1">
-                  vs {ev.opponentName || "TBD"}
-                </Body>
-                <Subtitle tone="secondary" className="mb-3">
-                  {ev.title}
-                </Subtitle>
-
-                {ev.score && (
-                  <View className="bg-surface-overlay border border-surface-border p-3 flex-row justify-between items-center">
-                    <Body tone="primary" className="font-semibold text-sm" numberOfLines={1}>
-                      {ev.score.homeTeamName || "Home"}
-                    </Body>
-                    <View className="flex-row items-center gap-3">
-                      <Hero tone="primary" className="text-xl">{ev.score.homeScore}</Hero>
-                      <Body tone="muted">—</Body>
-                      <Hero tone="primary" className="text-xl">{ev.score.awayScore}</Hero>
+                <Card variant="raised">
+                  <View className="p-4">
+                    <View className="flex-row justify-between items-center mb-2">
+                      <Badge label={ev.startDate ? format(parseISO(ev.startDate), "MMM d") : "TBD"} variant="ghost" />
+                      <EyebrowTight tone="secondary">
+                        {ev.startDate ? format(parseISO(ev.startDate), "h:mm a") : ""}
+                      </EyebrowTight>
                     </View>
-                    <Body tone="secondary" className="text-xs font-semibold" numberOfLines={1}>
-                      {ev.score.awayTeamName || "Away"}
+                    <Body tone="primary" className="font-semibold text-base mb-1">
+                      vs {ev.opponentName || "TBD"}
                     </Body>
+                    <Body tone="secondary" className="text-sm mb-3">
+                      {ev.title}
+                    </Body>
+
+                    {ev.score && (
+                      <View className="bg-surface-overlay border border-surface-border p-3 flex-row justify-between items-center">
+                        <Body tone="primary" className="font-semibold text-sm" numberOfLines={1}>
+                          {ev.score.homeTeamName || "Home"}
+                        </Body>
+                        <View className="flex-row items-center gap-3">
+                          <Hero tone="primary" size="sm">{ev.score.homeScore}</Hero>
+                          <Body tone="muted">—</Body>
+                          <Hero tone="primary" size="sm">{ev.score.awayScore}</Hero>
+                        </View>
+                        <Body tone="secondary" className="text-xs font-semibold" numberOfLines={1}>
+                          {ev.score.awayTeamName || "Away"}
+                        </Body>
+                      </View>
+                    )}
                   </View>
-                )}
+                </Card>
               </TouchableOpacity>
             );
           }}

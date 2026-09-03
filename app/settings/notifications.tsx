@@ -10,6 +10,7 @@ import { fetchUserPreferences, saveUserPreferences } from "@/services/preference
 import { clearHiddenAnnouncements, getHiddenAnnouncementCount } from "@/services/announcements";
 import * as Notifications from "expo-notifications";
 import { PageHeader, SectionLabel, IconChip } from "@/components/ui/Page";
+import { Card } from "@/components/ui/Card";
 import { LoaderBar } from "@/components/ui/LoaderBar";
 import { Body, EyebrowTight, Subtitle } from "@/components/ui";
 import type { NotificationPreferences } from "@/types";
@@ -342,29 +343,22 @@ export default function NotificationSettingsScreen() {
       >
         <View className="px-5 py-4">
           <SectionLabel>general</SectionLabel>
-          <View className="bg-surface border border-surface-border">
-            <View className="flex-row items-center justify-between px-4 py-4 border-b border-surface-border">
-              <View className="flex-row items-center gap-3 flex-1">
-                <IconChip name="notifications" color="#00ABA9" background="#00ABA922" />
-                <View className="flex-1">
-                  <Body tone="primary" className="text-sm font-semibold">push notifications</Body>
-                  <Subtitle tone="secondary" className="mt-0.5">Receive notifications on your device</Subtitle>
-                </View>
-              </View>
-              <Switch
-                value={localNotifications.pushEnabled}
-                onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, pushEnabled: val }))}
-                trackColor={{ false: "#D8D8D8", true: "#00ABA9" }}
-                thumbColor="#FFFFFF"
-                accessibilityLabel="push notifications"
-              />
-            </View>
-          </View>
+          <Card variant="default">
+            <ToggleRow
+              title="Push Notifications"
+              subtitle="Receive notifications on your device"
+              value={localNotifications.pushEnabled}
+              onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, pushEnabled: val }))}
+              iconName="notifications"
+              iconColor="#00ABA9"
+              iconBackground="#00ABA922"
+            />
+          </Card>
         </View>
 
         <View className="px-5 pb-4">
           <SectionLabel>announcements</SectionLabel>
-          <View className="bg-surface border border-surface-border">
+          <Card variant="default">
             <ToggleRow
               title="All Announcements"
               subtitle="Receive notifications for all announcements"
@@ -405,12 +399,12 @@ export default function NotificationSettingsScreen() {
               iconBackground="#A200FF22"
               disabled={!localNotifications.pushEnabled || !localNotifications.announcementsEnabled}
             />
-          </View>
+          </Card>
         </View>
 
         <View className="px-5 pb-4">
           <SectionLabel>games & scheduling</SectionLabel>
-          <View className="bg-surface border border-surface-border">
+          <Card variant="default">
             <ToggleRow
               title="Score Notifications"
               subtitle="Game score updates and results"
@@ -431,82 +425,86 @@ export default function NotificationSettingsScreen() {
               iconBackground="#F0960922"
               disabled={!localNotifications.pushEnabled}
             />
-          </View>
+          </Card>
         </View>
 
         <View className="px-5 pb-4">
           <SectionLabel>quiet hours</SectionLabel>
-          <View className="bg-surface border border-surface-border p-4 gap-3">
-            <Body tone="secondary" className="text-xs">
-              Notifications will be silenced during these hours
-            </Body>
-            <View className="flex-row gap-3">
-              <QuietHoursButton
-                label="Start"
-                time={localNotifications.quietHoursStart}
-                onPress={() => setShowStartPicker(true)}
-                disabled={!localNotifications.pushEnabled}
-              />
-              <QuietHoursButton
-                label="End"
-                time={localNotifications.quietHoursEnd}
-                onPress={() => setShowEndPicker(true)}
-                disabled={!localNotifications.pushEnabled}
-              />
+          <Card variant="default">
+            <View className="p-4 gap-3">
+              <Body tone="secondary" className="text-xs">
+                Notifications will be silenced during these hours
+              </Body>
+              <View className="flex-row gap-3">
+                <QuietHoursButton
+                  label="Start"
+                  time={localNotifications.quietHoursStart}
+                  onPress={() => setShowStartPicker(true)}
+                  disabled={!localNotifications.pushEnabled}
+                />
+                <QuietHoursButton
+                  label="End"
+                  time={localNotifications.quietHoursEnd}
+                  onPress={() => setShowEndPicker(true)}
+                  disabled={!localNotifications.pushEnabled}
+                />
+              </View>
+              {(localNotifications.quietHoursStart || localNotifications.quietHoursEnd) && (
+                <TouchableOpacity
+                  className="items-center py-3"
+                  onPress={() => setLocalNotifications((prev) => ({
+                    ...prev,
+                    quietHoursStart: undefined,
+                    quietHoursEnd: undefined,
+                  }))}
+                  accessibilityRole="button"
+                  accessibilityLabel="clear quiet hours"
+                  activeOpacity={0.85}
+                >
+                  <EyebrowTight tone="danger">clear quiet hours</EyebrowTight>
+                </TouchableOpacity>
+              )}
             </View>
-            {(localNotifications.quietHoursStart || localNotifications.quietHoursEnd) && (
-              <TouchableOpacity
-                className="items-center py-3"
-                onPress={() => setLocalNotifications((prev) => ({
-                  ...prev,
-                  quietHoursStart: undefined,
-                  quietHoursEnd: undefined,
-                }))}
-                accessibilityRole="button"
-                accessibilityLabel="clear quiet hours"
-                activeOpacity={0.85}
-              >
-                <EyebrowTight tone="danger">clear quiet hours</EyebrowTight>
-              </TouchableOpacity>
-            )}
-          </View>
+          </Card>
         </View>
 
         <View className="px-5 pb-4">
           <SectionLabel>hidden announcements</SectionLabel>
-          <View className="bg-surface border border-surface-border p-4 gap-3">
-            {hiddenCount > 0 ? (
-              <>
-                <View className="flex-row items-center gap-3">
-                  <IconChip name="eye-off" color="#E51400" background="#E5140022" />
-                  <View className="flex-1">
-                    <Body tone="primary" className="text-sm font-semibold">
-                      {hiddenCount} hidden
-                    </Body>
-                    <Subtitle tone="secondary" className="mt-0.5">
-                      announcements dismissed from feed
-                    </Subtitle>
+          <Card variant="default">
+            <View className="p-4 gap-3">
+              {hiddenCount > 0 ? (
+                <>
+                  <View className="flex-row items-center gap-3">
+                    <IconChip name="eye-off" color="#E51400" background="#E5140022" />
+                    <View className="flex-1">
+                      <Body tone="primary" className="text-sm font-semibold">
+                        {hiddenCount} hidden
+                      </Body>
+                      <Subtitle tone="secondary" className="mt-0.5">
+                        announcements dismissed from feed
+                      </Subtitle>
+                    </View>
                   </View>
+                  <TouchableOpacity
+                    className="items-center py-3 border-t border-surface-border"
+                    onPress={handleClearHiddenAnnouncements}
+                    accessibilityRole="button"
+                    accessibilityLabel="show all announcements"
+                    activeOpacity={0.85}
+                  >
+                    <EyebrowTight tone="primaryAccent">show all announcements</EyebrowTight>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <View className="flex-row items-center gap-3">
+                  <IconChip name="checkmark-circle" color="#339933" background="#33993322" />
+                  <Body tone="secondary" className="text-sm">
+                    No hidden announcements
+                  </Body>
                 </View>
-                <TouchableOpacity
-                  className="items-center py-3 border-t border-surface-border"
-                  onPress={handleClearHiddenAnnouncements}
-                  accessibilityRole="button"
-                  accessibilityLabel="show all announcements"
-                  activeOpacity={0.85}
-                >
-                  <EyebrowTight tone="primaryAccent">show all announcements</EyebrowTight>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <View className="flex-row items-center gap-3">
-                <IconChip name="checkmark-circle" color="#339933" background="#33993322" />
-                <Body tone="secondary" className="text-sm">
-                  No hidden announcements
-                </Body>
-              </View>
-            )}
-          </View>
+              )}
+            </View>
+          </Card>
         </View>
 
         <View className="px-5 pb-4">

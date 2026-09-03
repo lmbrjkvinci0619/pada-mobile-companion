@@ -14,7 +14,7 @@ export const ReadOnlyBanner = React.memo(function ReadOnlyBanner({
   showLink = true,
 }: ReadOnlyBannerProps) {
   return (
-    <View className="bg-primary flex-row items-center gap-3 px-4 py-3 mx-5 mb-3">
+    <View className="bg-primary-700 flex-row items-center gap-3 px-4 py-3 mb-3">
       <Ionicons name="information-circle" size={20} color="#FFFFFF" />
       <View className="flex-1">
         <Body tone="inverse" className="text-sm leading-5">

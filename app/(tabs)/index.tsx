@@ -15,6 +15,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useEvents, useAnnouncements, useRegistrations, useArticles } from "@/hooks/useApi";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 import { Tile, TileGrid, TileCell } from "@/components/ui/Tile";
 import { Hub, HubPanel, useHubMetrics } from "@/components/ui/Hub";
 import { PivotPanorama } from "@/components/ui/Pivot";
@@ -56,7 +57,7 @@ const AnnouncementRow = React.memo(function AnnouncementRow({
           {!ann.isRead && <View className="w-2 h-2 bg-primary" accessibilityLabel="unread" />}
           {ann.isUrgent && <Badge label="Urgent" variant="danger" />}
           <Eyebrow tone="secondary" className="tracking-[0.12em]">
-            {format(new Date(ann.createdAt), "MMM d").toLowerCase()}
+            {format(new Date(ann.createdAt), "MMM d")}
           </Eyebrow>
         </View>
         <Body
@@ -201,11 +202,17 @@ export default function HomeScreen() {
   const activePanelRef = useRef(0);
   activePanelRef.current = activePanel;
   const { stride } = useHubMetrics();
+  const hasPannedRef = useRef(false);
   const onHubScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetX = e.nativeEvent.contentOffset.x;
     if (offsetX < 0) return;
     const idx = Math.round(offsetX / stride);
-    if (idx !== activePanelRef.current && idx >= 0) setActivePanel(idx);
+    if (idx !== activePanelRef.current && idx >= 0) {
+      setActivePanel(idx);
+      if (offsetX > 8) hasPannedRef.current = true;
+    } else if (offsetX > 8) {
+      hasPannedRef.current = true;
+    }
   }, [stride]);
 
   const greeting = isAuthenticated ? (user?.firstName ?? "player").toLowerCase() : "guest";
@@ -252,8 +259,14 @@ export default function HomeScreen() {
 
       <Hub className="flex-1" onScroll={onHubScroll}>
         <HubPanel title="home">
+          {!hasPannedRef.current && activePanel === 0 && (
+            <View className="absolute right-3 top-2 z-10 flex-row items-center gap-1 opacity-60" pointerEvents="none" accessibilityElementsHidden>
+              <Eyebrow tone="secondary" className="tracking-[0.18em]">swipe</Eyebrow>
+              <Ionicons name="chevron-forward" size={14} color="#5C5C5C" />
+            </View>
+          )}
           <ScrollView showsVerticalScrollIndicator={false} className="flex-1" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00ABA9" />}>
-            <View className="mb-5">
+            <View className="mb-4">
               <Section numberOfLines={1}>
                 hello, {greeting}
               </Section>
@@ -444,18 +457,20 @@ export default function HomeScreen() {
           <ScrollView showsVerticalScrollIndicator={false} className="flex-1" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00ABA9" />}>
             <TouchableOpacity
               onPress={() => openUrl(EXTERNAL_URLS.about)}
-              activeOpacity={0.9}
-              className="bg-surface border border-surface-border p-4 mb-5"
+              activeOpacity={0.85}
+              className="mb-6"
             >
-              <View className="flex-row items-start gap-3">
-                <IconChip name="information-circle" color="#339933" background="#33993322" />
-                <View className="flex-1">
-                  <Label tone="primary" className="tracking-[0.12em]">About PADA</Label>
-                  <Subtitle tone="secondary" className="mt-1" numberOfLines={3}>
-                    Portland Ultimate Frisbee Association — building community through spirit of the game since 1985.
-                  </Subtitle>
+              <Card variant="default">
+                <View className="p-4 flex-row items-start gap-3">
+                  <IconChip name="information-circle" color="#339933" background="#33993322" />
+                  <View className="flex-1">
+                    <Label tone="primary" className="tracking-[0.12em]">About PADA</Label>
+                    <Subtitle tone="secondary" className="mt-1" numberOfLines={3}>
+                      Portland Ultimate Frisbee Association — building community through spirit of the game since 1985.
+                    </Subtitle>
+                  </View>
                 </View>
-              </View>
+              </Card>
             </TouchableOpacity>
 
             <SectionLabel>events</SectionLabel>

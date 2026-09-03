@@ -8,6 +8,7 @@ import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useSettingsStore } from "@/store/settingsStore";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { ListRow } from "@/components/ui/ListRow";
 import { PageHeader, SectionLabel, IconChip } from "@/components/ui/Page";
 import { Section, Body, EyebrowTight } from "@/components/ui";
@@ -120,7 +121,7 @@ export default function UserSettingsScreen() {
             </TouchableOpacity>
           )}
 
-          <View className="bg-surface-overlay border border-primary px-3 py-1 mt-3">
+          <View className="bg-surface-overlay px-3 py-1 mt-3">
             <EyebrowTight tone="primaryAccent" className="text-[10px] tracking-[0.2em]">
               {user?.role}
             </EyebrowTight>
@@ -132,7 +133,7 @@ export default function UserSettingsScreen() {
 
         <View className="px-5 mt-5 pb-2">
           <SectionLabel>account</SectionLabel>
-          <View className="bg-surface border border-surface-border">
+          <Card variant="default">
             <ListRow
               icon={<IconChip name="mail-outline" color="#1BA1E2" background="#1BA1E222" />}
               title="Email"
@@ -144,12 +145,12 @@ export default function UserSettingsScreen() {
               subtitle="Not set"
               last
             />
-          </View>
+          </Card>
         </View>
 
         <View className="px-5 mt-5 pb-2">
           <SectionLabel>preferences</SectionLabel>
-          <View className="bg-surface border border-surface-border">
+          <Card variant="default">
             <ListRow
               icon={<IconChip name="notifications-outline" color="#F09609" background="#F0960922" />}
               title="Notifications"
@@ -167,12 +168,12 @@ export default function UserSettingsScreen() {
               subtitle="Automatic"
               last
             />
-          </View>
+          </Card>
         </View>
 
         <View className="px-5 mt-5 pb-2">
           <SectionLabel>support</SectionLabel>
-          <View className="bg-surface border border-surface-border">
+          <Card variant="default">
             <ListRow
               icon={<IconChip name="help-circle-outline" color="#F09609" background="#F0960922" />}
               title="Help Center"
@@ -198,7 +199,7 @@ export default function UserSettingsScreen() {
               onPress={() => openUrl(EXTERNAL_URLS.privacy)}
               last
             />
-          </View>
+          </Card>
         </View>
 
         <View className="px-5 pb-8 mt-5">

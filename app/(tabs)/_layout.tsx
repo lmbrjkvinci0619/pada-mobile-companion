@@ -67,7 +67,7 @@ export default function TabsLayout() {
         tabBarLabelStyle: {
           fontFamily: "Inter_600SemiBold",
           fontWeight: "600",
-          fontSize: 10,
+          fontSize: 11,
           marginTop: 2,
           textTransform: "uppercase",
           letterSpacing: 1.2,
@@ -84,7 +84,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="registrations"
         options={{
-          title: "Register",
+          title: "My Registrations",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="document-text" size={size} color={color} />
           ),

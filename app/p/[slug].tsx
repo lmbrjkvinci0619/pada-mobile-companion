@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { format, parseISO } from "date-fns";
 import { useArticles } from "@/hooks/useApi";
 import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/Page";
 import { LoaderBar } from "@/components/ui/LoaderBar";
 import { Section, EyebrowTight, Body } from "@/components/ui";
@@ -62,7 +63,7 @@ export default function PageDetailScreen() {
             )}
           </View>
 
-          <Section tone="primary" className="text-3xl mb-4 leading-tight">
+          <Section tone="primary" size="md" className="mb-4 leading-tight">
             {page.title}
           </Section>
 
@@ -72,11 +73,13 @@ export default function PageDetailScreen() {
             </EyebrowTight>
           )}
 
-          <View className="bg-surface border border-surface-border p-4">
-            <Body tone="primary" className="text-sm leading-6">
-              {page.content || page.summary || "No content available."}
-            </Body>
-          </View>
+          <Card variant="default">
+            <View className="p-4">
+              <Body tone="primary" className="text-sm leading-6">
+                {page.content || page.summary || "No content available."}
+              </Body>
+            </View>
+          </Card>
         </View>
       </ScrollView>
     </SafeAreaView>

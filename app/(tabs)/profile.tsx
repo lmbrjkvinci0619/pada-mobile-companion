@@ -70,7 +70,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           {user?.role && (
-            <View className="bg-surface-overlay border border-primary px-4 py-1 mt-3">
+            <View className="bg-surface-overlay px-4 py-1 mt-3">
               <Eyebrow tone="primaryAccent" className="text-[10px] tracking-[0.2em]">
                 {user.role}
               </Eyebrow>
@@ -81,18 +81,18 @@ export default function ProfileScreen() {
         <View className="px-5 pt-5">
           <TouchableOpacity
             onPress={() => openUrl(EXTERNAL_URLS.donate)}
-            activeOpacity={0.9}
+            activeOpacity={0.85}
             accessibilityRole="link"
             accessibilityLabel="donate to PADA"
           >
             <Tile
-              size="wide"
-              accent="magenta"
-              eyebrow="support"
-              title="Donate to PADA"
-              subtitle="keep the spirit of the game alive"
-              icon={<Ionicons name="heart" size={28} color="#FFFFFF" />}
-            />
+                size="wide"
+                accent="magenta"
+                eyebrow="support"
+                title="Donate to PADA"
+                subtitle="keep the spirit of the game alive"
+                icon={<Ionicons name="heart" size={28} color="#FFFFFF" />}
+              />
           </TouchableOpacity>
         </View>
 

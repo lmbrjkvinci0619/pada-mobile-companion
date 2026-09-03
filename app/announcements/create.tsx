@@ -6,6 +6,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { ChipGroup } from "@/components/ui/ChipGroup";
 import { PageHeader, SectionLabel, IconChip } from "@/components/ui/Page";
 import { Body, Eyebrow, EyebrowTight, Hero } from "@/components/ui";
 import { createAnnouncement } from "@/services/announcements";
@@ -205,7 +207,11 @@ export default function CreateAnnouncementScreen() {
           back={() => router.back()}
           right={
             <View className="flex-row items-center gap-3">
-              <TouchableOpacity onPress={() => setShowPreview((p) => !p)} disabled={isSubmitting} className="w-10 h-10 items-center justify-center bg-surface border border-surface-border">
+              <TouchableOpacity
+                onPress={() => setShowPreview((p) => !p)} disabled={isSubmitting} className="w-10 h-10 items-center justify-center bg-surface border border-surface-border"
+                accessibilityRole="button"
+                accessibilityLabel={showPreview ? "hide preview" : "show preview"}
+              >
                 <Ionicons name={showPreview ? "eye-off" : "eye"} size={20} color="#000000" />
               </TouchableOpacity>
               {isSubmitting ? (
@@ -227,7 +233,7 @@ export default function CreateAnnouncementScreen() {
           {showPreview && (
             <View className="bg-primary p-4 mb-6">
               <EyebrowTight tone="inverse">preview</EyebrowTight>
-              <Hero tone="inverse" className="text-3xl mt-1">
+              <Hero tone="inverse" size="md" className="mt-1">
                 {title || "Untitled"}
               </Hero>
               <Body tone="inverse" className="text-sm mt-2">
@@ -290,33 +296,39 @@ export default function CreateAnnouncementScreen() {
               return (
                 <TouchableOpacity
                   key={option.type}
-                  className={`flex-row items-center p-4 border ${isSelected ? "border-primary" : "border-surface-border"} ${isDisabled ? "opacity-50" : ""}`}
+                  className={isDisabled ? "opacity-50" : undefined}
                   style={isSelected ? { backgroundColor: `${option.accent}1A` } : undefined}
                   onPress={() => !isDisabled && setAnnouncementType(option.type)}
                   disabled={isSubmitting || isDisabled}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: isSelected, disabled: isDisabled }}
                   activeOpacity={0.85}
                 >
-                  <IconChip name={option.icon} color={option.accent} background={`${option.accent}22`} />
-                  <View className="flex-1 ml-3">
-                    <View className="flex-row items-center gap-2">
-                      <Body
-                        tone="primary"
-                        className="text-sm font-semibold"
-                        style={isSelected ? { color: option.accent } : undefined}
-                      >
-                        {option.label}
-                      </Body>
-                      {isDisabled && (
-                        <View className="bg-surface-overlay border border-surface-border px-2 py-0.5">
-                          <EyebrowTight tone="muted">admin only</EyebrowTight>
+                  <Card variant="raised">
+                    <View className="flex-row items-center p-4">
+                      <IconChip name={option.icon} color={option.accent} background={`${option.accent}22`} />
+                      <View className="flex-1 ml-3">
+                        <View className="flex-row items-center gap-2">
+                          <Body
+                            tone="primary"
+                            className="text-sm font-semibold"
+                            style={isSelected ? { color: option.accent } : undefined}
+                          >
+                            {option.label}
+                          </Body>
+                          {isDisabled && (
+                            <View className="bg-surface-overlay border border-surface-border px-2 py-0.5">
+                              <EyebrowTight tone="muted">admin only</EyebrowTight>
+                            </View>
+                          )}
                         </View>
-                      )}
+                        <Body tone="muted" className="text-xs mt-1">
+                          {option.description}
+                        </Body>
+                      </View>
+                      {isSelected && <Ionicons name="checkmark-circle" size={22} color={option.accent} />}
                     </View>
-                    <Body tone="muted" className="text-xs mt-1">
-                      {option.description}
-                    </Body>
-                  </View>
-                  {isSelected && <Ionicons name="checkmark-circle" size={22} color={option.accent} />}
+                  </Card>
                 </TouchableOpacity>
               );
             })}
@@ -329,22 +341,25 @@ export default function CreateAnnouncementScreen() {
               return (
                 <TouchableOpacity
                   key={option.type}
-                  className={`flex-row items-center p-4 border ${isSelected ? "border-primary bg-primary-50" : "border-surface-border bg-surface-raised"}`}
                   onPress={() => setTargetType(option.type)}
                   disabled={isSubmitting}
                   accessibilityRole="radio"
                   accessibilityState={{ selected: isSelected }}
                   activeOpacity={0.85}
                 >
-                  <View className="flex-1">
-                    <Body tone={isSelected ? "primaryAccent" : "primary"} className="text-sm font-semibold">
-                      {option.label}
-                    </Body>
-                    <Body tone="muted" className="text-xs mt-1">
-                      {option.description}
-                    </Body>
-                  </View>
-                  {isSelected && <Ionicons name="checkmark-circle" size={22} color="#00ABA9" />}
+                  <Card variant={isSelected ? "default" : "raised"} className={isSelected ? "bg-primary-50" : undefined}>
+                    <View className="flex-row items-center p-4">
+                      <View className="flex-1">
+                        <Body tone={isSelected ? "primaryAccent" : "primary"} className="text-sm font-semibold">
+                          {option.label}
+                        </Body>
+                        <Body tone="muted" className="text-xs mt-1">
+                          {option.description}
+                        </Body>
+                      </View>
+                      {isSelected && <Ionicons name="checkmark-circle" size={22} color="#00ABA9" />}
+                    </View>
+                  </Card>
                 </TouchableOpacity>
               );
             })}
@@ -360,64 +375,38 @@ export default function CreateAnnouncementScreen() {
                   <View className="h-px w-8 bg-primary" />
                 </View>
               ) : teams.length === 0 ? (
-                <View className="bg-surface border border-surface-border p-6 items-center">
-                  <Ionicons name="people-outline" size={32} color="#8A8A8A" />
-                  <Body tone="muted" className="text-sm mt-2">
-                    No teams available
-                  </Body>
-                </View>
-              ) : (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View className="flex-row gap-2">
-                    {teams.map((team) => {
-                      const isSelected = targetId === team.id;
-                      return (
-                        <TouchableOpacity
-                          key={team.id}
-                          className={`px-4 py-3 border ${isSelected ? "bg-primary border-primary" : "bg-surface-raised border-surface-border"}`}
-                          onPress={() => setTargetId(team.id)}
-                          disabled={isSubmitting}
-                          accessibilityRole="radio"
-                          accessibilityState={{ selected: isSelected }}
-                          activeOpacity={0.85}
-                        >
-                          <EyebrowTight tone={isSelected ? "inverse" : "secondary"}>
-                            {team.name}
-                          </EyebrowTight>
-                        </TouchableOpacity>
-                      );
-                    })}
+                <Card variant="default">
+                  <View className="p-6 items-center">
+                    <Ionicons name="people-outline" size={32} color="#8A8A8A" />
+                    <Body tone="muted" className="text-sm mt-2">
+                      No teams available
+                    </Body>
                   </View>
-                </ScrollView>
+                </Card>
+              ) : (
+                <ChipGroup
+                  layout="scroll"
+                  options={teams.map((t) => ({ key: t.id, label: t.name }))}
+                  value={targetId}
+                  onChange={setTargetId}
+                  accessibilityLabel="team"
+                />
               )}
             </View>
           )}
 
           <SectionLabel>expiration</SectionLabel>
-          <View className="flex-row flex-wrap gap-2 mb-6">
-            {EXPIRATION_OPTIONS.map((option) => {
-              const isSelected = expirationHours === option.hours;
-              return (
-                <TouchableOpacity
-                  key={option.label}
-                  className={`flex-1 min-w-[100px] p-3 border items-center ${isSelected ? "bg-primary border-primary" : "bg-surface-raised border-surface-border"}`}
-                  onPress={() => setExpirationHours(option.hours)}
-                  disabled={isSubmitting}
-                  activeOpacity={0.85}
-                >
-                    <EyebrowTight tone={isSelected ? "inverse" : "primary"}>
-                      {option.label}
-                    </EyebrowTight>
-                    <EyebrowTight
-                      tone={isSelected ? "inverse" : "muted"}
-                      className="mt-1 opacity-85"
-                    >
-                      {option.description}
-                    </EyebrowTight>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          <ChipGroup
+            className="mb-6"
+            options={EXPIRATION_OPTIONS.map((o) => ({
+              key: String(o.hours ?? "never"),
+              label: o.label,
+              description: o.description,
+            }))}
+            value={String(expirationHours ?? "never")}
+            onChange={(k) => setExpirationHours(k === "never" ? null : Number(k))}
+            accessibilityLabel="expiration"
+          />
 
           <View className={`p-4 mb-8 border ${isUrgent ? "bg-surface border-danger" : "bg-surface border-surface-border"}`}>
             <View className="flex-row items-center justify-between">

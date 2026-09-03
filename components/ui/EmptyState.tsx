@@ -2,7 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { cn } from "@/utils/cn";
-import { Eyebrow, Body } from "./Typography";
+import { Section, Body } from "./Typography";
 
 interface EmptyStateProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -32,9 +32,9 @@ export const EmptyState = React.memo(function EmptyState({
       <View className="w-12 h-12 items-center justify-center border border-surface-border bg-surface-raised">
         <Ionicons name={icon} size={24} color={color} />
       </View>
-      <Eyebrow tone="primary" className="text-xs tracking-[0.18em] text-center">
+      <Section tone="primary" size="sm" className="text-center">
         {title}
-      </Eyebrow>
+      </Section>
       {subtitle && (
         <Body tone="secondary" className="text-sm text-center max-w-[260px]">
           {subtitle}

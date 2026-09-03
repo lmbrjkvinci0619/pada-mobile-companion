@@ -33,9 +33,12 @@ const CALENDAR_THEME = Object.freeze({
   selectedDotColor: "#FFFFFF",
   arrowColor: "#000000",
   monthTextColor: "#000000",
-  textDayFontFamily: "System",
-  textMonthFontFamily: "System",
-  textDayHeaderFontFamily: "System",
+  textDayFontFamily: "Inter_400Regular",
+  textDayFontWeight: "400",
+  textMonthFontFamily: "Inter_300Light",
+  textMonthFontWeight: "300",
+  textDayHeaderFontFamily: "Inter_600SemiBold",
+  textDayHeaderFontWeight: "600",
 });
 
 const EventCard = React.memo(function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
@@ -148,7 +151,7 @@ export default function ScheduleScreen() {
       >
         {view === "day" ? (
           <>
-            <View className="mx-5 mt-3 border border-surface-border bg-surface">
+            <View className="mx-4 mt-3 border border-surface-border bg-surface">
               <Calendar theme={CALENDAR_THEME} markedDates={markedDates} onDayPress={handleDayPress} />
             </View>
 

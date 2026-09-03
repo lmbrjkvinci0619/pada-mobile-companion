@@ -11,8 +11,9 @@ import { fetchAnnouncementById, markAnnouncementAsRead } from "@/services/announ
 import { queryKeys } from "@/lib/queryKeys";
 import { PageHeader, SectionLabel, IconChip } from "@/components/ui/Page";
 import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Hero, EyebrowTight, Body } from "@/components/ui";
+import { Hero, EyebrowTight, Body, MetaSentence } from "@/components/ui";
 import type { Announcement, AnnouncementType } from "@/types";
 
 const TYPE_ACCENTS: Record<AnnouncementType, string> = {
@@ -101,12 +102,12 @@ export default function AnnouncementDetail() {
             <Badge label={typeLabel} accent={accent} />
             {announcement.isUrgent && <Badge label="Urgent" variant="danger" />}
           </View>
-          <Hero tone="primary" className="text-3xl mb-2">
+          <Hero tone="primary" size="md" className="mb-2">
             {announcement.title}
           </Hero>
-          <EyebrowTight tone="secondary">
+          <MetaSentence tone="secondary">
             By {announcement.authorName} · {format(new Date(announcement.createdAt), "MMM d, yyyy 'at' h:mm a")}
-          </EyebrowTight>
+          </MetaSentence>
         </View>
 
         {isExpired && (
@@ -121,7 +122,7 @@ export default function AnnouncementDetail() {
         </Body>
 
         <SectionLabel>details</SectionLabel>
-        <View className="bg-surface border border-surface-border">
+        <Card variant="raised">
           <DetailRow label="Type" value={typeLabel} accent={accent} />
           <DetailRow
             label="Audience"
@@ -144,7 +145,7 @@ export default function AnnouncementDetail() {
               last
             />
           )}
-        </View>
+        </Card>
       </ScrollView>
     </SafeAreaView>
   );
