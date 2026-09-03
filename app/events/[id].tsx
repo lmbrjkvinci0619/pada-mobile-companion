@@ -15,18 +15,20 @@ import { useEvent, useTeam } from "@/hooks/useApi";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { fetchScheduleExport, canUserReportTeamScores } from "@/services/topscore";
 import { useAuthStore } from "@/store/authStore";
+import { useColors } from "@/lib/tokens";
 import { Ionicons } from "@expo/vector-icons";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { PageHeader, SectionLabel } from "@/components/ui/Page";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Title, Eyebrow, Body, EyebrowTight, Subtitle } from "@/components/ui";
+import { Title, Eyebrow, Body, EyebrowTight, Subtitle, Score } from "@/components/ui";
 import { openUrl } from "@/lib/urlUtils";
 import { format, parseISO } from "date-fns";
 import type { ScheduleExport } from "@/types";
 
 export default function EventDetailScreen() {
   useAuthRedirect();
+  const colors = useColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: event, isLoading } = useEvent(id);
   const { user } = useAuthStore();
@@ -123,13 +125,13 @@ export default function EventDetailScreen() {
 
       <ScrollView className="flex-1" contentContainerClassName="px-5 pt-4 pb-8" showsVerticalScrollIndicator={false}>
         <View className="bg-primary p-5">
-          <Eyebrow tone="inverse" className="text-[10px] tracking-[0.2em]">
+          <Eyebrow style={{ color: colors.txtInverse }} className="text-[10px] tracking-[0.2em]">
             {event.type}
           </Eyebrow>
-          <Title tone="inverse" size="sm" className="text-[26px] mt-1">
+          <Title style={{ color: colors.txtInverse }} size="sm" className="mt-1">
             {event.title.toLowerCase()}
           </Title>
-          <Body tone="inverse" className="text-sm mt-2 font-normal">
+          <Body style={{ color: colors.txtInverse }} className="text-sm mt-2 font-normal">
             {event.startDate ? format(parseISO(event.startDate), "EEEE, MMMM d 'at' h:mm a") : "date tbd"}
           </Body>
         </View>
@@ -181,12 +183,13 @@ export default function EventDetailScreen() {
 
             {event.location && (event.location.latitude != null || event.location.address) && (
               <TouchableOpacity
-                className="mt-3 flex-row items-center justify-center gap-2 bg-primary py-3"
+                className="mt-3 flex-row items-center justify-center gap-2 py-3"
+                style={{ backgroundColor: colors.primary }}
                 onPress={handleOpenDirections}
                 activeOpacity={0.85}
               >
-                <Ionicons name="navigate" size={18} color="#FFFFFF" />
-                <EyebrowTight tone="inverse">Directions</EyebrowTight>
+                <Ionicons name="navigate" size={18} color={colors.txtInverse} />
+                <EyebrowTight style={{ color: colors.txtInverse }}>Directions</EyebrowTight>
               </TouchableOpacity>
             )}
           </Card.Content>
@@ -242,7 +245,7 @@ export default function EventDetailScreen() {
           accessibilityLabel="add event to calendar"
           activeOpacity={0.85}
         >
-          <Ionicons name="calendar-outline" size={20} color="#000000" />
+          <Ionicons name="calendar-outline" size={20} color={colors.txtPrimary} />
           <EyebrowTight tone="primary">
             {isOpeningCalendar ? "opening calendar..." : "add to calendar"}
           </EyebrowTight>
@@ -259,14 +262,15 @@ export default function EventDetailScreen() {
 }
 
 function ScoreRow({ name, score, accent }: { name: string; score: number; accent?: boolean }) {
+  const colors = useColors();
   return (
     <View className="flex-row items-center justify-between">
       <Body tone="primary" className="text-base font-semibold flex-1">
         {name}
       </Body>
-      <Title tone={accent ? "primaryAccent" : "primary"} size="md" className="text-[32px]">
+      <Score tone={accent ? "primaryAccent" : "primary"} style={accent ? { color: colors.primary } : undefined}>
         {score}
-      </Title>
+      </Score>
     </View>
   );
 }

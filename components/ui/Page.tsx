@@ -3,6 +3,7 @@ import { View, TouchableOpacity, type ViewProps } from "react-native";
 import { cn } from "@/utils/cn";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useColors } from "@/lib/tokens";
 import { Section, Eyebrow } from "./Typography";
 
 interface PageHeaderProps {
@@ -22,6 +23,7 @@ export function PageHeader({
   large = false,
   className,
 }: PageHeaderProps) {
+  const colors = useColors();
   const handleBack = () => {
     if (typeof back === "function") back();
     else router.back();
@@ -39,11 +41,11 @@ export function PageHeader({
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               className="mr-3 w-10 h-10 items-center justify-center"
             >
-              <Ionicons name="chevron-back" size={26} color="#000000" />
+              <Ionicons name="chevron-back" size={26} color={colors.txtPrimary} />
             </TouchableOpacity>
           )}
           <View className="flex-1">
-            <Section numberOfLines={1} className={large ? "text-[34px]" : undefined}>
+            <Section numberOfLines={1}>
               {title}
             </Section>
             {subtitle && (
@@ -65,7 +67,7 @@ export function Divider({ className }: { className?: string }) {
 
 export function IconChip({
   name,
-  color = "#000000",
+  color,
   background,
   size = 18,
 }: {
@@ -74,12 +76,13 @@ export function IconChip({
   background?: string;
   size?: number;
 }) {
+  const colors = useColors();
   return (
     <View
       className="w-9 h-9 items-center justify-center border border-surface-border"
       style={background ? { backgroundColor: background } : undefined}
     >
-      <Ionicons name={name} size={size} color={color} />
+      <Ionicons name={name} size={size} color={color ?? colors.txtPrimary} />
     </View>
   );
 }

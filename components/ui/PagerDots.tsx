@@ -1,15 +1,17 @@
 import React from "react";
-import { View, ViewProps } from "react-native";
+import { View, ViewProps, TouchableOpacity } from "react-native";
 import { cn } from "@/utils/cn";
 
 interface PagerDotsProps extends ViewProps {
   count: number;
   active: number;
+  onSelect?: (index: number) => void;
 }
 
 export const PagerDots = React.memo(function PagerDots({
   count,
   active,
+  onSelect,
   className,
   ...rest
 }: PagerDotsProps) {
@@ -23,10 +25,15 @@ export const PagerDots = React.memo(function PagerDots({
       {Array.from({ length: count }).map((_, i) => {
         const isActive = i === active;
         return (
-          <View
+          <TouchableOpacity
             key={i}
-            className={cn("h-1", isActive ? "w-6 bg-primary" : "w-2 bg-surface-border")}
+            onPress={() => onSelect?.(i)}
+            disabled={!onSelect}
+            accessibilityRole="tab"
+            accessibilityLabel={`go to panel ${i + 1}`}
             accessibilityState={{ selected: isActive }}
+            hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+            className={cn("h-1", isActive ? "w-6 bg-primary" : "w-2 bg-surface-border")}
           />
         );
       })}

@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { format, formatDistanceToNow, isPast } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
+import { useColors } from "@/lib/tokens";
 import { useAuthStore } from "@/store/authStore";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { fetchAnnouncementById, markAnnouncementAsRead } from "@/services/announcements";
@@ -16,19 +17,24 @@ import { LoaderBar } from "@/components/ui/LoaderBar";
 import { Title, EyebrowTight, Body, MetaSentence } from "@/components/ui";
 import type { Announcement, AnnouncementType } from "@/types";
 
-const TYPE_ACCENTS: Record<AnnouncementType, string> = {
-  pada_org: "#A200FF",
-  league_longterm: "#1BA1E2",
-  game: "#F09609",
-};
-const TYPE_LABELS: Record<AnnouncementType, string> = {
+const TYPE_LABEL: Record<AnnouncementType, string> = {
   pada_org: "PADA Organization",
   league_longterm: "League",
   game: "Game",
 };
 
+function accentFor(type: AnnouncementType, colors: ReturnType<typeof useColors>) {
+  switch (type) {
+    case "pada_org":       return colors.purple;
+    case "game":           return colors.warning;
+    case "league_longterm":
+    default:               return colors.secondary;
+  }
+}
+
 export default function AnnouncementDetail() {
   useAuthRedirect();
+  const colors = useColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
@@ -80,7 +86,7 @@ export default function AnnouncementDetail() {
       <SafeAreaView className="flex-1 bg-bg">
         <PageHeader title="announcement" back />
         <View className="flex-1 items-center justify-center">
-          <Ionicons name="alert-circle" size={48} color="#E51400" />
+          <Ionicons name="alert-circle" size={48} color={colors.danger} />
           <Body tone="danger" className="mt-2">
             {error || "Unknown error"}
           </Body>
@@ -89,8 +95,8 @@ export default function AnnouncementDetail() {
     );
   }
 
-  const accent = TYPE_ACCENTS[announcement.announcementType] ?? TYPE_ACCENTS.league_longterm;
-  const typeLabel = TYPE_LABELS[announcement.announcementType] ?? "League";
+  const accent = accentFor(announcement.announcementType, colors);
+  const typeLabel = TYPE_LABEL[announcement.announcementType] ?? "League";
   const isExpired = announcement.expiresAt && isPast(new Date(announcement.expiresAt));
 
   return (
@@ -111,9 +117,13 @@ export default function AnnouncementDetail() {
         </View>
 
         {isExpired && (
-          <View className="bg-surface border border-danger px-4 py-3 mb-4 flex-row items-center gap-2">
-            <Ionicons name="alert-circle" size={18} color="#E51400" />
-            <EyebrowTight tone="danger">this announcement has expired</EyebrowTight>
+          <View
+            className="border border-danger px-4 py-3 mb-4 flex-row items-center gap-2"
+            style={{ backgroundColor: colors.surface }}
+            accessibilityRole="alert"
+          >
+            <Ionicons name="alert-circle" size={18} color={colors.danger} />
+            <EyebrowTight style={{ color: colors.danger }}>this announcement has expired</EyebrowTight>
           </View>
         )}
 

@@ -9,14 +9,17 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthStore } from "@/store/authStore";
 import { APP_NAME } from "@/constants/config";
+import { useColors } from "@/lib/tokens";
 import { Button } from "@/components/ui/Button";
-import { Hero, Title, Eyebrow, Body, Label } from "@/components/ui";
+import { Title, Eyebrow, Body, Label } from "@/components/ui";
 import { isValidEmail } from "@/lib/validation";
 import { openUrl } from "@/lib/urlUtils";
 
 export default function LoginScreen() {
+  const colors = useColors();
   const { login, isLoading, error } = useAuthStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,9 +43,10 @@ export default function LoginScreen() {
   };
 
   return (
+    <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
     <KeyboardAvoidingView
       className="flex-1 bg-bg"
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
         className="flex-1"
@@ -50,16 +54,19 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="items-center mb-10">
-          <View className="w-20 h-20 bg-primary items-center justify-center mb-5">
-            <Title tone="inverse" size="lg" className="text-[44px] leading-none">
+          <View
+            className="w-20 h-20 items-center justify-center mb-5"
+            style={{ backgroundColor: colors.primary }}
+          >
+            <Title style={{ color: colors.txtInverse }} size="lg" className="text-[44px] leading-none">
               p
             </Title>
           </View>
           <Title>{APP_NAME}</Title>
           <View className="flex-row items-center gap-2 mt-3">
-            <View className="h-px w-6 bg-primary" />
+            <View className="h-px w-6" style={{ backgroundColor: colors.primary }} />
             <Eyebrow tone="secondary">pada.org companion</Eyebrow>
-            <View className="h-px w-6 bg-primary" />
+            <View className="h-px w-6" style={{ backgroundColor: colors.primary }} />
           </View>
         </View>
 
@@ -69,8 +76,12 @@ export default function LoginScreen() {
           </Label>
 
           {(error || validationError) && (
-            <View className="flex-row items-start gap-3 bg-surface border border-danger px-4 py-3">
-              <Ionicons name="alert-circle" size={18} color="#E51400" />
+            <View
+              className="flex-row items-start gap-3 border border-danger px-4 py-3"
+              style={{ backgroundColor: colors.surface }}
+              accessibilityRole="alert"
+            >
+              <Ionicons name="alert-circle" size={18} color={colors.danger} />
               <Body tone="danger" className="text-sm font-semibold flex-1">
                 {validationError || error}
               </Body>
@@ -80,11 +91,11 @@ export default function LoginScreen() {
           <View className="gap-2">
             <Eyebrow tone="secondary" className="tracking-[0.18em]">email</Eyebrow>
             <View className="flex-row items-center bg-surface-raised border border-surface-border px-4 py-3 gap-3">
-              <Ionicons name="mail-outline" size={18} color="#5C5C5C" />
+              <Ionicons name="mail-outline" size={18} color={colors.txtSecondary} />
               <TextInput
                 className="flex-1 text-txt-primary text-sm"
                 placeholder="your@email.com"
-                placeholderTextColor="#8A8A8A"
+                placeholderTextColor={colors.txtMuted}
                 value={email}
                 onChangeText={(text) => { setEmail(text); setValidationError(null); }}
                 keyboardType="email-address"
@@ -100,11 +111,11 @@ export default function LoginScreen() {
           <View className="gap-2">
             <Eyebrow tone="secondary" className="tracking-[0.18em]">password</Eyebrow>
             <View className="flex-row items-center bg-surface-raised border border-surface-border px-4 py-3 gap-3">
-              <Ionicons name="lock-closed-outline" size={18} color="#5C5C5C" />
+              <Ionicons name="lock-closed-outline" size={18} color={colors.txtSecondary} />
               <TextInput
                 className="flex-1 text-txt-primary text-sm"
                 placeholder="Your password"
-                placeholderTextColor="#8A8A8A"
+                placeholderTextColor={colors.txtMuted}
                 value={password}
                 onChangeText={(text) => { setPassword(text); setValidationError(null); }}
                 secureTextEntry={!showPass}
@@ -119,9 +130,9 @@ export default function LoginScreen() {
                 onPress={() => setShowPass((v) => !v)}
                 accessibilityRole="button"
                 accessibilityLabel={showPass ? "hide password" : "show password"}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               >
-                <Ionicons name={showPass ? "eye-off-outline" : "eye-outline"} size={18} color="#5C5C5C" />
+                <Ionicons name={showPass ? "eye-off-outline" : "eye-outline"} size={18} color={colors.txtSecondary} />
               </TouchableOpacity>
             </View>
           </View>
@@ -132,13 +143,15 @@ export default function LoginScreen() {
             accessibilityRole="checkbox"
             accessibilityState={{ checked: rememberMe }}
             accessibilityLabel="stay signed in for 30 days"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <View
               className={`w-5 h-5 items-center justify-center ${
-                rememberMe ? "bg-primary" : "bg-surface-raised border border-surface-border"
+                rememberMe ? "" : "bg-surface-raised border border-surface-border"
               }`}
+              style={rememberMe ? { backgroundColor: colors.primary } : undefined}
             >
-              {rememberMe && <Ionicons name="checkmark" size={12} color="#FFFFFF" />}
+              {rememberMe && <Ionicons name="checkmark" size={12} color={colors.txtInverse} />}
             </View>
             <Label tone="secondary">stay signed in for 30 days</Label>
           </TouchableOpacity>
@@ -162,5 +175,6 @@ export default function LoginScreen() {
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

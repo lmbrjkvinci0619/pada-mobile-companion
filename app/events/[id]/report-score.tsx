@@ -9,12 +9,13 @@ import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { reportScore, updateScore, fetchGames, canUserReportTeamScores } from "@/services/topscore";
 import { invalidateCache } from "@/lib/apiClient";
 import { invalidateQueries } from "@/lib/queryClient";
+import { useColors } from "@/lib/tokens";
 import type { EventStatus } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { PageHeader, SectionLabel } from "@/components/ui/Page";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Title, EyebrowTight, Body, Label } from "@/components/ui";
+import { Title, EyebrowTight, Body, Label, Score } from "@/components/ui";
 
 function ScoreAdjuster({
   teamName,
@@ -25,30 +26,35 @@ function ScoreAdjuster({
   score: number;
   onChange: (s: number) => void;
 }) {
+  const colors = useColors();
   return (
     <Card variant="raised" className="p-5 items-center flex-1">
       <EyebrowTight tone="secondary" className="text-center h-10" numberOfLines={2}>
         {teamName}
       </EyebrowTight>
-      <Title tone="primary" size="2xl" className="my-4">{score}</Title>
+      <Score tone="primary" className="my-4">{score}</Score>
       <View className="flex-row gap-3">
         <TouchableOpacity
-          className="w-12 h-12 bg-surface-overlay border border-surface-border items-center justify-center"
+          className="w-12 h-12 items-center justify-center border border-surface-border"
+          style={{ backgroundColor: colors.surfaceOverlay }}
           onPress={() => onChange(Math.max(0, score - 1))}
           accessibilityRole="button"
           accessibilityLabel={`decrease ${teamName} score`}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           activeOpacity={0.85}
         >
-          <Ionicons name="remove" size={24} color="#000000" />
+          <Ionicons name="remove" size={24} color={colors.txtPrimary} />
         </TouchableOpacity>
         <TouchableOpacity
-          className="w-12 h-12 bg-primary items-center justify-center"
+          className="w-12 h-12 items-center justify-center"
+          style={{ backgroundColor: colors.primary }}
           onPress={() => onChange(score + 1)}
           accessibilityRole="button"
           accessibilityLabel={`increase ${teamName} score`}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           activeOpacity={0.85}
         >
-          <Ionicons name="add" size={24} color="#FFFFFF" />
+          <Ionicons name="add" size={24} color={colors.txtInverse} />
         </TouchableOpacity>
       </View>
     </Card>
@@ -57,6 +63,7 @@ function ScoreAdjuster({
 
 export default function ReportScoreScreen() {
   useAuthRedirect();
+  const colors = useColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuthStore();
   const { data: eventData } = useEvent(id);
@@ -70,6 +77,8 @@ export default function ReportScoreScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [gameId, setGameId] = useState<string | null>(null);
   const [isLoadingGame, setIsLoadingGame] = useState(true);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [submissionOk, setSubmissionOk] = useState(false);
 
   useEffect(() => {
     if (!event) return;
@@ -111,6 +120,8 @@ export default function ReportScoreScreen() {
     }
 
     setIsSubmitting(true);
+    setSubmissionError(null);
+    setSubmissionOk(false);
     try {
       const result = event.score
         ? await updateScore(gameId, homeScore, awayScore, false, status)
@@ -120,13 +131,13 @@ export default function ReportScoreScreen() {
         invalidateCache(`/api/games?event_id=${event.id}`);
         invalidateQueries(["events", "id", event.id]);
         invalidateQueries(["events", "all"]);
-        Alert.alert("Score Submitted", "The score has been reported.", [{ text: "OK", onPress: () => router.back() }]);
+        setSubmissionOk(true);
       } else {
-        Alert.alert("Submission Failed", "We couldn't submit the score. Please try again.");
+        setSubmissionError("We couldn't submit the score. Please try again.");
       }
     } catch (err) {
       console.error("Failed to report score:", err);
-      Alert.alert("Submission Failed", "An unexpected error occurred. Please try again.");
+      setSubmissionError("An unexpected error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -140,7 +151,7 @@ export default function ReportScoreScreen() {
         <PageHeader title="report score" back={() => router.back()} />
         <LoaderBar visible />
         <View className="flex-1 items-center justify-center px-6">
-          <Ionicons name="football-outline" size={48} color="#8A8A8A" />
+          <Ionicons name="football-outline" size={48} color={colors.txtMuted} />
           <Body tone="muted" className="mt-3 text-center">
             loading game data
           </Body>
@@ -152,7 +163,7 @@ export default function ReportScoreScreen() {
   if (!gameId) {
     return (
       <SafeAreaView className="flex-1 bg-bg justify-center items-center p-6">
-        <Ionicons name="warning-outline" size={64} color="#5C5C5C" />
+        <Ionicons name="warning-outline" size={64} color={colors.txtSecondary} />
         <Label tone="primary" className="text-xl mt-4 text-center">
           no game found
         </Label>
@@ -167,7 +178,7 @@ export default function ReportScoreScreen() {
   if (!isAuthorized) {
     return (
       <SafeAreaView className="flex-1 bg-bg items-center justify-center px-6" edges={["top", "bottom"]}>
-        <Ionicons name="lock-closed" size={48} color="#E51400" />
+        <Ionicons name="lock-closed" size={48} color={colors.danger} />
         <Label tone="primary" className="text-xl mt-4 text-center">
           permission required
         </Label>
@@ -200,6 +211,35 @@ export default function ReportScoreScreen() {
       />
 
       <ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false}>
+        {submissionOk && (
+          <View
+            className="border border-success p-4 mb-4 flex-row items-center gap-3"
+            style={{ backgroundColor: colors.surface }}
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite"
+          >
+            <Ionicons name="checkmark-circle" size={20} color={colors.success} />
+            <Body tone="success" className="text-sm font-semibold flex-1">
+              score submitted
+            </Body>
+            <TouchableOpacity onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="back to event">
+              <EyebrowTight style={{ color: colors.success }}>done</EyebrowTight>
+            </TouchableOpacity>
+          </View>
+        )}
+        {submissionError && (
+          <View
+            className="border border-danger p-4 mb-4 flex-row items-center gap-3"
+            style={{ backgroundColor: colors.surface }}
+            accessibilityRole="alert"
+            accessibilityLiveRegion="assertive"
+          >
+            <Ionicons name="alert-circle" size={20} color={colors.danger} />
+            <Body tone="danger" className="text-sm flex-1">
+              {submissionError}
+            </Body>
+          </View>
+        )}
         <View className="flex-row gap-4 mb-8">
           <ScoreAdjuster teamName={homeTeamName} score={homeScore} onChange={setHomeScore} />
           <ScoreAdjuster teamName={awayTeamName} score={awayScore} onChange={setAwayScore} />
@@ -217,7 +257,7 @@ export default function ReportScoreScreen() {
           variant="success"
           onPress={handleSubmit}
           loading={isSubmitting}
-          disabled={isSubmitting}
+          disabled={isSubmitting || submissionOk}
         />
       </ScrollView>
     </SafeAreaView>
@@ -235,6 +275,7 @@ function StatusOption({
   onPress: () => void;
   last?: boolean;
 }) {
+  const colors = useColors();
   return (
     <TouchableOpacity
       className={`px-5 py-4 flex-row items-center justify-between ${last ? "" : "border-b border-surface-border"} ${selected ? "bg-primary-50" : ""}`}
@@ -244,7 +285,7 @@ function StatusOption({
       activeOpacity={0.85}
     >
       <Label tone={selected ? "primaryAccent" : "primary"}>{label}</Label>
-      {selected && <Ionicons name="checkmark" size={20} color="#00ABA9" />}
+      {selected && <Ionicons name="checkmark" size={20} color={colors.primary} />}
     </TouchableOpacity>
   );
 }

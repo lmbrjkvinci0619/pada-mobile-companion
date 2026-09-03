@@ -27,6 +27,8 @@ type Variant =
   | "hero"
   | "title"
   | "section"
+  | "greeting"
+  | "team"
   | "tile"
   | "body"
   | "subtitle"
@@ -35,7 +37,8 @@ type Variant =
   | "eyebrow"
   | "eyebrowTight"
   | "label"
-  | "numeric";
+  | "numeric"
+  | "score";
 
 type Size = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
 
@@ -43,6 +46,8 @@ const VARIANT_CLASS: Record<Variant, string> = {
   hero:          "text-[44px] font-light lowercase tracking-[-0.01em] leading-[1.02]",
   title:         "text-[34px] font-light lowercase tracking-[-0.01em] leading-[1.05]",
   section:       "text-[24px] font-light lowercase tracking-tight leading-tight",
+  greeting:      "text-[26px] font-light lowercase tracking-tight leading-tight",
+  team:          "text-[22px] font-light lowercase tracking-tight leading-tight",
   tile:          "text-[18px] font-light lowercase tracking-tight leading-tight",
   body:          "text-[15px] font-normal leading-[1.4]",
   subtitle:      "text-[13px] font-normal leading-[1.4]",
@@ -52,6 +57,7 @@ const VARIANT_CLASS: Record<Variant, string> = {
   eyebrowTight:  "text-[10px] font-semibold uppercase tracking-[0.12em]",
   label:         "text-[12px] font-semibold uppercase tracking-[0.14em]",
   numeric:       "text-[40px] font-light tabular-nums leading-none",
+  score:         "text-[32px] font-light tabular-nums leading-none",
 };
 
 const VARIANT_SIZE: Partial<Record<Variant, Partial<Record<Size, string>>>> = {
@@ -111,6 +117,8 @@ function makeTypography(v: Variant) {
 export const Hero = makeTypography("hero");
 export const Title = makeTypography("title");
 export const Section = makeTypography("section");
+export const Greeting = makeTypography("greeting");
+export const TeamName = makeTypography("team");
 export const TileTitle = makeTypography("tile");
 export const Body = makeTypography("body");
 export const Subtitle = makeTypography("subtitle");
@@ -120,11 +128,14 @@ export const Eyebrow = makeTypography("eyebrow");
 export const EyebrowTight = makeTypography("eyebrowTight");
 export const Label = makeTypography("label");
 export const Numeric = makeTypography("numeric");
+export const Score = makeTypography("score");
 
 export const Typography = {
   Hero,
   Title,
   Section,
+  Greeting,
+  TeamName,
   TileTitle,
   Body,
   Subtitle,
@@ -134,6 +145,7 @@ export const Typography = {
   EyebrowTight,
   Label,
   Numeric,
+  Score,
 };
 
 export type { Variant as TypographyVariant, Tone as TypographyTone };

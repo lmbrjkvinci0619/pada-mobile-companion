@@ -15,7 +15,7 @@ import { Tile, TileGrid, TileCell } from '@/components/ui/Tile';
 import { Pivot, PivotPanorama } from '@/components/ui/Pivot';
 import { Segmented } from '@/components/ui/SegmentedControl';
 import { SectionLabel, IconChip } from '@/components/ui/Page';
-import { Title } from '@/components/ui';
+import { Title, TeamName, Score, Numeric, Greeting } from '@/components/ui';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function UIGallery() {
@@ -54,6 +54,10 @@ export default function UIGallery() {
               <Title>title — light lowercase</Title>
               <Title size="sm">title small</Title>
               <Title size="2xl">title display</Title>
+              <TeamName>team name (22px light)</TeamName>
+              <Greeting>greeting (26px light)</Greeting>
+              <Numeric>40</Numeric>
+              <Score>32</Score>
             </View>
           </CardSection>
 

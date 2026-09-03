@@ -2,6 +2,7 @@ import React from "react";
 import { View, TouchableOpacity, type ViewStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { cn } from "@/utils/cn";
+import { useColors } from "@/lib/tokens";
 import { Body, Subtitle } from "./Typography";
 
 interface ListRowProps {
@@ -31,6 +32,19 @@ export const ListRow = React.memo(function ListRow({
   className,
   style,
 }: ListRowProps) {
+  const colors = useColors();
+  const chevronColor = disabled ? colors.txtMuted : colors.txtSecondary;
+
+  const defaultRight =
+    right ??
+    (onPress ? (
+      <Ionicons
+        name={external ? "open-outline" : "chevron-forward"}
+        size={18}
+        color={chevronColor}
+      />
+    ) : null);
+
   const content = (
     <>
       <View className="flex-row items-center gap-3 flex-1">
@@ -54,19 +68,12 @@ export const ListRow = React.memo(function ListRow({
           )}
         </View>
       </View>
-      {right ??
-        (onPress ? (
-          <Ionicons
-            name={external ? "open-outline" : "chevron-forward"}
-            size={18}
-            color={disabled ? "#8A8A8A" : "#5C5C5C"}
-          />
-        ) : null)}
+      {defaultRight}
     </>
   );
 
   const containerClass = cn(
-    "flex-row items-center justify-between px-4 py-4",
+    "flex-row items-center justify-between px-4 py-4 min-h-[56px]",
     !last && "border-b border-surface-border",
     disabled && "opacity-60",
     className,

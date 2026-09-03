@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { format, parseISO } from "date-fns";
 import { useArticles } from "@/hooks/useApi";
+import { useColors } from "@/lib/tokens";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { PageHeader, SectionLabel } from "@/components/ui/Page";
@@ -14,6 +15,7 @@ import { Body, EyebrowTight, Subtitle } from "@/components/ui";
 import type { Article } from "@/types";
 
 function PageRow({ article }: { article: Article }) {
+  const colors = useColors();
   return (
     <TouchableOpacity
       onPress={() => router.push(`/p/${article.slug || article.id}`)}
@@ -21,8 +23,11 @@ function PageRow({ article }: { article: Article }) {
       className="flex-row items-center gap-3 py-4 border-b border-surface-border"
     >
       {article.imageUrl && (
-        <View className="w-16 h-16 bg-surface-overlay border border-surface-border items-center justify-center">
-          <Ionicons name="image-outline" size={24} color="#5C5C5C" />
+        <View
+          className="w-16 h-16 items-center justify-center border border-surface-border"
+          style={{ backgroundColor: colors.surfaceOverlay }}
+        >
+          <Ionicons name="image-outline" size={24} color={colors.txtSecondary} />
         </View>
       )}
       <View className="flex-1">
@@ -43,7 +48,7 @@ function PageRow({ article }: { article: Article }) {
           </Subtitle>
         )}
       </View>
-      <Ionicons name="chevron-forward" size={18} color="#5C5C5C" />
+      <Ionicons name="chevron-forward" size={18} color={colors.txtSecondary} />
     </TouchableOpacity>
   );
 }
@@ -51,6 +56,7 @@ function PageRow({ article }: { article: Article }) {
 export default function PagesScreen() {
   const { data: articles = [], isLoading, refetch } = useArticles();
   const [refreshing, setRefreshing] = React.useState(false);
+  const colors = useColors();
 
   const sortedArticles = useMemo(
     () =>
@@ -86,7 +92,7 @@ export default function PagesScreen() {
         className="flex-1 px-5"
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00ABA9" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
       >
         {sortedArticles.length === 0 ? (

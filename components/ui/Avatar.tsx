@@ -2,6 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import { Image } from "expo-image";
 import { cn } from "@/utils/cn";
+import { useColors } from "@/lib/tokens";
 import { Label } from "./Typography";
 
 interface AvatarProps {
@@ -32,19 +33,21 @@ function getInitials(name?: string): string {
 }
 
 const FALLBACK_FILLS = [
-  "#00ABA9",
-  "#1BA1E2",
-  "#339933",
-  "#F09609",
-  "#D80073",
-  "#A200FF",
-];
+  "primary",
+  "secondary",
+  "success",
+  "warning",
+  "magenta",
+  "purple",
+] as const;
 
-function seedColor(name?: string): string {
+type FallbackKey = (typeof FALLBACK_FILLS)[number];
+
+function seedColorKey(name?: string): FallbackKey {
   if (!name) return FALLBACK_FILLS[0];
   let code = 0;
   for (let i = 0; i < name.length; i++) code += name.charCodeAt(i);
-  return FALLBACK_FILLS[code % FALLBACK_FILLS.length] ?? FALLBACK_FILLS[0];
+  return FALLBACK_FILLS[code % FALLBACK_FILLS.length];
 }
 
 export const Avatar = React.memo(function Avatar({
@@ -56,11 +59,13 @@ export const Avatar = React.memo(function Avatar({
   accent,
 }: AvatarProps) {
   const { container, text } = sizeMap[size];
+  const colors = useColors();
+  const borderColor = colors.surfaceBorder;
 
   const commonClasses = cn(
     container,
     "overflow-hidden",
-    border && "border border-surface-border",
+    border && "border",
     className,
   );
 
@@ -69,6 +74,7 @@ export const Avatar = React.memo(function Avatar({
       <Image
         source={{ uri }}
         className={commonClasses}
+        style={border ? { borderColor, borderWidth: 1 } : undefined}
         transition={200}
         contentFit="cover"
         cachePolicy="disk"
@@ -79,10 +85,13 @@ export const Avatar = React.memo(function Avatar({
     );
   }
 
+  const fallbackKey = seedColorKey(name);
+  const bg = accent ?? colors[fallbackKey];
+
   return (
     <View
       className={cn(commonClasses, "items-center justify-center")}
-      style={{ backgroundColor: accent ?? seedColor(name) }}
+      style={[{ backgroundColor: bg }, border ? { borderColor, borderWidth: 1 } : undefined]}
     >
       <Label tone="inverse" className={cn(text)}>
         {getInitials(name)}

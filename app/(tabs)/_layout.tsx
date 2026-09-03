@@ -4,14 +4,21 @@ import { Ionicons } from "@expo/vector-icons";
 import { View } from "react-native";
 import { useAuthStore } from "@/store/authStore";
 import { useAnnouncements } from "@/hooks/useApi";
+import { useColors } from "@/lib/tokens";
 import { LoaderBar } from "@/components/ui/LoaderBar";
 import { Body, EyebrowTight } from "@/components/ui";
 
 const TabBarBadge = React.memo(function TabBarBadge({ count }: { count: number }) {
+  const colors = useColors();
   if (count === 0) return null;
   return (
-    <View className="absolute -top-1 -right-1 min-w-4 h-4 bg-danger items-center justify-center px-1" accessibilityLabel={`${count} unread`}>
-      <Body tone="inverse" className="text-[10px] font-semibold">
+    <View
+      className="absolute -top-1 -right-1 min-w-4 h-4 items-center justify-center px-1"
+      style={{ backgroundColor: colors.danger }}
+      accessibilityLabel={`${count} unread`}
+      accessibilityLiveRegion="polite"
+    >
+      <Body style={{ color: colors.txtInverse }} className="text-[10px] font-semibold">
         {count > 9 ? "9+" : count}
       </Body>
     </View>
@@ -32,6 +39,7 @@ function TabsLoading() {
 export default function TabsLayout() {
   const { isAuthenticated, isLoading, user } = useAuthStore();
   const { data: announcements = [] } = useAnnouncements(user?.id || "");
+  const colors = useColors();
   const unreadCount = useMemo(
     () => announcements.filter((a) => !a.isRead).length,
     [announcements],
@@ -55,15 +63,15 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#FFFFFF",
-          borderTopColor: "#D8D8D8",
+          backgroundColor: colors.bg,
+          borderTopColor: colors.surfaceBorder,
           borderTopWidth: 1,
           height: 64,
           paddingBottom: 8,
           paddingTop: 8,
         },
-        tabBarActiveTintColor: "#00ABA9",
-        tabBarInactiveTintColor: "#5C5C5C",
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.txtSecondary,
         tabBarLabelStyle: {
           fontFamily: "Inter_600SemiBold",
           fontWeight: "600",

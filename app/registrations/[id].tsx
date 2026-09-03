@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, TouchableOpacity } from "react-native";
+import { View } from "react-native";
 import { useLocalSearchParams, router, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { fetchRegistrationById } from "@/services/topscore";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { getRegistrationUrl, openUrl } from "@/lib/urlUtils";
+import { useColors } from "@/lib/tokens";
 import { PageHeader } from "@/components/ui/Page";
 import { Button } from "@/components/ui/Button";
 import { LoaderBar } from "@/components/ui/LoaderBar";
@@ -22,6 +23,7 @@ function resolveUrlForRegistration(reg: Registration): string {
 export default function RegistrationDetailScreen() {
   useAuthRedirect();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const colors = useColors();
 
   const [registration, setRegistration] = useState<Registration | null>(null);
   const [targetUrl, setTargetUrl] = useState<string | null>(null);
@@ -31,7 +33,6 @@ export default function RegistrationDetailScreen() {
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-    let timer: ReturnType<typeof setTimeout> | null = null;
     const load = async () => {
       try {
         const reg = await fetchRegistrationById(String(id));
@@ -41,7 +42,6 @@ export default function RegistrationDetailScreen() {
         setRegistration(reg);
         setTargetUrl(url);
         setIsLoading(false);
-        timer = setTimeout(() => { openUrl(url); }, 400);
       } catch (err) {
         if (cancelled) return;
         console.error("Failed to load registration", err);
@@ -50,7 +50,7 @@ export default function RegistrationDetailScreen() {
       }
     };
     load();
-    return () => { cancelled = true; if (timer) clearTimeout(timer); };
+    return () => { cancelled = true; };
   }, [id]);
 
   const goBackSafe = () => {
@@ -61,7 +61,7 @@ export default function RegistrationDetailScreen() {
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
       <Stack.Screen options={{ title: "Registration" }} />
-      <PageHeader title="registration" subtitle="opening on pada.org" back={goBackSafe} />
+      <PageHeader title="registration" subtitle="view on pada.org" back={goBackSafe} />
 
       {isLoading ? (
         <View className="flex-1">
@@ -74,7 +74,7 @@ export default function RegistrationDetailScreen() {
         </View>
       ) : error ? (
         <View className="flex-1 items-center justify-center px-6 gap-3">
-          <Ionicons name="alert-circle-outline" size={48} color="#E51400" />
+          <Ionicons name="alert-circle-outline" size={48} color={colors.danger} />
           <Body tone="danger" className="text-base font-semibold text-center">
             {error}
           </Body>
@@ -85,8 +85,11 @@ export default function RegistrationDetailScreen() {
         </View>
       ) : (
         <View className="flex-1 items-center justify-center px-6 gap-4">
-          <View className="w-16 h-16 bg-primary items-center justify-center">
-            <Ionicons name="open-outline" size={32} color="#FFFFFF" />
+          <View
+            className="w-16 h-16 items-center justify-center"
+            style={{ backgroundColor: colors.primary }}
+          >
+            <Ionicons name="open-outline" size={32} color={colors.txtInverse} />
           </View>
           {registration && (
             <Body tone="primary" className="text-base font-semibold text-center" numberOfLines={2}>
@@ -94,23 +97,15 @@ export default function RegistrationDetailScreen() {
             </Body>
           )}
           <Title tone="primary" size="sm" className="text-center">
-            opening registration in your browser...
+            continue on pada.org
           </Title>
           <Body tone="muted" className="text-sm text-center">
-            The Pada.org registration page is launching outside this app. After you finish, return here to continue browsing PADA.
+            To register, edit, or pay for this registration, PadaHub will hand you off to Pada.org. You&apos;ll return here when you&apos;re done.
           </Body>
           {targetUrl && (
-            <Button label="Open Again" onPress={() => openUrl(targetUrl)} className="mt-2" />
+            <Button label="Continue on Pada.org" onPress={() => openUrl(targetUrl)} className="mt-2" />
           )}
-          <TouchableOpacity
-            className="px-5 py-3"
-            onPress={goBackSafe}
-            accessibilityRole="button"
-            accessibilityLabel="back to registrations"
-            activeOpacity={0.85}
-          >
-            <EyebrowTight tone="primaryAccent">back to registrations</EyebrowTight>
-          </TouchableOpacity>
+          <Button variant="ghost" label="Stay in PadaHub" onPress={goBackSafe} />
         </View>
       )}
     </SafeAreaView>

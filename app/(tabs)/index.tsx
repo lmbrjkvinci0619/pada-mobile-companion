@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
 import { useAuthStore } from "@/store/authStore";
 import { useEvents, useAnnouncements, useRegistrations, useArticles } from "@/hooks/useApi";
+import { useColors } from "@/lib/tokens";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
@@ -24,7 +25,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { LoaderBar } from "@/components/ui/LoaderBar";
 import { PagerDots } from "@/components/ui/PagerDots";
 import { DonateFooter } from "@/components/ui/DonateFooter";
-import { Title, Body, Eyebrow, Subtitle, Label } from "@/components/ui";
+import { Greeting, Body, Eyebrow, Subtitle, Label } from "@/components/ui";
 import type { Event, Article } from "@/types";
 import { EXTERNAL_URLS, openUrl } from "@/lib/urlUtils";
 
@@ -40,9 +41,10 @@ const AnnouncementRow = React.memo(function AnnouncementRow({
 }: {
   ann: { id: string; title: string; content: string; isUrgent: boolean; isRead?: boolean; createdAt: string };
 }) {
+  const colors = useColors();
   const accent = ann.isUrgent ? "danger" : "secondary";
   const iconName = ann.isUrgent ? "warning" : "megaphone";
-  const accentColor = ann.isUrgent ? "#E51400" : "#1BA1E2";
+  const accentColor = ann.isUrgent ? colors.danger : colors.secondary;
   return (
     <TouchableOpacity
       onPress={() => router.push(`/announcements/${ann.id}`)}
@@ -54,7 +56,13 @@ const AnnouncementRow = React.memo(function AnnouncementRow({
       </View>
       <View className="flex-1">
         <View className="flex-row items-center gap-2 mb-1">
-          {!ann.isRead && <View className="w-2 h-2 bg-primary" accessibilityLabel="unread" />}
+          {!ann.isRead && (
+            <View
+              className="w-2 h-2"
+              style={{ backgroundColor: colors.primary }}
+              accessibilityLabel="unread"
+            />
+          )}
           {ann.isUrgent && <Badge label="Urgent" variant="danger" />}
           <Eyebrow tone="secondary" className="tracking-[0.12em]">
             {format(new Date(ann.createdAt), "MMM d")}
@@ -96,6 +104,7 @@ const PublicEventCard = React.memo(function PublicEventCard({ event }: { event: 
 });
 
 const ArticleTile = React.memo(function ArticleTile({ article }: { article: Article }) {
+  const colors = useColors();
   return (
     <TouchableOpacity
       onPress={() => router.push(`/p/${article.slug || article.id}`)}
@@ -104,7 +113,7 @@ const ArticleTile = React.memo(function ArticleTile({ article }: { article: Arti
     >
       <View style={{ width: 240 }} className="bg-surface-raised border border-surface-border">
         <View className="h-24 bg-primary-50 items-center justify-center border-b border-surface-border">
-          <Ionicons name="newspaper-outline" size={28} color="#00ABA9" />
+          <Ionicons name="newspaper-outline" size={28} color={colors.primary} />
         </View>
         <View className="p-3">
           {article.category && <Badge label={article.category} variant="primary" className="mb-2" />}
@@ -201,21 +210,37 @@ export default function HomeScreen() {
   const [activePanel, setActivePanel] = useState(0);
   const activePanelRef = useRef(0);
   activePanelRef.current = activePanel;
-  const { stride } = useHubMetrics();
+  const { stride, panelWidth } = useHubMetrics();
+  const hubRef = useRef<ScrollView | null>(null);
   const hasPannedRef = useRef(false);
-  const onHubScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const offsetX = e.nativeEvent.contentOffset.x;
-    if (offsetX < 0) return;
-    const idx = Math.round(offsetX / stride);
-    if (idx !== activePanelRef.current && idx >= 0) {
-      setActivePanel(idx);
-      if (offsetX > 8) hasPannedRef.current = true;
-    } else if (offsetX > 8) {
+  const onHubScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const offsetX = e.nativeEvent.contentOffset.x;
+      if (offsetX < 0) return;
+      const idx = Math.round(offsetX / stride);
+      if (idx !== activePanelRef.current && idx >= 0) {
+        setActivePanel(idx);
+        if (offsetX > 8) hasPannedRef.current = true;
+      } else if (offsetX > 8) {
+        hasPannedRef.current = true;
+      }
+    },
+    [stride],
+  );
+
+  const goToPanel = useCallback(
+    (idx: number) => {
+      if (idx === activePanelRef.current) return;
       hasPannedRef.current = true;
-    }
-  }, [stride]);
+      setActivePanel(idx);
+      hubRef.current?.scrollTo({ x: idx * (panelWidth + 12), animated: true });
+    },
+    [panelWidth],
+  );
 
   const greeting = isAuthenticated ? (user?.firstName ?? "player").toLowerCase() : "guest";
+
+  const colors = useColors();
 
   const liveGame = liveEvent
     ? {
@@ -256,19 +281,28 @@ export default function HomeScreen() {
         }
       />
 
-      <Hub className="flex-1" onScroll={onHubScroll}>
+      <Hub ref={hubRef} className="flex-1" onScroll={onHubScroll} panelWidth={panelWidth}>
         <HubPanel title="home">
           {!hasPannedRef.current && activePanel === 0 && (
-            <View className="absolute right-3 top-2 z-10 flex-row items-center gap-1 opacity-60" pointerEvents="none" accessibilityElementsHidden>
+            <View
+              className="absolute right-3 top-2 z-10 flex-row items-center gap-1 opacity-60"
+              pointerEvents="none"
+              importantForAccessibility="no-hide-descendants"
+              accessibilityElementsHidden
+            >
               <Eyebrow tone="secondary" className="tracking-[0.18em]">swipe</Eyebrow>
-              <Ionicons name="chevron-forward" size={14} color="#5C5C5C" />
+              <Ionicons name="chevron-forward" size={14} color={colors.txtSecondary} />
             </View>
           )}
-          <ScrollView showsVerticalScrollIndicator={false} className="flex-1" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00ABA9" />}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            className="flex-1"
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+            }
+          >
             <View className="mb-4">
-              <Title numberOfLines={1} size="sm" className="text-[26px]">
-                hello, {greeting}
-              </Title>
+              <Greeting numberOfLines={1}>hello, {greeting}</Greeting>
             </View>
 
             {!isAuthenticated && (
@@ -279,7 +313,7 @@ export default function HomeScreen() {
                 title="Sign in to see your schedule"
                 subtitle="registrations, teams, and live games"
                 onPress={() => router.push("/(auth)/login")}
-                icon={<Ionicons name="log-in-outline" size={28} color="#FFFFFF" />}
+                icon={<Ionicons name="log-in-outline" size={28} color={colors.txtInverse} />}
               />
             )}
 
@@ -383,7 +417,13 @@ export default function HomeScreen() {
         </HubPanel>
 
         <HubPanel title="alerts" signal={unreadAnnouncements > 0 ? "unread" : null}>
-          <ScrollView showsVerticalScrollIndicator={false} className="flex-1" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00ABA9" />}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            className="flex-1"
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+            }
+          >
             <SectionLabel
               action={
                 <TouchableOpacity onPress={() => router.push("/announcements")}>
@@ -453,7 +493,13 @@ export default function HomeScreen() {
         </HubPanel>
 
         <HubPanel title="explore">
-          <ScrollView showsVerticalScrollIndicator={false} className="flex-1" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00ABA9" />}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            className="flex-1"
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+            }
+          >
             <TouchableOpacity
               onPress={() => openUrl(EXTERNAL_URLS.about)}
               activeOpacity={0.85}
@@ -461,7 +507,7 @@ export default function HomeScreen() {
             >
               <Card variant="default">
                 <View className="p-4 flex-row items-start gap-3">
-                  <IconChip name="information-circle" color="#339933" background="#33993322" />
+                  <IconChip name="information-circle" color={colors.success} background={`${colors.success}22`} />
                   <View className="flex-1">
                     <Label tone="primary" className="tracking-[0.12em]">About PADA</Label>
                     <Subtitle tone="secondary" className="mt-1" numberOfLines={3}>
@@ -520,7 +566,7 @@ export default function HomeScreen() {
       </Hub>
 
       <View className="bg-bg border-t border-surface-border">
-        <PagerDots count={3} active={activePanel} />
+        <PagerDots count={3} active={activePanel} onSelect={goToPanel} />
       </View>
       <DonateFooter />
       <LoaderBar visible={refreshing || (eventsLoading && events.length > 0)} />

@@ -207,7 +207,7 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
-      <View className={isDark ? "flex-1 dark" : "flex-1"}>
+      <View className="flex-1 dark">
         <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={isDark ? "#000000" : "#FFFFFF"} />
         <OfflineBanner />
         <QueryClientProvider client={queryClient}>

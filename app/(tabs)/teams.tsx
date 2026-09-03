@@ -6,41 +6,46 @@ import { router, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
 import { useTeams } from "@/hooks/useApi";
+import { useColors } from "@/lib/tokens";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { ReadOnlyBanner } from "@/components/ui/ReadOnlyBanner";
 import { PageHeader } from "@/components/ui/Page";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Body, Eyebrow, Subtitle, EyebrowTight, Title } from "@/components/ui";
+import { TeamName, Body, Eyebrow, Subtitle, EyebrowTight } from "@/components/ui";
 import type { Team } from "@/types";
 
-const TEAM_ACCENTS = ["#00ABA9", "#1BA1E2", "#339933", "#F09609", "#D80073", "#A200FF"];
+const TEAM_ACCENT_KEYS = ["primary", "secondary", "success", "warning", "magenta", "purple"] as const;
+type AccentKey = (typeof TEAM_ACCENT_KEYS)[number];
 
-function teamAccent(id: string): string {
+function teamAccentKey(id: string): AccentKey {
   let code = 0;
   for (let i = 0; i < id.length; i++) code += id.charCodeAt(i);
-  return TEAM_ACCENTS[code % TEAM_ACCENTS.length];
+  return TEAM_ACCENT_KEYS[code % TEAM_ACCENT_KEYS.length];
 }
 
 const TeamCard = React.memo(function TeamCard({ team, onPress }: { team: Team; onPress: () => void }) {
-  const accent = team.color ?? teamAccent(team.id);
+  const colors = useColors();
+  const accent = team.color ?? colors[teamAccentKey(team.id)];
+  const isLightAccent = accent.toLowerCase() === colors.white.toLowerCase();
+  const badgeBg = isLightAccent ? colors.bg : colors.bg;
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.85} className="mb-4">
       <Card variant="raised" className="overflow-hidden">
         <View style={{ backgroundColor: accent }}>
           <View className="p-4 flex-row items-start justify-between">
             <View className="flex-1">
-              <Eyebrow tone="inverse" className="text-[10px] tracking-[0.2em]">
+              <Eyebrow style={{ color: colors.txtInverse }} className="text-[10px] tracking-[0.2em]">
                 {team.sport ?? "Ultimate"}
               </Eyebrow>
-              <Title tone="inverse" size="sm" className="text-[22px] mt-1" numberOfLines={1}>
+              <TeamName style={{ color: colors.txtInverse }} numberOfLines={1}>
                 {team.name.toLowerCase()}
-              </Title>
+              </TeamName>
             </View>
             {team.season && (
-              <View className="bg-white px-3 py-0.5">
-                <EyebrowTight tone="primary">{team.season}</EyebrowTight>
+              <View className="px-3 py-0.5" style={{ backgroundColor: badgeBg }}>
+                <EyebrowTight style={{ color: colors.primary }}>{team.season}</EyebrowTight>
               </View>
             )}
           </View>
@@ -53,7 +58,7 @@ const TeamCard = React.memo(function TeamCard({ team, onPress }: { team: Team; o
 
           <View className="flex-row items-center gap-4 mt-3 pt-3 border-t border-surface-border">
             <View className="flex-row items-center gap-1.5">
-              <Ionicons name="people" size={14} color="#5C5C5C" />
+              <Ionicons name="people" size={14} color={colors.txtSecondary} />
               <Subtitle tone="secondary" className="font-semibold">
                 {team.roster?.length || 0} members
               </Subtitle>
@@ -69,6 +74,7 @@ export default function TeamsScreen() {
   const { isAuthenticated } = useAuthStore();
   const { data: teams = [], isLoading, refetch } = useTeams();
   const [refreshing, setRefreshing] = useState(false);
+  const colors = useColors();
 
   if (!isAuthenticated) {
     return <Redirect href="/(auth)/login" />;
@@ -106,7 +112,7 @@ export default function TeamsScreen() {
         contentContainerClassName="px-5 pb-8 pt-2"
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00ABA9" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
         initialNumToRender={5}
         maxToRenderPerBatch={5}

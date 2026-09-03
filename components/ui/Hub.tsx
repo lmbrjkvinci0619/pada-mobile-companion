@@ -7,6 +7,7 @@ interface HubProps extends Omit<ScrollViewProps, "horizontal"> {
   children: React.ReactNode;
   gap?: number;
   className?: string;
+  panelWidth?: number;
 }
 
 export const HUB_GAP_DEFAULT = 12;
@@ -19,22 +20,24 @@ export function useHubMetrics(gap: number = HUB_GAP_DEFAULT) {
   return { width, panelWidth, stride };
 }
 
-export const Hub = React.memo(function Hub({
-  children,
-  gap = HUB_GAP_DEFAULT,
-  className,
-  ...rest
-}: HubProps) {
-  const { panelWidth } = useHubMetrics(gap);
+export const Hub = React.forwardRef<ScrollView, HubProps>(function Hub(
+  { children, gap = HUB_GAP_DEFAULT, className, panelWidth: panelWidthProp, ...rest },
+  ref,
+) {
+  const { width } = useWindowDimensions();
+  const metrics = useHubMetrics(gap);
+  const panelWidth = panelWidthProp ?? metrics.panelWidth;
+  const stride = panelWidth + gap;
 
   const items = React.Children.toArray(children);
 
   return (
     <ScrollView
+      ref={ref}
       horizontal
       showsHorizontalScrollIndicator={false}
       decelerationRate="fast"
-      snapToInterval={panelWidth + gap}
+      snapToInterval={stride}
       snapToAlignment="start"
       contentContainerStyle={{ paddingHorizontal: 16 }}
       className={className}

@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
+import { useColors } from "@/lib/tokens";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ChipGroup } from "@/components/ui/ChipGroup";
@@ -32,10 +33,19 @@ const EXPIRATION_OPTIONS: ExpirationOption[] = [
   { label: "Never", hours: null, description: "No expiry" },
 ];
 
-const ANNOUNCEMENT_TYPE_OPTIONS: { type: AnnouncementType; label: string; description: string; icon: keyof typeof Ionicons.glyphMap; accent: string }[] = [
-  { type: "league_longterm", label: "League Update", description: "Long-term league announcements", icon: "trophy", accent: "#1BA1E2" },
-  { type: "game", label: "Game Alert", description: "Game-specific updates", icon: "flash", accent: "#F09609" },
-  { type: "pada_org", label: "PADA Org", description: "Organization-wide announcements", icon: "business", accent: "#A200FF" },
+function announcementAccent(type: AnnouncementType, colors: ReturnType<typeof useColors>) {
+  switch (type) {
+    case "pada_org":       return colors.purple;
+    case "game":           return colors.warning;
+    case "league_longterm":
+    default:               return colors.secondary;
+  }
+}
+
+const ANNOUNCEMENT_TYPE_OPTIONS: { type: AnnouncementType; label: string; description: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { type: "league_longterm", label: "League Update", description: "Long-term league announcements", icon: "trophy" },
+  { type: "game", label: "Game Alert", description: "Game-specific updates", icon: "flash" },
+  { type: "pada_org", label: "PADA Org", description: "Organization-wide announcements", icon: "business" },
 ];
 
 const TARGET_OPTIONS: { type: AnnouncementTargetType; label: string; description: string; requiresLeagueAdmin: boolean }[] = [
@@ -48,6 +58,7 @@ const PADA_GLOBAL_TARGET_ID = "pada-global";
 
 export default function CreateAnnouncementScreen() {
   useAuthRedirect();
+  const colors = useColors();
   const { user } = useAuthStore();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -186,7 +197,7 @@ export default function CreateAnnouncementScreen() {
   if (!canPost) {
     return (
       <SafeAreaView className="flex-1 bg-bg items-center justify-center px-6">
-        <Ionicons name="lock-closed" size={48} color="#E51400" />
+        <Ionicons name="lock-closed" size={48} color={colors.danger} />
         <EyebrowTight tone="primary" className="text-xl mt-4 text-center">
           permission required
         </EyebrowTight>
@@ -212,10 +223,10 @@ export default function CreateAnnouncementScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={showPreview ? "hide preview" : "show preview"}
               >
-                <Ionicons name={showPreview ? "eye-off" : "eye"} size={20} color="#000000" />
+                <Ionicons name={showPreview ? "eye-off" : "eye"} size={20} color={colors.txtPrimary} />
               </TouchableOpacity>
               {isSubmitting ? (
-                <ActivityIndicator color="#00ABA9" />
+                <ActivityIndicator color={colors.primary} />
               ) : (
                 <Button
                   label="Post"
@@ -231,19 +242,19 @@ export default function CreateAnnouncementScreen() {
 
         <ScrollView className="flex-1 px-5 pt-4" keyboardShouldPersistTaps="handled">
           {showPreview && (
-            <View className="bg-primary p-4 mb-6">
-              <EyebrowTight tone="inverse">preview</EyebrowTight>
-              <Title tone="inverse" size="md" className="mt-1">
+            <View className="p-4 mb-6" style={{ backgroundColor: colors.primary }}>
+              <EyebrowTight style={{ color: colors.txtInverse }}>preview</EyebrowTight>
+              <Title style={{ color: colors.txtInverse }} size="md" className="mt-1">
                 {(title || "untitled").toLowerCase()}
               </Title>
-              <Body tone="inverse" className="text-sm mt-2">
+              <Body style={{ color: colors.txtInverse }} className="text-sm mt-2">
                 {content || "No content"}
               </Body>
               <View className="flex-row items-center gap-4 mt-3">
-                <EyebrowTight tone="inverse">
+                <EyebrowTight style={{ color: colors.txtInverse }}>
                   {targetType === "team" && selectedTeam ? selectedTeam.name : targetType === "division" ? "division-wide" : "league-wide"}
                 </EyebrowTight>
-                <EyebrowTight tone="inverse">
+                <EyebrowTight style={{ color: colors.txtInverse }}>
                   {expirationHours === null ? "never expires" : `expires in ${expirationHours}h`}
                 </EyebrowTight>
               </View>
@@ -293,11 +304,12 @@ export default function CreateAnnouncementScreen() {
             {ANNOUNCEMENT_TYPE_OPTIONS.map((option) => {
               const isDisabled = option.type === "pada_org" && !isLeagueAdmin;
               const isSelected = announcementType === option.type;
+              const accent = announcementAccent(option.type, colors);
               return (
                 <TouchableOpacity
                   key={option.type}
                   className={isDisabled ? "opacity-50" : undefined}
-                  style={isSelected ? { backgroundColor: `${option.accent}1A` } : undefined}
+                  style={isSelected ? { backgroundColor: colors.primary + "1A" } : undefined}
                   onPress={() => !isDisabled && setAnnouncementType(option.type)}
                   disabled={isSubmitting || isDisabled}
                   accessibilityRole="radio"
@@ -306,13 +318,13 @@ export default function CreateAnnouncementScreen() {
                 >
                   <Card variant="raised">
                     <View className="flex-row items-center p-4">
-                      <IconChip name={option.icon} color={option.accent} background={`${option.accent}22`} />
+                      <IconChip name={option.icon} color={accent} background={accent + "22"} />
                       <View className="flex-1 ml-3">
                         <View className="flex-row items-center gap-2">
                           <Body
                             tone="primary"
                             className="text-sm font-semibold"
-                            style={isSelected ? { color: option.accent } : undefined}
+                            style={isSelected ? { color: accent } : undefined}
                           >
                             {option.label}
                           </Body>
@@ -326,7 +338,7 @@ export default function CreateAnnouncementScreen() {
                           {option.description}
                         </Body>
                       </View>
-                      {isSelected && <Ionicons name="checkmark-circle" size={22} color={option.accent} />}
+                      {isSelected && <Ionicons name="checkmark-circle" size={22} color={accent} />}
                     </View>
                   </Card>
                 </TouchableOpacity>
@@ -357,7 +369,7 @@ export default function CreateAnnouncementScreen() {
                           {option.description}
                         </Body>
                       </View>
-                      {isSelected && <Ionicons name="checkmark-circle" size={22} color="#00ABA9" />}
+                      {isSelected && <Ionicons name="checkmark-circle" size={22} color={colors.primary} />}
                     </View>
                   </Card>
                 </TouchableOpacity>
@@ -377,7 +389,7 @@ export default function CreateAnnouncementScreen() {
               ) : teams.length === 0 ? (
                 <Card variant="default">
                   <View className="p-6 items-center">
-                    <Ionicons name="people-outline" size={32} color="#8A8A8A" />
+                    <Ionicons name="people-outline" size={32} color={colors.txtMuted} />
                     <Body tone="muted" className="text-sm mt-2">
                       No teams available
                     </Body>
@@ -408,11 +420,14 @@ export default function CreateAnnouncementScreen() {
             accessibilityLabel="expiration"
           />
 
-          <View className={`p-4 mb-8 border ${isUrgent ? "bg-surface border-danger" : "bg-surface border-surface-border"}`}>
+          <View
+            className={`p-4 mb-8 border ${isUrgent ? "border-danger" : "border-surface-border"}`}
+            style={{ backgroundColor: colors.surface }}
+          >
             <View className="flex-row items-center justify-between">
               <View className="flex-1 mr-4">
                 <View className="flex-row items-center gap-2">
-                  <Ionicons name="warning" size={18} color={isUrgent ? "#E51400" : "#5C5C5C"} />
+                  <Ionicons name="warning" size={18} color={isUrgent ? colors.danger : colors.txtSecondary} />
                   <Body tone={isUrgent ? "danger" : "primary"} className="text-sm font-semibold">
                     mark as urgent
                   </Body>
@@ -424,8 +439,8 @@ export default function CreateAnnouncementScreen() {
               <Switch
                 value={isUrgent}
                 onValueChange={setIsUrgent}
-                trackColor={{ false: "#D8D8D8", true: "#E51400" }}
-                thumbColor="#FFFFFF"
+                trackColor={{ false: colors.surfaceBorder, true: colors.danger }}
+                thumbColor={colors.surfaceRaised}
                 disabled={isSubmitting}
                 accessibilityLabel="mark announcement as urgent"
               />

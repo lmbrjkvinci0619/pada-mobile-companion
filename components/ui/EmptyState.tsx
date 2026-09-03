@@ -2,6 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { cn } from "@/utils/cn";
+import { useColors, type ColorKey } from "@/lib/tokens";
 import { Section, Body as TBody } from "./Typography";
 
 interface EmptyStateProps {
@@ -12,11 +13,11 @@ interface EmptyStateProps {
   className?: string;
 }
 
-const ACCENT_ICON: Record<NonNullable<EmptyStateProps["accent"]>, string> = {
-  muted: "#8A8A8A",
-  primary: "#00ABA9",
-  secondary: "#1BA1E2",
-  warning: "#F09609",
+const ACCENT_KEY: Record<NonNullable<EmptyStateProps["accent"]>, ColorKey> = {
+  muted: "txtMuted",
+  primary: "primary",
+  secondary: "secondary",
+  warning: "warning",
 };
 
 export const EmptyState = React.memo(function EmptyState({
@@ -26,7 +27,8 @@ export const EmptyState = React.memo(function EmptyState({
   accent = "muted",
   className,
 }: EmptyStateProps) {
-  const color = ACCENT_ICON[accent];
+  const colors = useColors();
+  const color = colors[ACCENT_KEY[accent]];
   return (
     <View
       className={cn(

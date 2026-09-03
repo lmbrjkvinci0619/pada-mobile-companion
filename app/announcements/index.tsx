@@ -5,6 +5,7 @@ import { router, useFocusEffect } from "expo-router";
 import { format, formatDistanceToNow, isPast } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
+import { useColors } from "@/lib/tokens";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -21,17 +22,28 @@ const PAGE_SIZE = 20;
 
 const keyExtractor = (item: Announcement) => item.id;
 
-const TYPE_ACCENTS: Record<AnnouncementType, string> = {
-  pada_org: "#A200FF",
-  league_longterm: "#1BA1E2",
-  game: "#F09609",
+type AccentKey = "pada_org" | "league_longterm" | "game";
+
+const TYPE_ACCENT_KEYS: Record<AnnouncementType, AccentKey> = {
+  pada_org: "pada_org",
+  league_longterm: "league_longterm",
+  game: "game",
 };
 
-const TYPE_LABELS: Record<AnnouncementType, string> = {
+const TYPE_LABEL: Record<AnnouncementType, string> = {
   pada_org: "PADA Org",
   league_longterm: "League",
   game: "Game",
 };
+
+function accentFor(type: AnnouncementType, colors: ReturnType<typeof useColors>) {
+  switch (TYPE_ACCENT_KEYS[type]) {
+    case "pada_org":       return colors.purple;
+    case "game":           return colors.warning;
+    case "league_longterm":
+    default:               return colors.secondary;
+  }
+}
 
 const AnnouncementItem = React.memo(function AnnouncementItem({
   item,
@@ -40,8 +52,9 @@ const AnnouncementItem = React.memo(function AnnouncementItem({
   item: Announcement;
   onDismiss: (id: string) => void;
 }) {
-  const accent = TYPE_ACCENTS[item.announcementType] ?? TYPE_ACCENTS.league_longterm;
-  const label = TYPE_LABELS[item.announcementType] ?? "League";
+  const colors = useColors();
+  const accent = accentFor(item.announcementType, colors);
+  const label = TYPE_LABEL[item.announcementType] ?? "League";
   const isExpired = item.expiresAt && isPast(new Date(item.expiresAt));
   const [showDismiss, setShowDismiss] = useState(false);
 
@@ -80,7 +93,13 @@ const AnnouncementItem = React.memo(function AnnouncementItem({
         <View className="p-4 gap-2">
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center gap-2 flex-1">
-              {!item.isRead && <View className="w-2 h-2 bg-primary" accessibilityLabel="unread" />}
+              {!item.isRead && (
+                <View
+                  className="w-2 h-2"
+                  style={{ backgroundColor: colors.primary }}
+                  accessibilityLabel="unread"
+                />
+              )}
               <Badge label={label} accent={accent} />
               {item.isUrgent && <Badge label="Urgent" variant="danger" />}
               <EyebrowTight tone="secondary">
@@ -90,7 +109,7 @@ const AnnouncementItem = React.memo(function AnnouncementItem({
             <View className="flex-row items-center gap-2">
               {item.expiresAt && (
                 <View className="flex-row items-center gap-1">
-                  <Ionicons name="time-outline" size={12} color="#5C5C5C" />
+                  <Ionicons name="time-outline" size={12} color={colors.txtSecondary} />
                   <Body tone="secondary" className="text-[10px] font-semibold tracking-[0.12em]">
                     {isExpired ? "Expired" : `Expires ${formatDistanceToNow(new Date(item.expiresAt), { addSuffix: true })}`}
                   </Body>
@@ -99,12 +118,13 @@ const AnnouncementItem = React.memo(function AnnouncementItem({
               {showDismiss && (
                 <TouchableOpacity
                   onPress={handleDismiss}
-                  className="w-7 h-7 bg-danger items-center justify-center"
+                  className="w-7 h-7 items-center justify-center"
+                  style={{ backgroundColor: colors.danger }}
                   accessibilityRole="button"
                   accessibilityLabel="hide announcement"
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <Ionicons name="close" size={14} color="#FFFFFF" />
+                  <Ionicons name="close" size={14} color={colors.txtInverse} />
                 </TouchableOpacity>
               )}
             </View>
@@ -125,6 +145,7 @@ export default function AnnouncementsListScreen() {
   useAuthRedirect();
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
+  const colors = useColors();
   const canPost = user?.isCoordinator || user?.isAdmin || user?.role === "captain";
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -230,8 +251,14 @@ export default function AnnouncementsListScreen() {
         subtitle="alerts & updates"
         back={() => router.back()}
         right={canPost ? (
-          <TouchableOpacity onPress={() => router.push("/announcements/create")} className="w-10 h-10 items-center justify-center bg-primary">
-            <Ionicons name="add" size={24} color="#FFFFFF" />
+          <TouchableOpacity
+            onPress={() => router.push("/announcements/create")}
+            className="w-10 h-10 items-center justify-center"
+            style={{ backgroundColor: colors.primary }}
+            accessibilityRole="button"
+            accessibilityLabel="new announcement"
+          >
+            <Ionicons name="add" size={24} color={colors.txtInverse} />
           </TouchableOpacity>
         ) : undefined}
       />
@@ -240,18 +267,19 @@ export default function AnnouncementsListScreen() {
         <LoaderBar visible />
       ) : error ? (
         <View className="flex-1 justify-center items-center px-5">
-          <Ionicons name="alert-circle-outline" size={48} color="#E51400" />
+          <Ionicons name="alert-circle-outline" size={48} color={colors.danger} />
           <Body tone="primary" className="text-center mt-2">
             {error}
           </Body>
           <TouchableOpacity
-            className="mt-4 bg-primary px-5 py-3"
+            className="mt-4 px-5 py-3"
+            style={{ backgroundColor: colors.primary }}
             onPress={onRefresh}
             accessibilityRole="button"
             accessibilityLabel="retry loading announcements"
             activeOpacity={0.85}
           >
-            <Label tone="inverse" className="text-xs">retry</Label>
+            <Label style={{ color: colors.txtInverse }} className="text-xs">retry</Label>
           </TouchableOpacity>
         </View>
       ) : (
@@ -260,7 +288,7 @@ export default function AnnouncementsListScreen() {
           contentContainerClassName="px-5 py-4 gap-3"
           keyExtractor={keyExtractor}
           renderItem={({ item }) => <AnnouncementItem item={item} onDismiss={handleDismiss} />}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00ABA9" />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
           ListFooterComponent={renderFooter}

@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useSettingsStore } from "@/store/settingsStore";
+import { useColors } from "@/lib/tokens";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -16,6 +17,7 @@ import { EXTERNAL_URLS, openUrl } from "@/lib/urlUtils";
 
 export default function UserSettingsScreen() {
   useAuthRedirect();
+  const colors = useColors();
   const { user, isAuthenticated } = useAuthStore();
   const { displayName, setDisplayName } = useSettingsStore();
 
@@ -64,7 +66,7 @@ export default function UserSettingsScreen() {
   if (!isAuthenticated) {
     return (
       <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <Ionicons name="person-circle-outline" size={64} color="#8A8A8A" />
+        <Ionicons name="person-circle-outline" size={64} color={colors.txtMuted} />
         <Body tone="muted" className="mt-4">
           Please log in to view settings
         </Body>
@@ -83,7 +85,7 @@ export default function UserSettingsScreen() {
             name={`${user?.firstName} ${user?.lastName}`}
             uri={user?.avatarUrl}
             size="xl"
-            accent="#00ABA9"
+            accent={colors.primary}
           />
 
           {isEditing ? (
@@ -93,7 +95,7 @@ export default function UserSettingsScreen() {
                 value={localDisplayName}
                 onChangeText={setLocalDisplayName}
                 placeholder="Enter display name"
-                placeholderTextColor="#8A8A8A"
+                placeholderTextColor={colors.txtMuted}
                 autoFocus
               />
               <View className="flex-row gap-3 mt-3">
@@ -115,7 +117,7 @@ export default function UserSettingsScreen() {
                 <EyebrowTight tone="primaryAccent" className="tracking-[0.18em]">
                   edit profile
                 </EyebrowTight>
-                <Ionicons name="pencil" size={12} color="#00ABA9" />
+                <Ionicons name="pencil" size={12} color={colors.primary} />
               </View>
             </TouchableOpacity>
           )}
@@ -134,12 +136,12 @@ export default function UserSettingsScreen() {
           <SectionLabel>account</SectionLabel>
           <Card variant="default">
             <ListRow
-              icon={<IconChip name="mail-outline" color="#1BA1E2" background="#1BA1E222" />}
+              icon={<IconChip name="mail-outline" color={colors.secondary} background={`${colors.secondary}22`} />}
               title="Email"
               subtitle={user?.email}
             />
             <ListRow
-              icon={<IconChip name="call-outline" color="#339933" background="#33993322" />}
+              icon={<IconChip name="call-outline" color={colors.success} background={`${colors.success}22`} />}
               title="Phone"
               subtitle="Not set"
               last
@@ -151,18 +153,18 @@ export default function UserSettingsScreen() {
           <SectionLabel>preferences</SectionLabel>
           <Card variant="default">
             <ListRow
-              icon={<IconChip name="notifications-outline" color="#F09609" background="#F0960922" />}
+              icon={<IconChip name="notifications-outline" color={colors.warning} background={`${colors.warning}22`} />}
               title="Notifications"
               subtitle="Manage push and in-app notifications"
               onPress={() => router.push("/settings/notifications")}
             />
             <ListRow
-              icon={<IconChip name="language-outline" color="#339933" background="#33993322" />}
+              icon={<IconChip name="language-outline" color={colors.success} background={`${colors.success}22`} />}
               title="Language"
               subtitle="English"
             />
             <ListRow
-              icon={<IconChip name="time-outline" color="#1BA1E2" background="#1BA1E222" />}
+              icon={<IconChip name="time-outline" color={colors.secondary} background={`${colors.secondary}22`} />}
               title="Timezone"
               subtitle="Automatic"
               last
@@ -174,25 +176,25 @@ export default function UserSettingsScreen() {
           <SectionLabel>support</SectionLabel>
           <Card variant="default">
             <ListRow
-              icon={<IconChip name="help-circle-outline" color="#F09609" background="#F0960922" />}
+              icon={<IconChip name="help-circle-outline" color={colors.warning} background={`${colors.warning}22`} />}
               title="Help Center"
               subtitle="FAQs and support articles"
               onPress={() => openUrl(EXTERNAL_URLS.help)}
             />
             <ListRow
-              icon={<IconChip name="chatbubbles-outline" color="#E51400" background="#E5140022" />}
+              icon={<IconChip name="chatbubbles-outline" color={colors.danger} background={`${colors.danger}22`} />}
               title="Contact Support"
               subtitle="Get help from our team"
               onPress={() => openUrl(EXTERNAL_URLS.supportEmail)}
             />
             <ListRow
-              icon={<IconChip name="document-text-outline" color="#5C5C5C" background="#5C5C5C22" />}
+              icon={<IconChip name="document-text-outline" color={colors.txtSecondary} background={`${colors.txtSecondary}22`} />}
               title="Terms of Service"
               subtitle="Read our terms"
               onPress={() => openUrl(EXTERNAL_URLS.terms)}
             />
             <ListRow
-              icon={<IconChip name="shield-outline" color="#5C5C5C" background="#5C5C5C22" />}
+              icon={<IconChip name="shield-outline" color={colors.txtSecondary} background={`${colors.txtSecondary}22`} />}
               title="Privacy Policy"
               subtitle="How we handle your data"
               onPress={() => openUrl(EXTERNAL_URLS.privacy)}

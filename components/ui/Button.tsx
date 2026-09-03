@@ -6,6 +6,7 @@ import {
   type TouchableOpacityProps,
 } from "react-native";
 import { cn } from "@/utils/cn";
+import { useColors } from "@/lib/tokens";
 import { Label } from "./Typography";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger" | "success" | "outline";
@@ -54,6 +55,9 @@ export const Button = React.memo(function Button({
   const textTone: "inverse" | "primary" | "primaryAccent" =
     isFilled ? "inverse" : variant === "ghost" || variant === "outline" ? "primaryAccent" : "primary";
 
+  const colors = useColors();
+  const spinnerColor = isFilled ? colors.txtInverse : colors.primary;
+
   return (
     <TouchableOpacity
       {...props}
@@ -69,7 +73,7 @@ export const Button = React.memo(function Button({
       )}
     >
       {loading ? (
-        <ActivityIndicator size="small" color={isFilled ? "#FFFFFF" : "#00ABA9"} />
+        <ActivityIndicator size="small" color={spinnerColor} />
       ) : icon ? (
         <View>{icon}</View>
       ) : null}

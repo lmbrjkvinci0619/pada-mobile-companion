@@ -4,13 +4,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, Redirect } from "expo-router";
 import { useAuthStore } from "@/store/authStore";
 import { useSettingsStore } from "@/store/settingsStore";
+import { useColors } from "@/lib/tokens";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { ListRow } from "@/components/ui/ListRow";
 import { Tile, TileGrid, TileCell } from "@/components/ui/Tile";
 import { PageHeader, IconChip, SectionLabel } from "@/components/ui/Page";
 import { DonateFooter } from "@/components/ui/DonateFooter";
-import { Title, Body, Eyebrow, Subtitle, EyebrowTight } from "@/components/ui";
+import { TeamName, Body, Eyebrow, Subtitle } from "@/components/ui";
 import { Ionicons } from "@expo/vector-icons";
 import { EXTERNAL_URLS, openUrl } from "@/lib/urlUtils";
 
@@ -44,6 +45,7 @@ export default function ProfileScreen() {
   };
 
   const fullName = `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() || "player";
+  const colors = useColors();
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
@@ -54,17 +56,17 @@ export default function ProfileScreen() {
               name={fullName}
               uri={user?.avatarUrl}
               size="xl"
-              accent="#00ABA9"
+              accent={colors.primary}
             />
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => router.push("/settings/profile")} className="mt-4 items-center" accessibilityRole="button" accessibilityLabel="edit profile">
-            <Title numberOfLines={1} size="sm" className="text-[24px]">
+            <TeamName numberOfLines={1}>
               {fullName.toLowerCase()}
-            </Title>
+            </TeamName>
             <View className="flex-row items-center justify-center gap-2 mt-1">
               <Body tone="secondary" className="text-sm">{user?.email}</Body>
-              <Ionicons name="pencil" size={14} color="#00ABA9" />
+              <Ionicons name="pencil" size={14} color={colors.primary} />
             </View>
           </TouchableOpacity>
 
@@ -90,7 +92,7 @@ export default function ProfileScreen() {
                 eyebrow="support"
                 title="Donate to PADA"
                 subtitle="keep the spirit of the game alive"
-                icon={<Ionicons name="heart" size={28} color="#FFFFFF" />}
+                icon={<Ionicons name="heart" size={28} color={colors.txtInverse} />}
               />
           </TouchableOpacity>
         </View>
@@ -99,13 +101,13 @@ export default function ProfileScreen() {
           <SectionLabel>quick links</SectionLabel>
           <View className="bg-surface border border-surface-border">
             <ListRow
-              icon={<IconChip name="rocket" color="#1BA1E2" background="#1BA1E222" />}
+              icon={<IconChip name="rocket" color={colors.secondary} background={`${colors.secondary}22`} />}
               title="New to PADA?"
               onPress={() => openUrl(EXTERNAL_URLS.newToPada)}
               external
             />
             <ListRow
-              icon={<IconChip name="happy" color="#F09609" background="#F0960922" />}
+              icon={<IconChip name="happy" color={colors.warning} background={`${colors.warning}22`} />}
               title="Youth Programs"
               onPress={() => openUrl(EXTERNAL_URLS.youth)}
               external
@@ -118,7 +120,7 @@ export default function ProfileScreen() {
           <SectionLabel>settings</SectionLabel>
           <View className="bg-surface border border-surface-border">
             <ListRow
-              icon={<IconChip name="person" color="#00ABA9" background="#00ABA922" />}
+              icon={<IconChip name="person" color={colors.primary} background={`${colors.primary}22`} />}
               title="Profile"
               subtitle="Manage your account"
               onPress={() => router.push("/settings/profile")}
@@ -127,8 +129,8 @@ export default function ProfileScreen() {
               icon={
                 <IconChip
                   name="notifications"
-                  color={notifications.pushEnabled ? "#F09609" : "#8A8A8A"}
-                  background={notifications.pushEnabled ? "#F0960922" : "#8A8A8A22"}
+                  color={notifications.pushEnabled ? colors.warning : colors.txtMuted}
+                  background={notifications.pushEnabled ? `${colors.warning}22` : `${colors.txtMuted}22`}
                 />
               }
               title="Notifications"
@@ -136,14 +138,14 @@ export default function ProfileScreen() {
               onPress={() => router.push("/settings/notifications")}
             />
             <ListRow
-              icon={<IconChip name="shield-checkmark" color="#339933" background="#33993322" />}
+              icon={<IconChip name="shield-checkmark" color={colors.success} background={`${colors.success}22`} />}
               title="Privacy"
               subtitle="Data and security"
               onPress={() => openUrl(EXTERNAL_URLS.privacy)}
               external
             />
             <ListRow
-              icon={<IconChip name="help-circle" color="#E51400" background="#E5140022" />}
+              icon={<IconChip name="help-circle" color={colors.danger} background={`${colors.danger}22`} />}
               title="Support"
               subtitle="Help and feedback"
               onPress={() => openUrl(EXTERNAL_URLS.supportEmail)}
@@ -157,7 +159,7 @@ export default function ProfileScreen() {
           <SectionLabel>developer</SectionLabel>
           <View className="bg-surface border border-surface-border">
             <ListRow
-              icon={<IconChip name="color-palette" color="#A200FF" background="#A200FF22" />}
+              icon={<IconChip name="color-palette" color={colors.purple} background={`${colors.purple}22`} />}
               title="UI Gallery"
               subtitle="Design system preview"
               onPress={() => router.push("/debug/ui-gallery")}

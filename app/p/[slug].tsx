@@ -5,6 +5,7 @@ import { useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { format, parseISO } from "date-fns";
 import { useArticles } from "@/hooks/useApi";
+import { useColors } from "@/lib/tokens";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/Page";
@@ -12,6 +13,7 @@ import { LoaderBar } from "@/components/ui/LoaderBar";
 import { Title, EyebrowTight, Body } from "@/components/ui";
 
 export default function PageDetailScreen() {
+  const colors = useColors();
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const { data: articles = [], isLoading } = useArticles();
 
@@ -31,7 +33,7 @@ export default function PageDetailScreen() {
       <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
         <PageHeader title="article" back />
         <View className="flex-1 items-center justify-center p-6">
-          <Ionicons name="alert-circle-outline" size={48} color="#8A8A8A" />
+          <Ionicons name="alert-circle-outline" size={48} color={colors.txtMuted} />
           <Title tone="muted" size="sm" className="mt-4">
             page not found
           </Title>
@@ -48,8 +50,11 @@ export default function PageDetailScreen() {
       <PageHeader title="article" subtitle={page.category ?? ""} back />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {page.imageUrl && (
-          <View className="h-48 bg-surface-overlay items-center justify-center border-b border-surface-border">
-            <Ionicons name="image-outline" size={48} color="#8A8A8A" />
+          <View
+            className="h-48 items-center justify-center border-b border-surface-border"
+            style={{ backgroundColor: colors.surfaceOverlay }}
+          >
+            <Ionicons name="image-outline" size={48} color={colors.txtMuted} />
           </View>
         )}
 

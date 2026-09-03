@@ -1,6 +1,7 @@
 import React from "react";
 import { View, TouchableOpacity, type ViewStyle } from "react-native";
 import { cn } from "@/utils/cn";
+import { useColors, type ColorKey } from "@/lib/tokens";
 import { Eyebrow, EyebrowTight, TileTitle, Subtitle, Meta } from "./Typography";
 
 type Accent =
@@ -13,15 +14,15 @@ type Accent =
   | "purple"
   | "black";
 
-const FILL: Record<Accent, string> = {
-  primary:   "#00ABA9",
-  secondary: "#1BA1E2",
-  success:   "#339933",
-  warning:   "#F09609",
-  danger:    "#E51400",
-  magenta:   "#D80073",
-  purple:    "#A200FF",
-  black:     "#000000",
+const TILE_KEY: Record<Accent, ColorKey> = {
+  primary:   "tilePrimary",
+  secondary: "tileSecondary",
+  success:   "tileSuccess",
+  warning:   "tileWarning",
+  danger:    "tileDanger",
+  magenta:   "tileMagenta",
+  purple:    "tilePurple",
+  black:     "tileBlack",
 };
 
 interface TileProps {
@@ -61,8 +62,11 @@ export const Tile = React.memo(function Tile({
   style,
   children,
 }: TileProps) {
-  const fill = FILL[accent];
+  const colors = useColors();
+  const fill = colors[TILE_KEY[accent]];
   const Wrapper: any = onPress ? TouchableOpacity : View;
+  const badgeBg = colors.surfaceRaised;
+  const badgeFg = colors.primary;
 
   return (
     <Wrapper
@@ -86,8 +90,11 @@ export const Tile = React.memo(function Tile({
           {icon ? <View className="mt-1">{icon}</View> : null}
         </View>
         {badge && (
-          <View className="bg-white px-2 py-0.5">
-            <EyebrowTight tone="primary">{badge}</EyebrowTight>
+          <View
+            className="px-2 py-0.5"
+            style={{ backgroundColor: badgeBg }}
+          >
+            <EyebrowTight style={{ color: badgeFg }}>{badge}</EyebrowTight>
           </View>
         )}
       </View>

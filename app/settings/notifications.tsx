@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { View, ScrollView, Switch, TouchableOpacity, Alert, Modal, RefreshControl } from "react-native";
+import { View, ScrollView, Switch, TouchableOpacity, Alert, Modal, RefreshControl, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useSettingsStore } from "@/store/settingsStore";
+import { useColors } from "@/lib/tokens";
 import { fetchUserPreferences, saveUserPreferences } from "@/services/preferences";
 import { clearHiddenAnnouncements, getHiddenAnnouncementCount } from "@/services/announcements";
 import * as Notifications from "expo-notifications";
 import { PageHeader, SectionLabel, IconChip } from "@/components/ui/Page";
 import { Card } from "@/components/ui/Card";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Body, EyebrowTight, Subtitle } from "@/components/ui";
+import { Body, EyebrowTight, Subtitle, Label } from "@/components/ui";
 import type { NotificationPreferences } from "@/types";
 
 const TIME_OPTIONS = [
@@ -33,6 +34,7 @@ const TimePickerModal = ({
   onSelect: (time: string) => void;
   onClose: () => void;
 }) => {
+  const colors = useColors();
   const [selectedIndex, setSelectedIndex] = useState(
     currentTime ? TIME_OPTIONS.indexOf(currentTime) : -1,
   );
@@ -50,42 +52,47 @@ const TimePickerModal = ({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
-      <View className="flex-1 bg-black/60 justify-end">
-        <View className="bg-bg border-t border-primary">
-          <View className="flex-row justify-between items-center px-4 py-4 border-b border-surface-border">
-            <TouchableOpacity onPress={onClose} accessibilityRole="button" accessibilityLabel="cancel">
-              <EyebrowTight tone="secondary">cancel</EyebrowTight>
-            </TouchableOpacity>
-            <EyebrowTight tone="primary">select time</EyebrowTight>
-            <TouchableOpacity onPress={handleDone} accessibilityRole="button" accessibilityLabel="confirm time">
-              <EyebrowTight tone="primaryAccent">done</EyebrowTight>
-            </TouchableOpacity>
-          </View>
-          <ScrollView className="max-h-[300px]" showsVerticalScrollIndicator={false}>
-            {TIME_OPTIONS.map((time, index) => (
-              <TouchableOpacity
-                key={time}
-                className={`px-4 py-4 flex-row justify-between items-center border-b border-surface-border ${
-                  selectedIndex === index ? "bg-primary-50" : ""
-                }`}
-                onPress={() => setSelectedIndex(index)}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: selectedIndex === index }}
-                activeOpacity={0.85}
-              >
-                <Body
-                  tone={selectedIndex === index ? "primaryAccent" : "primary"}
-                  className={`text-base ${selectedIndex === index ? "font-semibold" : ""}`}
-                >
-                  {time}
-                </Body>
-                {selectedIndex === index && <Ionicons name="checkmark-circle" size={22} color="#00ABA9" />}
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable
+        className="flex-1 justify-end"
+        style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+        onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel="dismiss time picker"
+      >
+        <Pressable onPress={(e) => e.stopPropagation()}>
+          <View className="border-t border-primary" style={{ backgroundColor: colors.bg }}>
+            <View className="flex-row justify-between items-center px-4 py-4 border-b border-surface-border">
+              <TouchableOpacity onPress={onClose} accessibilityRole="button" accessibilityLabel="cancel">
+                <EyebrowTight tone="secondary">cancel</EyebrowTight>
               </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      </View>
+              <EyebrowTight tone="primary">select time</EyebrowTight>
+              <TouchableOpacity onPress={handleDone} accessibilityRole="button" accessibilityLabel="confirm time">
+                <EyebrowTight tone="primaryAccent">done</EyebrowTight>
+              </TouchableOpacity>
+            </View>
+            <ScrollView className="max-h-[300px]" showsVerticalScrollIndicator={false}>
+              {TIME_OPTIONS.map((time, index) => (
+                <TouchableOpacity
+                  key={time}
+                  className={`px-4 py-4 flex-row justify-between items-center border-b border-surface-border ${
+                    selectedIndex === index ? "bg-primary-50" : ""
+                  }`}
+                  onPress={() => setSelectedIndex(index)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: selectedIndex === index }}
+                  activeOpacity={0.85}
+                >
+                  <Label tone={selectedIndex === index ? "primaryAccent" : "primary"}>
+                    {time}
+                  </Label>
+                  {selectedIndex === index && <Ionicons name="checkmark-circle" size={22} color={colors.primary} />}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </Pressable>
+      </Pressable>
     </Modal>
   );
 };
@@ -108,27 +115,30 @@ const ToggleRow = ({
   iconColor: string;
   iconBackground: string;
   disabled?: boolean;
-}) => (
-    <View className={`flex-row items-center justify-between px-4 py-4 border-b border-surface-border ${disabled ? "opacity-50" : ""}`}>
-      <View className="flex-row items-center gap-3 flex-1">
-        <IconChip name={iconName} color={iconColor} background={iconBackground} />
-        <View className="flex-1">
-          <Body tone={disabled ? "muted" : "primary"} className="text-sm font-semibold">
-            {title}
-          </Body>
-          {subtitle && <Subtitle tone="secondary" className="mt-0.5">{subtitle}</Subtitle>}
+}) => {
+    const colors = useColors();
+    return (
+      <View className={`flex-row items-center justify-between px-4 py-4 border-b border-surface-border ${disabled ? "opacity-50" : ""}`}>
+        <View className="flex-row items-center gap-3 flex-1">
+          <IconChip name={iconName} color={iconColor} background={iconBackground} />
+          <View className="flex-1">
+            <Body tone={disabled ? "muted" : "primary"} className="text-sm font-semibold">
+              {title}
+            </Body>
+            {subtitle && <Subtitle tone="secondary" className="mt-0.5">{subtitle}</Subtitle>}
+          </View>
         </View>
+        <Switch
+          value={value}
+          onValueChange={onValueChange}
+          trackColor={{ false: colors.surfaceBorder, true: colors.primary }}
+          thumbColor={colors.surfaceRaised}
+          disabled={disabled}
+          accessibilityLabel={title}
+        />
       </View>
-      <Switch
-        value={value}
-        onValueChange={onValueChange}
-        trackColor={{ false: "#D8D8D8", true: "#00ABA9" }}
-        thumbColor="#FFFFFF"
-        disabled={disabled}
-        accessibilityLabel={title}
-      />
-    </View>
-);
+    );
+  };
 
 const QuietHoursButton = ({
   label,
@@ -140,29 +150,33 @@ const QuietHoursButton = ({
   time?: string;
   onPress: () => void;
   disabled?: boolean;
-}) => (
-    <TouchableOpacity
-      className={`flex-1 px-4 py-4 flex-row items-center justify-between border border-surface-border ${
-        disabled ? "bg-surface" : "bg-surface-raised"
-      }`}
-      onPress={onPress}
-      disabled={disabled}
-      accessibilityRole="button"
-      accessibilityLabel={`${label} ${time || "not set"}`}
-      activeOpacity={0.85}
-    >
-      <EyebrowTight tone={disabled ? "muted" : "primary"}>{label}</EyebrowTight>
-      <View className="flex-row items-center gap-2">
-        <Body tone={disabled ? "muted" : "secondary"} className="text-xs">
-          {time || "Not set"}
-        </Body>
-        <Ionicons name="time-outline" size={18} color={disabled ? "#8A8A8A" : "#5C5C5C"} />
-      </View>
-    </TouchableOpacity>
-);
+}) => {
+    const colors = useColors();
+    return (
+      <TouchableOpacity
+        className={`flex-1 px-4 py-4 flex-row items-center justify-between border border-surface-border ${
+          disabled ? "bg-surface" : "bg-surface-raised"
+        }`}
+        onPress={onPress}
+        disabled={disabled}
+        accessibilityRole="button"
+        accessibilityLabel={`${label} ${time || "not set"}`}
+        activeOpacity={0.85}
+      >
+        <EyebrowTight tone={disabled ? "muted" : "primary"}>{label}</EyebrowTight>
+        <View className="flex-row items-center gap-2">
+          <Body tone={disabled ? "muted" : "secondary"} className="text-xs">
+            {time || "Not set"}
+          </Body>
+          <Ionicons name="time-outline" size={18} color={disabled ? colors.txtMuted : colors.txtSecondary} />
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
 export default function NotificationSettingsScreen() {
   useAuthRedirect();
+  const colors = useColors();
   const { user } = useAuthStore();
   const {
     notifications,
@@ -339,7 +353,7 @@ export default function NotificationSettingsScreen() {
 
       <ScrollView
         className="flex-1"
-        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor="#00ABA9" />}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.primary} />}
       >
         <View className="px-5 py-4">
           <SectionLabel>general</SectionLabel>
@@ -350,7 +364,7 @@ export default function NotificationSettingsScreen() {
               value={localNotifications.pushEnabled}
               onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, pushEnabled: val }))}
               iconName="notifications"
-              iconColor="#00ABA9"
+              iconColor={colors.primary}
               iconBackground="#00ABA922"
             />
           </Card>
@@ -365,7 +379,7 @@ export default function NotificationSettingsScreen() {
               value={localNotifications.announcementsEnabled}
               onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, announcementsEnabled: val }))}
               iconName="megaphone"
-              iconColor="#F09609"
+              iconColor={colors.warning}
               iconBackground="#F0960922"
               disabled={!localNotifications.pushEnabled}
             />
@@ -375,7 +389,7 @@ export default function NotificationSettingsScreen() {
               value={localNotifications.leagueAnnouncementsEnabled}
               onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, leagueAnnouncementsEnabled: val }))}
               iconName="trophy"
-              iconColor="#1BA1E2"
+              iconColor={colors.secondary}
               iconBackground="#1BA1E222"
               disabled={!localNotifications.pushEnabled || !localNotifications.announcementsEnabled}
             />
@@ -385,7 +399,7 @@ export default function NotificationSettingsScreen() {
               value={localNotifications.gameAnnouncementsEnabled}
               onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, gameAnnouncementsEnabled: val }))}
               iconName="calendar"
-              iconColor="#F09609"
+              iconColor={colors.warning}
               iconBackground="#F0960922"
               disabled={!localNotifications.pushEnabled || !localNotifications.announcementsEnabled}
             />
@@ -395,7 +409,7 @@ export default function NotificationSettingsScreen() {
               value={localNotifications.padaOrgAnnouncementsEnabled}
               onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, padaOrgAnnouncementsEnabled: val }))}
               iconName="business"
-              iconColor="#A200FF"
+              iconColor={colors.purple}
               iconBackground="#A200FF22"
               disabled={!localNotifications.pushEnabled || !localNotifications.announcementsEnabled}
             />
@@ -411,7 +425,7 @@ export default function NotificationSettingsScreen() {
               value={localNotifications.scoreNotificationsEnabled}
               onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, scoreNotificationsEnabled: val }))}
               iconName="ribbon"
-              iconColor="#339933"
+              iconColor={colors.success}
               iconBackground="#33993322"
               disabled={!localNotifications.pushEnabled}
             />
@@ -421,7 +435,7 @@ export default function NotificationSettingsScreen() {
               value={localNotifications.scheduleRemindersEnabled}
               onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, scheduleRemindersEnabled: val }))}
               iconName="alarm"
-              iconColor="#F09609"
+              iconColor={colors.warning}
               iconBackground="#F0960922"
               disabled={!localNotifications.pushEnabled}
             />
@@ -475,7 +489,7 @@ export default function NotificationSettingsScreen() {
               {hiddenCount > 0 ? (
                 <>
                   <View className="flex-row items-center gap-3">
-                    <IconChip name="eye-off" color="#E51400" background="#E5140022" />
+                    <IconChip name="eye-off" color={colors.danger} background={`${colors.danger}22`} />
                     <View className="flex-1">
                       <Body tone="primary" className="text-sm font-semibold">
                         {hiddenCount} hidden
@@ -497,7 +511,7 @@ export default function NotificationSettingsScreen() {
                 </>
               ) : (
                 <View className="flex-row items-center gap-3">
-                  <IconChip name="checkmark-circle" color="#339933" background="#33993322" />
+                  <IconChip name="checkmark-circle" color={colors.success} background={`${colors.success}22`} />
                   <Body tone="secondary" className="text-sm">
                     No hidden announcements
                   </Body>
@@ -516,7 +530,7 @@ export default function NotificationSettingsScreen() {
             accessibilityLabel="send test notification"
             activeOpacity={0.85}
           >
-            <Ionicons name="notifications" size={20} color="#00ABA9" />
+            <Ionicons name="notifications" size={20} color={colors.primary} />
             <EyebrowTight tone="primaryAccent">send test notification</EyebrowTight>
           </TouchableOpacity>
         </View>

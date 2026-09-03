@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useTeam, useEvents } from "@/hooks/useApi";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
+import { useColors } from "@/lib/tokens";
 import type { TeamMember, Event } from "@/types";
 import { ReadOnlyBanner } from "@/components/ui/ReadOnlyBanner";
 import { Avatar } from "@/components/ui/Avatar";
@@ -14,7 +15,7 @@ import { ListRow } from "@/components/ui/ListRow";
 import { PageHeader } from "@/components/ui/Page";
 import { LoaderBar } from "@/components/ui/LoaderBar";
 import { Pivot, PivotContent } from "@/components/ui/Pivot";
-import { Title, Eyebrow, EyebrowTight, Body } from "@/components/ui";
+import { TeamName, Score, Title, Eyebrow, EyebrowTight, Body } from "@/components/ui";
 import { format, parseISO } from "date-fns";
 import { RefreshControl } from "react-native";
 
@@ -22,6 +23,7 @@ type TeamTab = "roster" | "schedule";
 
 export default function TeamDetailScreen() {
   useAuthRedirect();
+  const colors = useColors();
   const { id, tab } = useLocalSearchParams<{ id: string; tab?: string }>();
   const { data: team, isLoading: teamLoading, refetch: refetchTeam } = useTeam(id);
   const { data: events = [], refetch: refetchEvents } = useEvents({ teamId: id });
@@ -77,15 +79,15 @@ export default function TeamDetailScreen() {
         right={team.season ? <Badge label={team.season} variant="primary" /> : undefined}
       />
 
-      <View className="px-5 pt-4 pb-5 bg-primary border-b border-primary">
-        <Title tone="inverse" size="md">
+      <View className="px-5 pt-4 pb-5 border-b border-primary" style={{ backgroundColor: colors.primary }}>
+        <TeamName style={{ color: colors.txtInverse }} size="md">
           {team.name.toLowerCase()}
-        </Title>
+        </TeamName>
         <View className="flex-row items-center justify-between mt-1">
-          <Eyebrow tone="inverse">{team.division}</Eyebrow>
+          <Eyebrow style={{ color: colors.txtInverse }}>{team.division}</Eyebrow>
           {recordText && (
-            <View className="bg-white px-3 py-1">
-              <EyebrowTight tone="primary">{recordText}</EyebrowTight>
+            <View className="px-3 py-1" style={{ backgroundColor: colors.surfaceRaised }}>
+              <EyebrowTight style={{ color: colors.primary }}>{recordText}</EyebrowTight>
             </View>
           )}
         </View>
@@ -95,27 +97,30 @@ export default function TeamDetailScreen() {
 
       {nextEvent && (
         <TouchableOpacity
-          className="mx-5 mb-3 bg-danger p-4 flex-row items-center gap-4"
+          className="mx-5 mb-3 p-4 flex-row items-center gap-4"
+          style={{ backgroundColor: colors.danger }}
           onPress={() => router.push(`/events/${nextEvent.id}`)}
           activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel={`${nextEvent.status === "in_progress" ? "live now" : "next match"} vs ${nextEvent.opponentName || "TBD"}`}
         >
-          <View className="w-12 h-12 bg-white items-center justify-center">
-            <Ionicons name="flash" size={24} color="#E51400" />
+          <View className="w-12 h-12 items-center justify-center" style={{ backgroundColor: colors.surfaceRaised }}>
+            <Ionicons name="flash" size={24} color={colors.danger} />
           </View>
           <View className="flex-1">
-            <Eyebrow tone="inverse" className="text-[10px] tracking-[0.2em]">
+            <Eyebrow style={{ color: colors.txtInverse }} className="text-[10px] tracking-[0.2em]">
               {nextEvent.status === "in_progress" ? "live now" : "next match"}
             </Eyebrow>
-            <Body tone="inverse" className="text-base font-semibold mt-0.5" numberOfLines={1}>
+            <Body style={{ color: colors.txtInverse }} className="text-base font-semibold mt-0.5" numberOfLines={1}>
               vs {nextEvent.opponentName || "TBD"}
             </Body>
             {nextEvent.score && (
-              <Body tone="inverse" className="text-xs font-semibold mt-0.5">
+              <Body style={{ color: colors.txtInverse }} className="text-xs font-semibold mt-0.5">
                 live: {nextEvent.score.homeScore} – {nextEvent.score.awayScore}
               </Body>
             )}
           </View>
-          <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
+          <Ionicons name="chevron-forward" size={18} color={colors.txtInverse} />
         </TouchableOpacity>
       )}
 
@@ -134,7 +139,7 @@ export default function TeamDetailScreen() {
           contentContainerClassName="px-5 py-4"
           data={(activeTab === "roster" ? team.roster ?? [] : events) as any[]}
           keyExtractor={(item) => item.id}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00ABA9" />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
           renderItem={({ item }) => {
             if (activeTab === "roster") {
               const member = item as TeamMember;
@@ -146,14 +151,17 @@ export default function TeamDetailScreen() {
                         name={`${member.firstName} ${member.lastName}`}
                         uri={member.avatarUrl}
                         size="md"
-                        accent="#00ABA9"
+                        accent={colors.primary}
                       />
                     }
                     title={`${member.firstName} ${member.lastName}`}
                     subtitle={member.role}
                     right={
                       member.jerseyNumber != null ? (
-                        <View className="w-10 h-10 bg-surface-overlay items-center justify-center border border-surface-border">
+                        <View
+                          className="w-11 h-11 items-center justify-center border border-surface-border"
+                          style={{ backgroundColor: colors.surfaceOverlay }}
+                        >
                           <Body tone="primary" className="font-semibold">{member.jerseyNumber}</Body>
                         </View>
                       ) : undefined
@@ -185,14 +193,17 @@ export default function TeamDetailScreen() {
                     </Body>
 
                     {ev.score && (
-                      <View className="bg-surface-overlay border border-surface-border p-3 flex-row justify-between items-center">
+                      <View
+                        className="border border-surface-border p-3 flex-row justify-between items-center"
+                        style={{ backgroundColor: colors.surfaceOverlay }}
+                      >
                         <Body tone="primary" className="font-semibold text-sm" numberOfLines={1}>
                           {ev.score.homeTeamName || "Home"}
                         </Body>
                         <View className="flex-row items-center gap-3">
-                          <Title tone="primary" size="sm">{ev.score.homeScore}</Title>
+                          <Score tone="primary" size="sm">{ev.score.homeScore}</Score>
                           <Body tone="muted">—</Body>
-                          <Title tone="primary" size="sm">{ev.score.awayScore}</Title>
+                          <Score tone="primary" size="sm">{ev.score.awayScore}</Score>
                         </View>
                         <Body tone="secondary" className="text-xs font-semibold" numberOfLines={1}>
                           {ev.score.awayTeamName || "Away"}
