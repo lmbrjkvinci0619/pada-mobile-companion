@@ -198,7 +198,7 @@ export default function CreateAnnouncementScreen() {
     return (
       <SafeAreaView className="flex-1 bg-bg items-center justify-center px-6">
         <Ionicons name="lock-closed" size={48} color={colors.danger} />
-        <EyebrowTight tone="primary" className="text-xl mt-4 text-center">
+        <EyebrowTight tone="primary" className="mt-4 text-center">
           permission required
         </EyebrowTight>
         <Body tone="muted" className="text-center mt-2">

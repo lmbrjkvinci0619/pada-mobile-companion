@@ -79,7 +79,7 @@ export default function TeamDetailScreen() {
         right={team.season ? <Badge label={team.season} variant="primary" /> : undefined}
       />
 
-      <View className="px-5 pt-4 pb-5 border-b border-primary" style={{ backgroundColor: colors.primary }}>
+      <View className="px-5 pt-4 pb-5" style={{ backgroundColor: colors.primary }}>
         <TeamName style={{ color: colors.txtInverse }} size="md">
           {team.name.toLowerCase()}
         </TeamName>

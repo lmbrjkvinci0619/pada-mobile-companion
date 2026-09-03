@@ -61,6 +61,7 @@ export const Avatar = React.memo(function Avatar({
   const { container, text } = sizeMap[size];
   const colors = useColors();
   const borderColor = colors.surfaceBorder;
+  const borderStyle = border ? { borderColor, borderWidth: 2 } : undefined;
 
   const commonClasses = cn(
     container,
@@ -74,7 +75,7 @@ export const Avatar = React.memo(function Avatar({
       <Image
         source={{ uri }}
         className={commonClasses}
-        style={border ? { borderColor, borderWidth: 1 } : undefined}
+        style={borderStyle}
         transition={200}
         contentFit="cover"
         cachePolicy="disk"
@@ -91,7 +92,7 @@ export const Avatar = React.memo(function Avatar({
   return (
     <View
       className={cn(commonClasses, "items-center justify-center")}
-      style={[{ backgroundColor: bg }, border ? { borderColor, borderWidth: 1 } : undefined]}
+      style={[{ backgroundColor: bg }, borderStyle]}
     >
       <Label tone="inverse" className={cn(text)}>
         {getInitials(name)}

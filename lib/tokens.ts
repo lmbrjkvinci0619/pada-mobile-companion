@@ -53,7 +53,7 @@ export const palette = {
     warning: "#FAAA24",
     danger: "#FF3322",
     magenta: "#FF3399",
-    purple: "#C155FF",
+    purple: "#D08AFF",
     black: "#000000",
     white: "#FFFFFF",
     tilePrimary: "#26C6C4",

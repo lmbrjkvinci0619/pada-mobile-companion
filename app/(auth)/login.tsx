@@ -55,10 +55,10 @@ export default function LoginScreen() {
       >
         <View className="items-center mb-10">
           <View
-            className="w-20 h-20 items-center justify-center mb-5"
+            className="w-24 h-24 items-center justify-center mb-6"
             style={{ backgroundColor: colors.primary }}
           >
-            <Title style={{ color: colors.txtInverse }} size="lg" className="text-[44px] leading-none">
+            <Title style={{ color: colors.txtInverse }} className="text-[64px] font-light leading-none">
               p
             </Title>
           </View>

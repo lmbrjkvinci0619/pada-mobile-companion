@@ -143,8 +143,8 @@ export default function ScheduleScreen() {
       <View className="px-5 pt-3 pb-2">
         <Segmented
           options={[
-            { key: "day", label: "Day" },
-            { key: "list", label: "All Events" },
+            { key: "day", label: "day" },
+            { key: "list", label: "all events" },
           ]}
           value={view}
           onChange={setView}

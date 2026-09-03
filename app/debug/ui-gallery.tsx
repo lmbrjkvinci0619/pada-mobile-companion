@@ -24,7 +24,7 @@ export default function UIGallery() {
     <SafeAreaView className="flex-1 bg-bg">
       <Stack.Screen options={{ title: "UI Gallery", headerShadowVisible: false }} />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <PivotPanorama title="ui gallery" subtitle="padahub metro" />
+        <PivotPanorama title="ui gallery" subtitle="padahub · metro" />
 
         <View className="px-5 pb-12">
           <CardSection title="buttons" className="mb-8 mt-4">
