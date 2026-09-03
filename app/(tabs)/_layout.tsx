@@ -78,6 +78,7 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: "Home",
+          tabBarAccessibilityLabel: "home",
           tabBarIcon: renderHomeIcon,
         }}
       />
@@ -85,6 +86,7 @@ export default function TabsLayout() {
         name="registrations"
         options={{
           title: "My Registrations",
+          tabBarAccessibilityLabel: "my registrations",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="document-text" size={size} color={color} />
           ),
@@ -94,6 +96,7 @@ export default function TabsLayout() {
         name="teams"
         options={{
           title: "Teams",
+          tabBarAccessibilityLabel: "my teams",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="people" size={size} color={color} />
           ),
@@ -103,6 +106,7 @@ export default function TabsLayout() {
         name="schedule"
         options={{
           title: "Schedule",
+          tabBarAccessibilityLabel: "schedule",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar" size={size} color={color} />
           ),
@@ -112,6 +116,7 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: "Profile",
+          tabBarAccessibilityLabel: "profile",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-circle" size={size} color={color} />
           ),

@@ -24,7 +24,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { LoaderBar } from "@/components/ui/LoaderBar";
 import { PagerDots } from "@/components/ui/PagerDots";
 import { DonateFooter } from "@/components/ui/DonateFooter";
-import { Section, Eyebrow, Body, Subtitle, Label } from "@/components/ui";
+import { Title, Body, Eyebrow, Subtitle, Label } from "@/components/ui";
 import type { Event, Article } from "@/types";
 import { EXTERNAL_URLS, openUrl } from "@/lib/urlUtils";
 
@@ -251,7 +251,6 @@ export default function HomeScreen() {
               uri={user?.avatarUrl}
               name={user ? `${user.firstName} ${user.lastName}` : "Guest"}
               size="md"
-              border
             />
           </TouchableOpacity>
         }
@@ -267,9 +266,9 @@ export default function HomeScreen() {
           )}
           <ScrollView showsVerticalScrollIndicator={false} className="flex-1" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00ABA9" />}>
             <View className="mb-4">
-              <Section numberOfLines={1}>
+              <Title numberOfLines={1} size="sm" className="text-[26px]">
                 hello, {greeting}
-              </Section>
+              </Title>
             </View>
 
             {!isAuthenticated && (

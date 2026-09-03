@@ -20,7 +20,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { PageHeader, SectionLabel } from "@/components/ui/Page";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Hero, Eyebrow, Body, EyebrowTight, Subtitle } from "@/components/ui";
+import { Title, Eyebrow, Body, EyebrowTight, Subtitle } from "@/components/ui";
 import { openUrl } from "@/lib/urlUtils";
 import { format, parseISO } from "date-fns";
 import type { ScheduleExport } from "@/types";
@@ -126,9 +126,9 @@ export default function EventDetailScreen() {
           <Eyebrow tone="inverse" className="text-[10px] tracking-[0.2em]">
             {event.type}
           </Eyebrow>
-          <Hero tone="inverse" className="text-2xl mt-1">
-            {event.title}
-          </Hero>
+          <Title tone="inverse" size="sm" className="text-[26px] mt-1">
+            {event.title.toLowerCase()}
+          </Title>
           <Body tone="inverse" className="text-sm mt-2 font-normal">
             {event.startDate ? format(parseISO(event.startDate), "EEEE, MMMM d 'at' h:mm a") : "date tbd"}
           </Body>
@@ -264,9 +264,9 @@ function ScoreRow({ name, score, accent }: { name: string; score: number; accent
       <Body tone="primary" className="text-base font-semibold flex-1">
         {name}
       </Body>
-      <Hero tone={accent ? "primaryAccent" : "primary"} className="text-3xl">
+      <Title tone={accent ? "primaryAccent" : "primary"} size="md" className="text-[32px]">
         {score}
-      </Hero>
+      </Title>
     </View>
   );
 }

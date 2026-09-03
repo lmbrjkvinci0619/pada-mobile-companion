@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ListRow } from "@/components/ui/ListRow";
 import { PageHeader, SectionLabel, IconChip } from "@/components/ui/Page";
-import { Section, Body, EyebrowTight } from "@/components/ui";
+import { Title, Body, EyebrowTight } from "@/components/ui";
 import { EXTERNAL_URLS, openUrl } from "@/lib/urlUtils";
 
 export default function UserSettingsScreen() {
@@ -83,7 +83,6 @@ export default function UserSettingsScreen() {
             name={`${user?.firstName} ${user?.lastName}`}
             uri={user?.avatarUrl}
             size="xl"
-            border
             accent="#00ABA9"
           />
 
@@ -109,9 +108,9 @@ export default function UserSettingsScreen() {
               accessibilityRole="button"
               accessibilityLabel="edit profile"
             >
-              <Section tone="primary" className="text-xl">
-                {localDisplayName || `${user?.firstName} ${user?.lastName}`}
-              </Section>
+              <Title tone="primary" size="sm" className="text-[20px]">
+                {(localDisplayName || `${user?.firstName} ${user?.lastName}`).toLowerCase()}
+              </Title>
               <View className="flex-row items-center justify-center gap-1 mt-1">
                 <EyebrowTight tone="primaryAccent" className="tracking-[0.18em]">
                   edit profile

@@ -9,7 +9,7 @@ import { getRegistrationUrl, openUrl } from "@/lib/urlUtils";
 import { PageHeader } from "@/components/ui/Page";
 import { Button } from "@/components/ui/Button";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Body, EyebrowTight, Section } from "@/components/ui";
+import { Body, EyebrowTight, Title } from "@/components/ui";
 import type { Registration } from "@/types";
 
 function resolveUrlForRegistration(reg: Registration): string {
@@ -93,9 +93,9 @@ export default function RegistrationDetailScreen() {
               {registration.organizationName}
             </Body>
           )}
-          <Section tone="primary" size="sm" className="text-center">
+          <Title tone="primary" size="sm" className="text-center">
             opening registration in your browser...
-          </Section>
+          </Title>
           <Body tone="muted" className="text-sm text-center">
             The Pada.org registration page is launching outside this app. After you finish, return here to continue browsing PADA.
           </Body>

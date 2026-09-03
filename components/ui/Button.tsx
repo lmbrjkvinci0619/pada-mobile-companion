@@ -35,9 +35,9 @@ const containerSize: Record<Size, string> = {
 };
 
 const textSize: Record<Size, string> = {
-  sm: "text-xs",
-  md: "text-sm",
-  lg: "text-base",
+  sm: "text-[11px]",
+  md: "text-xs",
+  lg: "text-sm",
 };
 
 export const Button = React.memo(function Button({
@@ -50,10 +50,16 @@ export const Button = React.memo(function Button({
   className,
   ...props
 }: ButtonProps) {
+  const isFilled = variant === "primary" || variant === "danger" || variant === "success";
+  const textTone: "inverse" | "primary" | "primaryAccent" =
+    isFilled ? "inverse" : variant === "ghost" || variant === "outline" ? "primaryAccent" : "primary";
+
   return (
     <TouchableOpacity
       {...props}
       disabled={disabled || loading}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: !!(disabled || loading), busy: loading }}
       className={cn(
         "flex-row items-center justify-center gap-2",
         variantContainer[variant],
@@ -63,29 +69,19 @@ export const Button = React.memo(function Button({
       )}
     >
       {loading ? (
-        <ActivityIndicator
-          size="small"
-          color={
-            variant === "primary" || variant === "danger" || variant === "success"
-              ? "#FFFFFF"
-              : "#00ABA9"
-          }
-        />
+        <ActivityIndicator size="small" color={isFilled ? "#FFFFFF" : "#00ABA9"} />
+      ) : icon ? (
+        <View>{icon}</View>
+      ) : null}
+      {loading ? (
+        <Label tone={textTone} className={cn(textSize[size])}>
+          {label || " "}
+        </Label>
       ) : (
-        icon ? <View>{icon}</View> : null
+        <Label tone={textTone} className={cn(textSize[size])}>
+          {label}
+        </Label>
       )}
-      <Label
-        tone={
-          variant === "primary" || variant === "danger" || variant === "success"
-            ? "inverse"
-            : variant === "ghost" || variant === "outline"
-              ? "primaryAccent"
-              : "primary"
-        }
-        className={cn(textSize[size])}
-      >
-        {label}
-      </Label>
     </TouchableOpacity>
   );
 });

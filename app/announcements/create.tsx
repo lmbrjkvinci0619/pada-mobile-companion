@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ChipGroup } from "@/components/ui/ChipGroup";
 import { PageHeader, SectionLabel, IconChip } from "@/components/ui/Page";
-import { Body, Eyebrow, EyebrowTight, Hero } from "@/components/ui";
+import { Body, Eyebrow, EyebrowTight, Title } from "@/components/ui";
 import { createAnnouncement } from "@/services/announcements";
 import { fetchTeams } from "@/services/topscore";
 import { AnnouncementTargetType, AnnouncementType, Team } from "@/types";
@@ -233,9 +233,9 @@ export default function CreateAnnouncementScreen() {
           {showPreview && (
             <View className="bg-primary p-4 mb-6">
               <EyebrowTight tone="inverse">preview</EyebrowTight>
-              <Hero tone="inverse" size="md" className="mt-1">
-                {title || "Untitled"}
-              </Hero>
+              <Title tone="inverse" size="md" className="mt-1">
+                {(title || "untitled").toLowerCase()}
+              </Title>
               <Body tone="inverse" className="text-sm mt-2">
                 {content || "No content"}
               </Body>

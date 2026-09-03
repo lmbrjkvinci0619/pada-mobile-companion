@@ -24,6 +24,8 @@ export const ReadOnlyBanner = React.memo(function ReadOnlyBanner({
           <TouchableOpacity
             onPress={() => Linking.openURL(PADA_ORG_URL)}
             activeOpacity={0.7}
+            accessibilityRole="link"
+            accessibilityLabel="open Pada.org"
           >
             <Eyebrow tone="inverse" className="mt-1 underline">
               Launch Pada.org

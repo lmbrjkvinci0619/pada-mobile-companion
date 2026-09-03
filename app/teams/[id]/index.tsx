@@ -14,7 +14,7 @@ import { ListRow } from "@/components/ui/ListRow";
 import { PageHeader } from "@/components/ui/Page";
 import { LoaderBar } from "@/components/ui/LoaderBar";
 import { Pivot, PivotContent } from "@/components/ui/Pivot";
-import { Hero, Eyebrow, EyebrowTight, Body, Section } from "@/components/ui";
+import { Title, Eyebrow, EyebrowTight, Body } from "@/components/ui";
 import { format, parseISO } from "date-fns";
 import { RefreshControl } from "react-native";
 
@@ -78,9 +78,9 @@ export default function TeamDetailScreen() {
       />
 
       <View className="px-5 pt-4 pb-5 bg-primary border-b border-primary">
-        <Hero tone="inverse" size="md">
-          {team.name}
-        </Hero>
+        <Title tone="inverse" size="md">
+          {team.name.toLowerCase()}
+        </Title>
         <View className="flex-row items-center justify-between mt-1">
           <Eyebrow tone="inverse">{team.division}</Eyebrow>
           {recordText && (
@@ -190,9 +190,9 @@ export default function TeamDetailScreen() {
                           {ev.score.homeTeamName || "Home"}
                         </Body>
                         <View className="flex-row items-center gap-3">
-                          <Hero tone="primary" size="sm">{ev.score.homeScore}</Hero>
+                          <Title tone="primary" size="sm">{ev.score.homeScore}</Title>
                           <Body tone="muted">—</Body>
-                          <Hero tone="primary" size="sm">{ev.score.awayScore}</Hero>
+                          <Title tone="primary" size="sm">{ev.score.awayScore}</Title>
                         </View>
                         <Body tone="secondary" className="text-xs font-semibold" numberOfLines={1}>
                           {ev.score.awayTeamName || "Away"}

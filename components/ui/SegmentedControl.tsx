@@ -30,15 +30,15 @@ export function Segmented<T extends string>({
             key={opt.key}
             onPress={() => onChange(opt.key)}
             activeOpacity={0.85}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: active }}
             className={cn(
               "flex-1 py-3 items-center justify-center",
               active ? "bg-primary" : "bg-surface",
               idx < options.length - 1 && "border-r border-surface-border",
             )}
           >
-            <Label tone={active ? "inverse" : "secondary"}>
-              {opt.label}
-            </Label>
+            <Label tone={active ? "inverse" : "secondary"}>{opt.label}</Label>
           </TouchableOpacity>
         );
       })}

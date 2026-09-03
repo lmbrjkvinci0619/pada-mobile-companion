@@ -31,12 +31,19 @@ export function PageHeader({
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center flex-1">
           {back && (
-            <TouchableOpacity onPress={handleBack} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="back" hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3 w-10 h-10 items-center justify-center">
+            <TouchableOpacity
+              onPress={handleBack}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="back"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              className="mr-3 w-10 h-10 items-center justify-center"
+            >
               <Ionicons name="chevron-back" size={26} color="#000000" />
             </TouchableOpacity>
           )}
           <View className="flex-1">
-            <Section numberOfLines={1} className={large ? "text-[40px]" : undefined}>
+            <Section numberOfLines={1} className={large ? "text-[34px]" : undefined}>
               {title}
             </Section>
             {subtitle && (
@@ -89,8 +96,8 @@ export function SectionLabel({
   return (
     <View className={cn("flex-row items-center justify-between mb-3", className)}>
       <View className="flex-row items-center gap-2">
-        <View className="w-1 h-3.5 bg-primary" />
-      <Eyebrow tone="primary">{children}</Eyebrow>
+        <View className="h-1 w-4 bg-primary" />
+        <Eyebrow tone="primary">{children}</Eyebrow>
       </View>
       {action}
     </View>

@@ -13,7 +13,7 @@ import { PageHeader, SectionLabel, IconChip } from "@/components/ui/Page";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Hero, EyebrowTight, Body, MetaSentence } from "@/components/ui";
+import { Title, EyebrowTight, Body, MetaSentence } from "@/components/ui";
 import type { Announcement, AnnouncementType } from "@/types";
 
 const TYPE_ACCENTS: Record<AnnouncementType, string> = {
@@ -102,9 +102,9 @@ export default function AnnouncementDetail() {
             <Badge label={typeLabel} accent={accent} />
             {announcement.isUrgent && <Badge label="Urgent" variant="danger" />}
           </View>
-          <Hero tone="primary" size="md" className="mb-2">
-            {announcement.title}
-          </Hero>
+          <Title tone="primary" size="md" className="mb-2">
+            {announcement.title.toLowerCase()}
+          </Title>
           <MetaSentence tone="secondary">
             By {announcement.authorName} · {format(new Date(announcement.createdAt), "MMM d, yyyy 'at' h:mm a")}
           </MetaSentence>

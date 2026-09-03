@@ -2,7 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { cn } from "@/utils/cn";
-import { Section, Body } from "./Typography";
+import { Section, Body as TBody } from "./Typography";
 
 interface EmptyStateProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -28,7 +28,12 @@ export const EmptyState = React.memo(function EmptyState({
 }: EmptyStateProps) {
   const color = ACCENT_ICON[accent];
   return (
-    <View className={cn("bg-surface border border-surface-border py-10 px-6 items-center gap-3", className)}>
+    <View
+      className={cn(
+        "bg-surface border border-surface-border py-10 px-6 items-center gap-3",
+        className,
+      )}
+    >
       <View className="w-12 h-12 items-center justify-center border border-surface-border bg-surface-raised">
         <Ionicons name={icon} size={24} color={color} />
       </View>
@@ -36,9 +41,9 @@ export const EmptyState = React.memo(function EmptyState({
         {title}
       </Section>
       {subtitle && (
-        <Body tone="secondary" className="text-sm text-center max-w-[260px]">
+        <TBody tone="secondary" className="text-sm text-center max-w-[260px]">
           {subtitle}
-        </Body>
+        </TBody>
       )}
     </View>
   );

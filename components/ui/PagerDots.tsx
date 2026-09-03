@@ -7,10 +7,19 @@ interface PagerDotsProps extends ViewProps {
   active: number;
 }
 
-export const PagerDots = React.memo(function PagerDots({ count, active, className, ...rest }: PagerDotsProps) {
+export const PagerDots = React.memo(function PagerDots({
+  count,
+  active,
+  className,
+  ...rest
+}: PagerDotsProps) {
   if (count <= 1) return null;
   return (
-    <View {...rest} className={cn("flex-row items-center justify-center gap-1.5 py-3", className)} accessibilityRole="tablist">
+    <View
+      {...rest}
+      className={cn("flex-row items-center justify-center gap-1.5 py-3", className)}
+      accessibilityRole="tablist"
+    >
       {Array.from({ length: count }).map((_, i) => {
         const isActive = i === active;
         return (

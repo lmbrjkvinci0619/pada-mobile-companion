@@ -23,7 +23,10 @@ export const LoaderBar = React.memo(function LoaderBar({ visible = true }: { vis
   const width = x.interpolate({ inputRange: [0, 1], outputRange: ["-40%", "140%"] });
 
   return (
-    <View className="absolute top-0 left-0 right-0 h-[3px] bg-surface-overlay z-50 overflow-hidden" accessibilityRole="progressbar">
+    <View
+      className="absolute top-0 left-0 right-0 h-[3px] bg-surface-overlay z-50 overflow-hidden"
+      accessibilityRole="progressbar"
+    >
       <Animated.View
         className="h-full bg-primary"
         style={{ width: "40%", transform: [{ translateX: width }] }}

@@ -12,7 +12,7 @@ import { ReadOnlyBanner } from "@/components/ui/ReadOnlyBanner";
 import { PageHeader } from "@/components/ui/Page";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Body, Eyebrow, Subtitle, EyebrowTight } from "@/components/ui";
+import { Body, Eyebrow, Subtitle, EyebrowTight, Title } from "@/components/ui";
 import type { Team } from "@/types";
 
 const TEAM_ACCENTS = ["#00ABA9", "#1BA1E2", "#339933", "#F09609", "#D80073", "#A200FF"];
@@ -34,9 +34,9 @@ const TeamCard = React.memo(function TeamCard({ team, onPress }: { team: Team; o
               <Eyebrow tone="inverse" className="text-[10px] tracking-[0.2em]">
                 {team.sport ?? "Ultimate"}
               </Eyebrow>
-              <Body tone="inverse" className="text-2xl font-light lowercase mt-1" numberOfLines={1}>
-                {team.name}
-              </Body>
+              <Title tone="inverse" size="sm" className="text-[22px] mt-1" numberOfLines={1}>
+                {team.name.toLowerCase()}
+              </Title>
             </View>
             {team.season && (
               <View className="bg-white px-3 py-0.5">

@@ -59,6 +59,8 @@ module.exports = {
           muted:     "var(--txt-muted)",
           inverse:   "var(--txt-inverse)",
         },
+        refresh:   "var(--refresh)",
+        indicator: "var(--indicator)",
       },
       fontFamily: {
         sans:  ["Inter_400Regular", "Segoe UI", "System"],

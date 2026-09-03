@@ -10,7 +10,7 @@ import { ListRow } from "@/components/ui/ListRow";
 import { Tile, TileGrid, TileCell } from "@/components/ui/Tile";
 import { PageHeader, IconChip, SectionLabel } from "@/components/ui/Page";
 import { DonateFooter } from "@/components/ui/DonateFooter";
-import { Section, Body, Eyebrow, Subtitle, EyebrowTight } from "@/components/ui";
+import { Title, Body, Eyebrow, Subtitle, EyebrowTight } from "@/components/ui";
 import { Ionicons } from "@expo/vector-icons";
 import { EXTERNAL_URLS, openUrl } from "@/lib/urlUtils";
 
@@ -54,15 +54,14 @@ export default function ProfileScreen() {
               name={fullName}
               uri={user?.avatarUrl}
               size="xl"
-              border
               accent="#00ABA9"
             />
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => router.push("/settings/profile")} className="mt-4 items-center" accessibilityRole="button" accessibilityLabel="edit profile">
-            <Section numberOfLines={1} className="text-3xl">
-              {fullName}
-            </Section>
+            <Title numberOfLines={1} size="sm" className="text-[24px]">
+              {fullName.toLowerCase()}
+            </Title>
             <View className="flex-row items-center justify-center gap-2 mt-1">
               <Body tone="secondary" className="text-sm">{user?.email}</Body>
               <Ionicons name="pencil" size={14} color="#00ABA9" />

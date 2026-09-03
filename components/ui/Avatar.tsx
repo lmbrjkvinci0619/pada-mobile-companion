@@ -2,7 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import { Image } from "expo-image";
 import { cn } from "@/utils/cn";
-import { Body } from "./Typography";
+import { Label } from "./Typography";
 
 interface AvatarProps {
   uri?: string;
@@ -14,19 +14,21 @@ interface AvatarProps {
 }
 
 const sizeMap = {
-  xs: { container: "w-7 h-7",  text: "text-xs" },
-  sm: { container: "w-9 h-9",  text: "text-sm" },
-  md: { container: "w-12 h-12", text: "text-base" },
-  lg: { container: "w-16 h-16", text: "text-xl" },
-  xl: { container: "w-24 h-24", text: "text-3xl" },
+  xs: { container: "w-7 h-7",   text: "text-[10px]" },
+  sm: { container: "w-9 h-9",   text: "text-xs" },
+  md: { container: "w-12 h-12", text: "text-sm" },
+  lg: { container: "w-16 h-16", text: "text-lg" },
+  xl: { container: "w-24 h-24", text: "text-2xl" },
 };
 
 function getInitials(name?: string): string {
   if (!name) return "?";
-  const parts = name.trim().split(" ");
-  return parts.length >= 2
-    ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
-    : name[0].toUpperCase();
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 0 || !parts[0]) return "?";
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  }
+  return parts[0][0].toUpperCase();
 }
 
 const FALLBACK_FILLS = [
@@ -50,7 +52,7 @@ export const Avatar = React.memo(function Avatar({
   name,
   size = "md",
   className,
-  border = false,
+  border = true,
   accent,
 }: AvatarProps) {
   const { container, text } = sizeMap[size];
@@ -82,9 +84,9 @@ export const Avatar = React.memo(function Avatar({
       className={cn(commonClasses, "items-center justify-center")}
       style={{ backgroundColor: accent ?? seedColor(name) }}
     >
-      <Body tone="inverse" className={cn("font-semibold", text)}>
+      <Label tone="inverse" className={cn(text)}>
         {getInitials(name)}
-      </Body>
+      </Label>
     </View>
   );
 });

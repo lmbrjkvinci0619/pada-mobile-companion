@@ -22,11 +22,11 @@ interface BadgeProps {
 
 const containerVariant: Record<Variant, string> = {
   default:   "bg-surface-overlay border border-surface-border",
-  primary:   "bg-surface-overlay border border-primary text-primary",
-  secondary: "bg-surface-overlay border border-secondary text-secondary",
-  success:   "bg-surface-overlay border border-success text-success",
-  warning:   "bg-surface-overlay border border-warning text-warning",
-  danger:    "bg-surface-overlay border border-danger text-danger",
+  primary:   "bg-surface-overlay border border-primary",
+  secondary: "bg-surface-overlay border border-secondary",
+  success:   "bg-surface-overlay border border-success",
+  warning:   "bg-surface-overlay border border-warning",
+  danger:    "bg-surface-overlay border border-danger",
   ghost:     "bg-transparent border border-surface-border",
 };
 
@@ -38,6 +38,12 @@ export const Badge = React.memo(function Badge({
   accent,
 }: BadgeProps) {
   const isAccent = !!accent;
+  const tone =
+    isAccent
+      ? "primary"
+      : variant === "default" || variant === "ghost"
+        ? "secondary"
+        : "primary";
   return (
     <View
       className={cn(
@@ -46,14 +52,16 @@ export const Badge = React.memo(function Badge({
         isAccent ? containerVariant.primary : containerVariant[variant],
         className,
       )}
-      style={isAccent ? { borderColor: accent } : undefined}
+      style={
+        isAccent
+          ? { borderColor: accent }
+          : undefined
+      }
     >
       <EyebrowTight
-        className={cn(
-          size === "sm" ? "text-[10px]" : "text-xs",
-        )}
+        className={cn(size === "sm" ? "text-[10px]" : "text-[11px]")}
         style={isAccent ? { color: accent } : undefined}
-        tone={isAccent ? "primary" : variant === "default" || variant === "ghost" ? "secondary" : "primary"}
+        tone={tone}
       >
         {label}
       </EyebrowTight>

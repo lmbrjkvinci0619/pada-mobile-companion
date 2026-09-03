@@ -3,7 +3,15 @@ import { View, TouchableOpacity, type ViewStyle } from "react-native";
 import { cn } from "@/utils/cn";
 import { Eyebrow, EyebrowTight, TileTitle, Subtitle, Meta } from "./Typography";
 
-type Accent = "primary" | "secondary" | "success" | "warning" | "danger" | "magenta" | "purple" | "black";
+type Accent =
+  | "primary"
+  | "secondary"
+  | "success"
+  | "warning"
+  | "danger"
+  | "magenta"
+  | "purple"
+  | "black";
 
 const FILL: Record<Accent, string> = {
   primary:   "#00ABA9",
@@ -32,9 +40,9 @@ interface TileProps {
 }
 
 const sizeClass: Record<NonNullable<TileProps["size"]>, string> = {
-  small:  "h-24 px-3 py-3",
-  medium: "h-32 px-4 py-4",
-  wide:   "min-h-40 px-4 py-4",
+  small:  "min-h-[96px] px-3 py-3",
+  medium: "min-h-[128px] px-4 py-4",
+  wide:   "min-h-[160px] px-4 py-4",
 };
 
 const lc = (s?: string) => (s ? s.toLowerCase() : s);

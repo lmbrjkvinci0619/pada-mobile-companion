@@ -54,15 +54,14 @@ export const ListRow = React.memo(function ListRow({
           )}
         </View>
       </View>
-      {right ?? (
-        onPress ? (
+      {right ??
+        (onPress ? (
           <Ionicons
             name={external ? "open-outline" : "chevron-forward"}
             size={18}
             color={disabled ? "#8A8A8A" : "#5C5C5C"}
           />
-        ) : null
-      )}
+        ) : null)}
     </>
   );
 

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, ScrollView, TouchableOpacity } from "react-native";
 import { cn } from "@/utils/cn";
-import { Hero, Eyebrow, Body } from "./Typography";
+import { Title, Eyebrow, Body } from "./Typography";
 
 export interface PivotItem<T extends string> {
   key: T;
@@ -41,19 +41,21 @@ export function Pivot<T extends string>({
                 onChange?.(item.key);
               }}
               activeOpacity={0.7}
-            className={cn(
-              "px-4 py-3 border-b-2",
-              isActive ? "border-primary" : "border-transparent",
-            )}
-            >
-            <Body
+              accessibilityRole="tab"
+              accessibilityState={{ selected: isActive }}
               className={cn(
-                "text-base font-light lowercase tracking-tight",
-                isActive ? "text-txt-primary" : "text-txt-muted",
+                "px-4 py-3 border-b-2",
+                isActive ? "border-primary" : "border-transparent",
               )}
             >
-              {item.label}
-            </Body>
+              <Body
+                className={cn(
+                  "text-base font-light lowercase tracking-tight",
+                  isActive ? "text-txt-primary" : "text-txt-muted",
+                )}
+              >
+                {item.label}
+              </Body>
             </TouchableOpacity>
           );
         })}
@@ -85,9 +87,14 @@ export function PivotPanorama({
         <View className="flex-1 pr-3">
           <View className="flex-row items-center gap-2">
             {unread ? (
-              <View className="w-2.5 h-2.5 bg-primary" accessibilityLabel={`${unread} unread`} />
+              <View
+                className="w-2 h-2 bg-primary"
+                accessibilityLabel={`${unread} unread`}
+              />
             ) : null}
-            <Hero numberOfLines={1}>{title}</Hero>
+            <Title numberOfLines={1} className="text-[34px]">
+              {title}
+            </Title>
           </View>
           {subtitle && (
             <Eyebrow tone="secondary" className="mt-2">

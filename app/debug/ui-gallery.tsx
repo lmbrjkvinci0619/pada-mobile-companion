@@ -15,6 +15,7 @@ import { Tile, TileGrid, TileCell } from '@/components/ui/Tile';
 import { Pivot, PivotPanorama } from '@/components/ui/Pivot';
 import { Segmented } from '@/components/ui/SegmentedControl';
 import { SectionLabel, IconChip } from '@/components/ui/Page';
+import { Title } from '@/components/ui';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function UIGallery() {
@@ -45,6 +46,14 @@ export default function UIGallery() {
                 label="With Icon"
                 icon={<Ionicons name="send" size={16} color="#FFFFFF" />}
               />
+            </View>
+          </CardSection>
+
+          <CardSection title="typography" className="mb-8">
+            <View className="gap-3">
+              <Title>title — light lowercase</Title>
+              <Title size="sm">title small</Title>
+              <Title size="2xl">title display</Title>
             </View>
           </CardSection>
 

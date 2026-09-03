@@ -14,7 +14,7 @@ import { router } from "expo-router";
 import { USE_MOCK_DATA } from "@/constants/mockData";
 import { LoaderBar } from "@/components/ui/LoaderBar";
 import { OfflineBanner } from "@/components/ui/OfflineBanner";
-import { EyebrowTight, Body, Label } from "@/components/ui";
+import { EyebrowTight, Body, Label, Title } from "@/components/ui";
 
 LogBox.ignoreLogs(["Warning: ..."]);
 
@@ -84,7 +84,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
     if (this.state.hasError) {
       return (
         <View className="flex-1 items-center justify-center bg-bg p-6">
-          <Label tone="danger" className="text-xl mb-2">something went wrong</Label>
+          <Title tone="danger" className="mb-2">something went wrong</Title>
           <Body tone="secondary" className="text-center mb-4">
             {this.state.error?.message || "An unexpected error occurred"}
           </Body>
@@ -95,7 +95,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
             accessibilityLabel="try again"
             activeOpacity={0.85}
           >
-            <Label tone="inverse" className="text-xs">try again</Label>
+            <Label tone="inverse">try again</Label>
           </TouchableOpacity>
         </View>
       );
@@ -194,7 +194,7 @@ export default function RootLayout() {
   if (error) {
     return (
       <View className="flex-1 items-center justify-center bg-bg p-6">
-        <Label tone="danger" className="text-lg mb-2">something went wrong</Label>
+        <Title tone="danger" className="mb-2">something went wrong</Title>
         <Body tone="secondary" className="text-center mb-4">
           {error}
         </Body>

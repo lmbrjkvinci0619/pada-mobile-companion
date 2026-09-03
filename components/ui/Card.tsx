@@ -1,5 +1,5 @@
 import React from "react";
-import { View, type ViewProps } from "react-native";
+import { View, TouchableOpacity, type ViewProps } from "react-native";
 import { cn } from "@/utils/cn";
 import { Body, Subtitle, Eyebrow } from "./Typography";
 
@@ -51,17 +51,28 @@ function CardHeader({
   children?: React.ReactNode;
   onPress?: () => void;
 }) {
-  const Wrapper: any = onPress ? require("react-native").TouchableOpacity : View;
+  const Wrapper = onPress ? TouchableOpacity : View;
   return (
     <Wrapper
       {...(onPress ? { onPress, activeOpacity: 0.85 } : {})}
-      className={cn("px-4 pt-4 pb-3 flex-row items-center justify-between border-b border-surface-border", className)}
+      className={cn(
+        "px-4 pt-4 pb-3 flex-row items-center justify-between border-b border-surface-border",
+        className,
+      )}
     >
       <View className="flex-1 flex-row items-center gap-3">
         {icon}
         <View className="flex-1">
-          {title && <Body tone="primary" className="font-semibold">{title}</Body>}
-          {subtitle && <Subtitle tone="secondary" className="mt-0.5">{subtitle}</Subtitle>}
+          {title && (
+            <Body tone="primary" className="font-semibold">
+              {title}
+            </Body>
+          )}
+          {subtitle && (
+            <Subtitle tone="secondary" className="mt-0.5">
+              {subtitle}
+            </Subtitle>
+          )}
         </View>
       </View>
       {children}
@@ -75,7 +86,12 @@ function CardContent({ className, children }: { className?: string; children: Re
 
 function CardFooter({ className, children }: { className?: string; children: React.ReactNode }) {
   return (
-    <View className={cn("px-4 py-3 border-t border-surface-border flex-row items-center justify-end gap-2", className)}>
+    <View
+      className={cn(
+        "px-4 py-3 border-t border-surface-border flex-row items-center justify-end gap-2",
+        className,
+      )}
+    >
       {children}
     </View>
   );
@@ -99,9 +115,9 @@ export function CardSection({
   return (
     <View className={cn("gap-3", className)}>
       {title && (
-      <Eyebrow tone="secondary" className="px-1">
-        {title}
-      </Eyebrow>
+        <Eyebrow tone="secondary" className="px-1">
+          {title}
+        </Eyebrow>
       )}
       {children}
     </View>

@@ -23,6 +23,8 @@
     --success: #339933;
     --warning: #F09609;
     --danger: #E51400;
+    --refresh: #00ABA9;
+    --indicator: #000000;
   }
 
   .dark {
@@ -45,5 +47,7 @@
     --success: #60A960;
     --warning: #FAAA24;
     --danger: #FF3322;
+    --refresh: #26C6C4;
+    --indicator: #FFFFFF;
   }
 }

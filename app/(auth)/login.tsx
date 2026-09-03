@@ -12,7 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
 import { APP_NAME } from "@/constants/config";
 import { Button } from "@/components/ui/Button";
-import { Hero, Eyebrow, Body, Label } from "@/components/ui";
+import { Hero, Title, Eyebrow, Body, Label } from "@/components/ui";
 import { isValidEmail } from "@/lib/validation";
 import { openUrl } from "@/lib/urlUtils";
 
@@ -51,11 +51,11 @@ export default function LoginScreen() {
       >
         <View className="items-center mb-10">
           <View className="w-20 h-20 bg-primary items-center justify-center mb-5">
-            <Hero tone="inverse" size="sm" className="leading-none">
+            <Title tone="inverse" size="lg" className="text-[44px] leading-none">
               p
-            </Hero>
+            </Title>
           </View>
-          <Hero>{APP_NAME}</Hero>
+          <Title>{APP_NAME}</Title>
           <View className="flex-row items-center gap-2 mt-3">
             <View className="h-px w-6 bg-primary" />
             <Eyebrow tone="secondary">pada.org companion</Eyebrow>

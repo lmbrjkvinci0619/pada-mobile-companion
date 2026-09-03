@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { PageHeader, SectionLabel } from "@/components/ui/Page";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Hero, EyebrowTight, Body, Label } from "@/components/ui";
+import { Title, EyebrowTight, Body, Label } from "@/components/ui";
 
 function ScoreAdjuster({
   teamName,
@@ -30,7 +30,7 @@ function ScoreAdjuster({
       <EyebrowTight tone="secondary" className="text-center h-10" numberOfLines={2}>
         {teamName}
       </EyebrowTight>
-      <Hero tone="primary" size="2xl" className="my-4">{score}</Hero>
+      <Title tone="primary" size="2xl" className="my-4">{score}</Title>
       <View className="flex-row gap-3">
         <TouchableOpacity
           className="w-12 h-12 bg-surface-overlay border border-surface-border items-center justify-center"

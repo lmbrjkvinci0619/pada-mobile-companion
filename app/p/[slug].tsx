@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/Page";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Section, EyebrowTight, Body } from "@/components/ui";
+import { Title, EyebrowTight, Body } from "@/components/ui";
 
 export default function PageDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -32,9 +32,9 @@ export default function PageDetailScreen() {
         <PageHeader title="article" back />
         <View className="flex-1 items-center justify-center p-6">
           <Ionicons name="alert-circle-outline" size={48} color="#8A8A8A" />
-          <Section tone="primary" className="mt-4">
+          <Title tone="muted" size="sm" className="mt-4">
             page not found
-          </Section>
+          </Title>
           <Body tone="secondary" className="text-sm mt-2 text-center">
             This page may have been removed or the link is invalid.
           </Body>
@@ -63,9 +63,9 @@ export default function PageDetailScreen() {
             )}
           </View>
 
-          <Section tone="primary" size="md" className="mb-4 leading-tight">
-            {page.title}
-          </Section>
+          <Title tone="primary" size="md" className="mb-4 leading-tight">
+            {page.title.toLowerCase()}
+          </Title>
 
           {page.authorName && (
             <EyebrowTight tone="secondary" className="mb-6">

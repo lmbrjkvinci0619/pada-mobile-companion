@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { View, ScrollView, useWindowDimensions, type ScrollViewProps } from "react-native";
 import { cn } from "@/utils/cn";
 import { Section } from "./Typography";
@@ -78,7 +78,7 @@ export function HubPanel({
         {signal ? (
           <View
             className={cn(
-              "mb-1 w-2.5 h-2.5",
+              "mb-1 w-2 h-2",
               signal === "unread" ? "bg-primary" : "bg-danger",
             )}
             accessibilityLabel={signal === "unread" ? "has unread" : "has new"}
