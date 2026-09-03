@@ -38,14 +38,14 @@ export function PageHeader({
             <Text
               numberOfLines={1}
               className={cn(
-                "text-txt-primary font-light lowercase tracking-tight",
-                large ? "text-4xl" : "text-2xl",
+                "text-txt-primary font-light lowercase tracking-tight leading-tight",
+                large ? "text-[40px]" : "text-[28px]",
               )}
             >
               {title}
             </Text>
             {subtitle && (
-              <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-[0.2em] mt-1">
+              <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.2em] mt-1">
                 {subtitle}
               </Text>
             )}
@@ -92,10 +92,13 @@ export function SectionLabel({
   className?: string;
 }) {
   return (
-    <View className={cn("flex-row items-center justify-between mb-2", className)}>
-      <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-[0.2em]">
-        {children}
-      </Text>
+    <View className={cn("flex-row items-center justify-between mb-3", className)}>
+      <View className="flex-row items-center gap-2">
+        <View className="w-1 h-3.5 bg-primary" />
+        <Text className="text-txt-primary text-[11px] font-semibold uppercase tracking-[0.2em]">
+          {children}
+        </Text>
+      </View>
       {action}
     </View>
   );

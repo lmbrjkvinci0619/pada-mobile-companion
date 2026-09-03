@@ -36,6 +36,8 @@ const sizeClass: Record<NonNullable<TileProps["size"]>, string> = {
   wide:   "min-h-40 px-4 py-4",
 };
 
+const lc = (s?: string) => (s ? s.toLowerCase() : s);
+
 export const Tile = React.memo(function Tile({
   title,
   subtitle,
@@ -56,6 +58,8 @@ export const Tile = React.memo(function Tile({
   return (
     <Wrapper
       {...(onPress ? { onPress, activeOpacity: 0.85 } : {})}
+      accessibilityRole={onPress ? "button" : "summary"}
+      accessibilityLabel={[eyebrow, title, subtitle].filter(Boolean).join(", ")}
       className={cn(
         "justify-between",
         sizeClass[size],
@@ -66,7 +70,7 @@ export const Tile = React.memo(function Tile({
       <View className="flex-row items-start justify-between">
         <View className="flex-1 pr-2">
           {eyebrow && (
-            <Text className="text-txt-inverse/80 text-[10px] font-bold uppercase tracking-[0.18em]">
+            <Text className="text-txt-inverse/85 text-[10px] font-semibold uppercase tracking-[0.18em]">
               {eyebrow}
             </Text>
           )}
@@ -74,7 +78,7 @@ export const Tile = React.memo(function Tile({
         </View>
         {badge && (
           <View className="bg-white px-2 py-0.5">
-            <Text className="text-txt-primary text-[10px] font-bold uppercase tracking-wider">
+            <Text className="text-txt-primary text-[10px] font-semibold uppercase tracking-[0.12em]">
               {badge}
             </Text>
           </View>
@@ -85,15 +89,15 @@ export const Tile = React.memo(function Tile({
         {title && (
           <Text
             numberOfLines={2}
-            className="text-txt-inverse text-lg font-bold leading-tight"
+            className="text-txt-inverse text-lg font-light lowercase tracking-tight leading-tight"
           >
-            {title}
+            {lc(title)}
           </Text>
         )}
         {subtitle && (
           <Text
             numberOfLines={1}
-            className="text-txt-inverse/85 text-xs font-medium mt-1"
+            className="text-txt-inverse/90 text-xs font-normal mt-1"
           >
             {subtitle}
           </Text>
@@ -101,7 +105,7 @@ export const Tile = React.memo(function Tile({
         {meta && (
           <Text
             numberOfLines={1}
-            className="text-txt-inverse/70 text-[10px] font-bold uppercase tracking-widest mt-2"
+            className="text-txt-inverse/75 text-[10px] font-semibold uppercase tracking-[0.18em] mt-2"
           >
             {meta}
           </Text>

@@ -1,11 +1,13 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, RefreshControl, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import { format, formatDistanceToNow, isPast } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
 import { Badge } from "@/components/ui/Badge";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { LoaderBar } from "@/components/ui/LoaderBar";
 import { useAuthStore } from "@/store/authStore";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { fetchAnnouncements, hideAnnouncement } from "@/services/announcements";
@@ -75,13 +77,9 @@ const AnnouncementItem = React.memo(function AnnouncementItem({
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center gap-2 flex-1">
           {!item.isRead && <View className="w-2 h-2 bg-primary" />}
-          <View className="px-2 py-0.5 border-2" style={{ borderColor: accent, backgroundColor: `${accent}1A` }}>
-            <Text style={{ color: accent }} className="text-[10px] font-bold uppercase tracking-wider">
-              {label}
-            </Text>
-          </View>
+          <Badge label={label} accent={accent} />
           {item.isUrgent && <Badge label="Urgent" variant="danger" />}
-          <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-wider">
+          <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.12em]">
             {format(new Date(item.createdAt), "MMM d, yyyy").toLowerCase()}
           </Text>
         </View>
@@ -89,7 +87,7 @@ const AnnouncementItem = React.memo(function AnnouncementItem({
           {item.expiresAt && (
             <View className="flex-row items-center gap-1">
               <Ionicons name="time-outline" size={12} color="#5C5C5C" />
-              <Text className="text-txt-secondary text-[10px] uppercase font-bold tracking-wider">
+              <Text className="text-txt-secondary text-[10px] uppercase font-semibold tracking-[0.12em]">
                 {isExpired ? "Expired" : `Expires ${formatDistanceToNow(new Date(item.expiresAt), { addSuffix: true })}`}
               </Text>
             </View>
@@ -105,7 +103,7 @@ const AnnouncementItem = React.memo(function AnnouncementItem({
           )}
         </View>
       </View>
-      <Text className="text-txt-primary font-bold text-base">{item.title}</Text>
+      <Text className="text-txt-primary font-semibold text-base">{item.title}</Text>
       <Text className="text-txt-secondary text-sm" numberOfLines={2}>{item.content}</Text>
     </TouchableOpacity>
   );
@@ -197,8 +195,10 @@ export default function AnnouncementsListScreen() {
   const renderFooter = () => {
     if (!isLoadingMore) return null;
     return (
-      <View className="py-4 items-center">
-        <ActivityIndicator size="small" color="#00ABA9" />
+      <View className="py-4 items-center flex-row justify-center gap-3">
+        <View className="h-px w-8 bg-primary" />
+        <Text className="text-txt-secondary text-[10px] font-semibold uppercase tracking-[0.2em]">loading more</Text>
+        <View className="h-px w-8 bg-primary" />
       </View>
     );
   };
@@ -225,15 +225,13 @@ export default function AnnouncementsListScreen() {
       />
 
       {isLoading ? (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#00ABA9" />
-        </View>
+        <LoaderBar visible />
       ) : error ? (
         <View className="flex-1 justify-center items-center px-5">
           <Ionicons name="alert-circle-outline" size={48} color="#E51400" />
           <Text className="text-txt-primary text-center mt-2">{error}</Text>
           <TouchableOpacity className="mt-4 bg-primary px-5 py-3" onPress={onRefresh} activeOpacity={0.85}>
-            <Text className="text-txt-inverse font-bold uppercase tracking-wider text-xs">Retry</Text>
+            <Text className="text-txt-inverse font-semibold uppercase tracking-[0.12em] text-xs">retry</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -246,9 +244,15 @@ export default function AnnouncementsListScreen() {
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
           ListFooterComponent={renderFooter}
+          ListHeaderComponent={refreshing ? <LoaderBar visible /> : null}
           ListEmptyComponent={
-            <View className="flex-1 justify-center items-center pt-10">
-              <Text className="text-txt-muted">No announcements yet.</Text>
+            <View className="mt-8 px-5">
+              <EmptyState
+                icon="megaphone-outline"
+                title="no announcements yet"
+                subtitle="PADA posts league, game, and org news here when there's something to share."
+                accent="muted"
+              />
             </View>
           }
           initialNumToRender={8}

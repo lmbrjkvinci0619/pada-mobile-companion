@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { ScrollView, View, Text, TouchableOpacity, RefreshControl, ActivityIndicator } from "react-native";
+import { ScrollView, View, Text, TouchableOpacity, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -7,6 +7,8 @@ import { format, parseISO } from "date-fns";
 import { useArticles } from "@/hooks/useApi";
 import { Badge } from "@/components/ui/Badge";
 import { PageHeader, SectionLabel } from "@/components/ui/Page";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { LoaderBar } from "@/components/ui/LoaderBar";
 import type { Article } from "@/types";
 
 function PageRow({ article }: { article: Article }) {
@@ -25,12 +27,12 @@ function PageRow({ article }: { article: Article }) {
         <View className="flex-row items-center gap-2 mb-1">
           {article.category && <Badge label={article.category} variant="primary" />}
           {article.publishedAt && (
-            <Text className="text-txt-secondary text-[10px] font-bold uppercase tracking-wider">
+            <Text className="text-txt-secondary text-[10px] font-semibold uppercase tracking-[0.12em]">
               {format(parseISO(article.publishedAt), "MMM d, yyyy").toLowerCase()}
             </Text>
           )}
         </View>
-        <Text className="text-txt-primary text-sm font-bold leading-snug" numberOfLines={2}>
+        <Text className="text-txt-primary text-sm font-semibold leading-snug" numberOfLines={2}>
           {article.title}
         </Text>
         {article.summary && (
@@ -66,8 +68,9 @@ export default function PagesScreen() {
 
   if (isLoading && !refreshing) {
     return (
-      <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <ActivityIndicator size="large" color="#00ABA9" />
+      <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
+        <PageHeader title="news" subtitle="latest updates from pada" back />
+        <LoaderBar visible />
       </SafeAreaView>
     );
   }
@@ -75,6 +78,7 @@ export default function PagesScreen() {
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
       <PageHeader title="news" subtitle="latest updates from pada" back />
+      <LoaderBar visible={refreshing} />
 
       <ScrollView
         className="flex-1 px-5"
@@ -84,11 +88,13 @@ export default function PagesScreen() {
         }
       >
         {sortedArticles.length === 0 ? (
-          <View className="mt-20 items-center gap-3">
-            <Ionicons name="document-text-outline" size={48} color="#8A8A8A" />
-            <Text className="text-txt-secondary text-sm font-bold text-center lowercase">
-              no articles yet.
-            </Text>
+          <View className="mt-8">
+            <EmptyState
+              icon="document-text-outline"
+              title="no articles yet"
+              subtitle="When PADA posts news, it will appear here."
+              accent="muted"
+            />
           </View>
         ) : (
           <>

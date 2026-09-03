@@ -7,7 +7,6 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/$1',
     '^expo$': '<rootDir>/__mocks__/expo.js',
     '^expo/src/winter$': '<rootDir>/__mocks__/expoWinter.js',
-    '^react-native-mmkv$': '<rootDir>/__mocks__/react-native-mmkv.js',
   },
   setupFiles: ['./jest.setup.js'],
 };

@@ -1,16 +1,18 @@
 import React, { useState, useCallback, useMemo } from "react";
 import {
-  ScrollView, View, Text, TouchableOpacity, RefreshControl, ActivityIndicator,
+  ScrollView, View, Text, TouchableOpacity, RefreshControl,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import { format, parseISO } from "date-fns";
 import { useAuthStore } from "@/store/authStore";
 import { useRegistrations } from "@/hooks/useApi";
 import { Badge } from "@/components/ui/Badge";
 import { ReadOnlyBanner } from "@/components/ui/ReadOnlyBanner";
 import { PageHeader, SectionLabel } from "@/components/ui/Page";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { LoaderBar } from "@/components/ui/LoaderBar";
 import { openRegistrationInBrowser } from "@/lib/urlUtils";
 import type { Registration, RegistrationStatus, RegistrationType } from "@/types";
 
@@ -59,7 +61,7 @@ const RegistrationCard = React.memo(function RegistrationCard({ reg }: { reg: Re
           <Ionicons name={TYPE_ICONS[reg.type]} size={20} color="#FFFFFF" />
         </View>
         <View className="flex-1">
-          <Text className="text-txt-primary font-bold text-base" numberOfLines={1}>
+          <Text className="text-txt-primary font-semibold text-base" numberOfLines={1}>
             {reg.organizationName}
           </Text>
           {reg.seasonName && (
@@ -74,11 +76,11 @@ const RegistrationCard = React.memo(function RegistrationCard({ reg }: { reg: Re
       <View className="flex-row items-center gap-4 px-4 py-2 bg-surface-overlay border-t-2 border-surface-border">
         <View className="flex-row items-center gap-1.5">
           <Ionicons name="pricetag-outline" size={13} color="#5C5C5C" />
-          <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-wider">{reg.type}</Text>
+          <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.12em]">{reg.type}</Text>
         </View>
         <View className="flex-row items-center gap-1.5">
           <Ionicons name="calendar-outline" size={13} color="#5C5C5C" />
-          <Text className="text-txt-secondary text-[11px] font-bold">
+          <Text className="text-txt-secondary text-[11px] font-semibold">
             {format(parseISO(reg.startDate), "MMM d, yyyy").toLowerCase()}
             {reg.endDate ? ` – ${format(parseISO(reg.endDate), "MMM d, yyyy").toLowerCase()}` : ""}
           </Text>
@@ -123,8 +125,10 @@ export default function RegistrationsScreen() {
 
   if (isLoading && !refreshing) {
     return (
-      <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <ActivityIndicator size="large" color="#00ABA9" />
+      <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
+        <PageHeader title="registrations" subtitle="your pada.org registrations" />
+        <ReadOnlyBanner message="Registrations are read-only. To register or make changes, visit Pada.org." />
+        <LoaderBar visible />
       </SafeAreaView>
     );
   }
@@ -133,6 +137,7 @@ export default function RegistrationsScreen() {
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
       <PageHeader title="registrations" subtitle="your pada.org registrations" />
       <ReadOnlyBanner message="Registrations are read-only. To register or make changes, visit Pada.org." />
+      <LoaderBar visible={refreshing} />
 
       <ScrollView
         className="flex-1 px-5 pt-2"
@@ -140,11 +145,13 @@ export default function RegistrationsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00ABA9" />}
       >
         {sections.length === 0 ? (
-          <View className="mt-20 items-center gap-3">
-            <Ionicons name="document-text-outline" size={48} color="#8A8A8A" />
-            <Text className="text-txt-secondary text-sm font-bold text-center lowercase">
-              no registrations found.{"\n"}register on the pada.org website.
-            </Text>
+          <View className="mt-8">
+            <EmptyState
+              icon="document-text-outline"
+              title="no registrations found"
+              subtitle="Register on the pada.org website to see your registrations here."
+              accent="muted"
+            />
           </View>
         ) : (
           sections.map((section) => (

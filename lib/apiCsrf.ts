@@ -1,4 +1,5 @@
-import { TOPSCORE_CLIENT_ID, TOPSCORE_CLIENT_SECRET, TOPSCORE_BASE_URL } from "@/constants/config";
+import { TOPSCORE_CLIENT_ID, TOPSCORE_CLIENT_SECRET } from "@/constants/config";
+import { normalizeTopScoreBaseUrl } from "./urlUtils";
 
 function base64UrlEncode(input: string | Uint8Array): string {
   const bytes = typeof input === "string" ? new TextEncoder().encode(input) : input;
@@ -28,19 +29,29 @@ async function hmacSha256(secret: string, data: string): Promise<string> {
   return "";
 }
 
+function getSecureRandomBytes(length: number): Uint8Array {
+  const buf = new Uint8Array(length);
+  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+    crypto.getRandomValues(buf);
+    return buf;
+  }
+  const fallback = new Uint8Array(length);
+  const now = Date.now();
+  const random = Math.random();
+  for (let i = 0; i < length; i++) {
+    const t = now + i * 1000;
+    const r = random * 1e9;
+    fallback[i] = ((t ^ r) >>> 0) % 256;
+  }
+  return fallback;
+}
+
 function randomNonce(length: number = 16): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const bytes = getSecureRandomBytes(length);
   let out = "";
-  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
-    const buf = new Uint8Array(length);
-    crypto.getRandomValues(buf);
-    for (let i = 0; i < length; i++) {
-      out += chars[buf[i] % chars.length];
-    }
-    return out;
-  }
   for (let i = 0; i < length; i++) {
-    out += chars[Math.floor(Math.random() * chars.length)];
+    out += chars[bytes[i] % chars.length];
   }
   return out;
 }
@@ -85,7 +96,8 @@ export function clearApiCsrfCache(): void {
 export function buildSignedUrl(path: string, authToken: string, csrfSignature: string): string {
   const [pathWithoutHash, hash] = path.split("#");
   const [purePath, existingQuery = ""] = pathWithoutHash.split("?");
-  const base = `${TOPSCORE_BASE_URL.replace(/\/$/, "")}${purePath.startsWith("/") ? purePath : `/${purePath}`}`;
+
+  const base = `${normalizeTopScoreBaseUrl()}${purePath.startsWith("/") ? purePath : `/${purePath}`}`;
   const params = new URLSearchParams(existingQuery);
   params.set("auth_token", authToken);
   params.set("api_csrf", csrfSignature);

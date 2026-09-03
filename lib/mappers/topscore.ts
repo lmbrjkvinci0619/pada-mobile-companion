@@ -286,7 +286,7 @@ export function mapGame(data: ApiGame): Event {
 }
 
 export function mapRosterMember(m: ApiRosterMember | ApiPerson): TeamMember {
-  const person = "person" in m && m.person ? m.person : (m as ApiPerson);
+  const person: ApiPerson = "person" in m && m.person ? m.person : (m as ApiPerson);
   const rosterMember = "jersey_number" in m ? m : null;
 
   const ROLE_PRIORITY: TeamMember["role"][] = ["captain", "coach", "assistant_coach", "player", "admin", "chaperone", "volunteer", "staff"];

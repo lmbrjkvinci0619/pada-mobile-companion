@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { useLocalSearchParams, router, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,6 +8,7 @@ import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { getRegistrationUrl, openUrl } from "@/lib/urlUtils";
 import { PageHeader } from "@/components/ui/Page";
 import { Button } from "@/components/ui/Button";
+import { LoaderBar } from "@/components/ui/LoaderBar";
 import type { Registration } from "@/types";
 
 function resolveUrlForRegistration(reg: Registration): string {
@@ -62,16 +63,18 @@ export default function RegistrationDetailScreen() {
       <PageHeader title="registration" subtitle="opening on pada.org" back={goBackSafe} />
 
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#00ABA9" />
-          <Text className="text-txt-muted mt-3 text-[11px] uppercase tracking-wider font-bold">
-            Loading registration...
-          </Text>
+        <View className="flex-1">
+          <LoaderBar visible />
+          <View className="flex-1 items-center justify-center">
+            <Text className="text-txt-muted mt-3 text-[11px] uppercase tracking-[0.18em] font-semibold">
+              loading registration
+            </Text>
+          </View>
         </View>
       ) : error ? (
         <View className="flex-1 items-center justify-center px-6 gap-3">
           <Ionicons name="alert-circle-outline" size={48} color="#E51400" />
-          <Text className="text-danger text-base font-bold uppercase tracking-wider text-center">{error}</Text>
+            <Text className="text-danger text-base font-semibold uppercase tracking-[0.12em] text-center">{error}</Text>
           <Text className="text-txt-muted text-sm text-center">
             We couldn&apos;t open this registration on Pada.org. Please try again or return to your registrations list.
           </Text>
@@ -83,12 +86,12 @@ export default function RegistrationDetailScreen() {
             <Ionicons name="open-outline" size={32} color="#FFFFFF" />
           </View>
           {registration && (
-            <Text className="text-txt-primary text-base font-bold text-center" numberOfLines={2}>
+            <Text className="text-txt-primary text-base font-semibold text-center" numberOfLines={2}>
               {registration.organizationName}
             </Text>
           )}
           <Text className="text-txt-primary text-2xl font-light lowercase tracking-tight text-center">
-            Opening registration in your browser...
+            opening registration in your browser...
           </Text>
           <Text className="text-txt-muted text-sm text-center">
             The Pada.org registration page is launching outside this app. After you finish, return here to continue browsing PADA.
@@ -97,8 +100,8 @@ export default function RegistrationDetailScreen() {
             <Button label="Open Again" onPress={() => openUrl(targetUrl)} className="mt-2" />
           )}
           <TouchableOpacity className="px-5 py-3" onPress={goBackSafe} activeOpacity={0.85}>
-            <Text className="text-primary text-xs font-bold uppercase tracking-wider">
-              Back to Registrations
+            <Text className="text-primary-700 text-xs font-semibold uppercase tracking-[0.12em]">
+              back to registrations
             </Text>
           </TouchableOpacity>
         </View>

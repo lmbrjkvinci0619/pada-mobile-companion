@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { View, Text, TouchableOpacity, FlatList, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, FlatList } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -10,6 +10,7 @@ import { ReadOnlyBanner } from "@/components/ui/ReadOnlyBanner";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { PageHeader } from "@/components/ui/Page";
+import { LoaderBar } from "@/components/ui/LoaderBar";
 import { Pivot, PivotContent } from "@/components/ui/Pivot";
 import { format, parseISO } from "date-fns";
 import { RefreshControl } from "react-native";
@@ -43,8 +44,9 @@ export default function TeamDetailScreen() {
 
   if (teamLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <ActivityIndicator size="large" color="#00ABA9" />
+      <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+        <PageHeader title="team" back={() => router.back()} />
+        <LoaderBar visible />
       </SafeAreaView>
     );
   }
@@ -77,12 +79,12 @@ export default function TeamDetailScreen() {
           {team.name}
         </Text>
         <View className="flex-row items-center justify-between mt-1">
-          <Text className="text-txt-inverse/80 text-[11px] font-bold uppercase tracking-[0.2em]">
+          <Text className="text-txt-inverse/85 text-[11px] font-semibold uppercase tracking-[0.2em]">
             {team.division}
           </Text>
           {recordText && (
             <View className="bg-white px-3 py-1">
-              <Text className="text-txt-primary text-[10px] font-bold uppercase tracking-wider">{recordText}</Text>
+              <Text className="text-txt-primary text-[10px] font-semibold uppercase tracking-[0.12em]">{recordText}</Text>
             </View>
           )}
         </View>
@@ -100,15 +102,15 @@ export default function TeamDetailScreen() {
             <Ionicons name="flash" size={24} color="#E51400" />
           </View>
           <View className="flex-1">
-            <Text className="text-txt-inverse text-[10px] font-bold uppercase tracking-[0.2em]">
-              {nextEvent.status === "in_progress" ? "Live Now" : "Next Match"}
+            <Text className="text-txt-inverse text-[10px] font-semibold uppercase tracking-[0.2em]">
+              {nextEvent.status === "in_progress" ? "live now" : "next match"}
             </Text>
-            <Text className="text-txt-inverse text-base font-bold mt-0.5" numberOfLines={1}>
+            <Text className="text-txt-inverse text-base font-semibold mt-0.5" numberOfLines={1}>
               vs {nextEvent.opponentName || "TBD"}
             </Text>
             {nextEvent.score && (
-              <Text className="text-txt-inverse/90 text-xs font-bold mt-0.5">
-                Live: {nextEvent.score.homeScore} – {nextEvent.score.awayScore}
+              <Text className="text-txt-inverse/90 text-xs font-semibold mt-0.5">
+                live: {nextEvent.score.homeScore} – {nextEvent.score.awayScore}
               </Text>
             )}
           </View>
@@ -144,16 +146,16 @@ export default function TeamDetailScreen() {
                     accent="#00ABA9"
                   />
                   <View className="flex-1 ml-3">
-                    <Text className="text-txt-primary font-bold text-sm">
+                    <Text className="text-txt-primary font-semibold text-sm">
                       {member.firstName} {member.lastName}
                     </Text>
                     <View className="bg-primary-50 border-2 border-primary self-start mt-1 px-2 py-0.5">
-                      <Text className="text-primary text-[10px] font-bold uppercase tracking-wider">{member.role}</Text>
+                      <Text className="text-primary text-[10px] font-semibold uppercase tracking-[0.12em]">{member.role}</Text>
                     </View>
                   </View>
                   {member.jerseyNumber != null && (
                     <View className="w-10 h-10 bg-surface-overlay items-center justify-center border-2 border-surface-border">
-                      <Text className="text-txt-primary font-bold">{member.jerseyNumber}</Text>
+                      <Text className="text-txt-primary font-semibold">{member.jerseyNumber}</Text>
                     </View>
                   )}
                 </View>
@@ -168,26 +170,26 @@ export default function TeamDetailScreen() {
               >
                 <View className="flex-row justify-between items-center mb-2">
                   <Badge label={ev.startDate ? format(parseISO(ev.startDate), "MMM d") : "TBD"} variant="ghost" />
-                  <Text className="text-txt-secondary text-[10px] font-bold uppercase tracking-wider">
+                  <Text className="text-txt-secondary text-[10px] font-semibold uppercase tracking-[0.12em]">
                     {ev.startDate ? format(parseISO(ev.startDate), "h:mm a") : ""}
                   </Text>
                 </View>
-                <Text className="text-txt-primary font-bold text-base mb-1">
+                <Text className="text-txt-primary font-semibold text-base mb-1">
                   vs {ev.opponentName || "TBD"}
                 </Text>
                 <Text className="text-txt-secondary text-xs mb-3">{ev.title}</Text>
 
                 {ev.score && (
                   <View className="bg-surface-overlay border-2 border-surface-border p-3 flex-row justify-between items-center">
-                    <Text className="text-txt-primary font-bold text-sm" numberOfLines={1}>
+                    <Text className="text-txt-primary font-semibold text-sm" numberOfLines={1}>
                       {ev.score.homeTeamName || "Home"}
                     </Text>
                     <View className="flex-row items-center gap-3">
-                      <Text className="text-txt-primary font-bold text-xl">{ev.score.homeScore}</Text>
+                      <Text className="text-txt-primary font-light text-xl">{ev.score.homeScore}</Text>
                       <Text className="text-txt-muted">—</Text>
-                      <Text className="text-txt-primary font-bold text-xl">{ev.score.awayScore}</Text>
+                      <Text className="text-txt-primary font-light text-xl">{ev.score.awayScore}</Text>
                     </View>
-                    <Text className="text-txt-secondary text-xs font-bold" numberOfLines={1}>
+                    <Text className="text-txt-secondary text-xs font-semibold" numberOfLines={1}>
                       {ev.score.awayTeamName || "Away"}
                     </Text>
                   </View>

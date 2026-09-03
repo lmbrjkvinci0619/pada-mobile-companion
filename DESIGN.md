@@ -56,16 +56,19 @@ Accent tiles always carry white text. Tile flip (press) reveals a slightly darke
 
 Single family: **Inter** (loaded via `@expo-google-fonts/inter`), with `Segoe UI` / system-sans fallbacks. Never use display faces, italics, or text shadows.
 
-| Role | Size | Weight | Case |
-|------|------|--------|------|
-| Hero (Panorama title) | 4.5rem (72 px) | Light (300) | lowercase |
-| Title (page header) | 2.5rem (40 px) | Light (300) | lowercase |
-| Section (Pivot header) | 1.75rem (28 px) | Light (300) | lowercase |
-| Header (tile heading) | 1.125rem (18 px) | SemiBold (600) | sentence |
-| Body | 0.9375rem (15 px) | Regular (400) | sentence |
-| Caption / metadata | 0.75rem (12 px) | SemiBold (600) | UPPER, tracked |
+| Role | Size | Weight | Case | Tracking |
+|------|------|--------|------|----------|
+| Hero (Panorama title) | 4.5rem (72 px) | Light (300) | lowercase | −0.01em |
+| Title (page header) | 2.5rem (40 px) | Light (300) | lowercase | −0.01em |
+| Section (Pivot / Hub panel header) | 1.75rem (28 px) | Light (300) | lowercase | tight |
+| Tile title | 1.125rem (18 px) | Light (300) | lowercase | tight |
+| Sub-tile subtitle | 0.75rem (12 px) | Regular (400) | sentence | normal |
+| Eyebrow / caption / button | 0.625–0.6875rem (10–11 px) | SemiBold (600) | UPPER | 0.12–0.20em |
+| Body | 0.9375rem (15 px) | Regular (400) | sentence | normal |
 
-Body line height 1.4. Display line height 1.05. Tracking −0.01em on display only.
+Body line height 1.4. Display line height 1.05.
+
+**Typography rule:** headings and tile titles are **Light (300) and lowercase**; metadata, badges, eyebrows, and button labels are **SemiBold (600), uppercase, tracked**. Do not use 700 weights.
 
 ## Geometry
 
@@ -76,10 +79,11 @@ Body line height 1.4. Display line height 1.05. Tracking −0.01em on display on
 ## Components
 
 ### Tile
-- Flat solid fill, 0 radius, 2 px internal padding.
-- Three sizes: **small** (1 col), **medium** (2×1), **wide** (2×2 / 4×2).
+- Flat solid fill, 0 radius, 12–16 px internal padding (small = 12 px; medium/wide = 16 px).
+- Three sizes: **small** (1 col, 96 px), **medium** (2×1, 128 px), **wide** (2×2 / 4×2, min 160 px).
 - Press feedback: opacity 1 → 0.85 over 100 ms, no scale.
 - Optional `count` badge in top-right.
+- Title rendered in Light (300) lowercase via internal auto-lowercasing — callers may pass sentence case and the Tile lowercases it.
 
 ### Pivot
 - Horizontal lowercase headers (`roster`, `schedule`, `stats`).
@@ -132,3 +136,4 @@ Body line height 1.4. Display line height 1.05. Tracking −0.01em on display on
 - No 1 px colored accent borders on cards.
 - No skeuomorphic textures or material metaphors.
 - No purple-on-dark unless WCAG AA contrast is verified.
+- No `font-bold` (700). All headings, buttons, and captions are SemiBold 600 max; display and tile titles are Light 300.

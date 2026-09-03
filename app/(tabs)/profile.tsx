@@ -8,6 +8,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Tile, TileGrid, TileCell } from "@/components/ui/Tile";
 import { PageHeader, IconChip, SectionLabel } from "@/components/ui/Page";
+import { DonateFooter } from "@/components/ui/DonateFooter";
 import { Ionicons } from "@expo/vector-icons";
 import { EXTERNAL_URLS, openUrl } from "@/lib/urlUtils";
 
@@ -65,7 +66,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           <View className="bg-primary-50 border-2 border-primary px-4 py-1 mt-3">
-            <Text className="text-primary text-[10px] font-bold uppercase tracking-[0.2em]">{user?.role}</Text>
+            <Text className="text-primary text-[10px] font-semibold uppercase tracking-[0.2em]">{user?.role}</Text>
           </View>
         </View>
 
@@ -160,6 +161,7 @@ export default function ProfileScreen() {
           <Button variant="ghost" label="Log Out" onPress={logout} className="border-danger" />
         </View>
       </ScrollView>
+      <DonateFooter />
     </SafeAreaView>
   );
 }
@@ -183,12 +185,14 @@ function ProfileRow({
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}${subtitle ? `, ${subtitle}` : ""}`}
       className={`flex-row items-center justify-between px-4 py-4 ${last ? "" : "border-b-2 border-surface-border"}`}
     >
       <View className="flex-row items-center gap-3 flex-1">
         {icon}
         <View className="flex-1">
-          <Text className="text-txt-primary text-sm font-bold">{title}</Text>
+          <Text className="text-txt-primary text-sm font-semibold">{title}</Text>
           {subtitle && <Text className="text-txt-secondary text-xs mt-0.5" numberOfLines={1}>{subtitle}</Text>}
         </View>
       </View>

@@ -60,7 +60,7 @@ function CardHeader({
       <View className="flex-1 flex-row items-center gap-3">
         {icon}
         <View className="flex-1">
-          {title && <Text className="text-txt-primary font-bold text-base">{title}</Text>}
+          {title && <Text className="text-txt-primary font-semibold text-base">{title}</Text>}
           {subtitle && <Text className="text-txt-secondary text-xs mt-0.5">{subtitle}</Text>}
         </View>
       </View>
@@ -99,7 +99,7 @@ export function CardSection({
   return (
     <View className={cn("gap-3", className)}>
       {title && (
-        <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-[0.18em] px-1">
+        <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.18em] px-1">
           {title}
         </Text>
       )}

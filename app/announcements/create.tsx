@@ -184,7 +184,7 @@ export default function CreateAnnouncementScreen() {
     return (
       <SafeAreaView className="flex-1 bg-bg items-center justify-center px-6">
         <Ionicons name="lock-closed" size={48} color="#E51400" />
-        <Text className="text-txt-primary text-xl font-bold uppercase tracking-wider mt-4 text-center">Permission Required</Text>
+        <Text className="text-txt-primary text-xl font-semibold uppercase tracking-[0.12em] mt-4 text-center">permission required</Text>
         <Text className="text-txt-muted text-center mt-2">
           Only team captains and league admins can create announcements.
         </Text>
@@ -223,7 +223,7 @@ export default function CreateAnnouncementScreen() {
         <ScrollView className="flex-1 px-5 pt-4" keyboardShouldPersistTaps="handled">
           {showPreview && (
             <View className="bg-primary border-2 border-primary-700 p-4 mb-6">
-              <Text className="text-txt-inverse text-[10px] font-bold uppercase tracking-wider">Preview</Text>
+              <Text className="text-txt-inverse text-[10px] font-semibold uppercase tracking-[0.12em]">preview</Text>
               <Text className="text-txt-inverse text-3xl font-light lowercase tracking-tight mt-1">
                 {title || "Untitled"}
               </Text>
@@ -231,11 +231,11 @@ export default function CreateAnnouncementScreen() {
                 {content || "No content"}
               </Text>
               <View className="flex-row items-center gap-4 mt-3">
-                <Text className="text-txt-inverse/85 text-[11px] font-bold uppercase tracking-wider">
-                  {targetType === "team" && selectedTeam ? selectedTeam.name : targetType === "division" ? "Division-wide" : "League-wide"}
+                <Text className="text-txt-inverse/85 text-[11px] font-semibold uppercase tracking-[0.12em]">
+                  {targetType === "team" && selectedTeam ? selectedTeam.name : targetType === "division" ? "division-wide" : "league-wide"}
                 </Text>
-                <Text className="text-txt-inverse/85 text-[11px] font-bold uppercase tracking-wider">
-                  {expirationHours === null ? "Never expires" : `Expires in ${expirationHours}h`}
+                <Text className="text-txt-inverse/85 text-[11px] font-semibold uppercase tracking-[0.12em]">
+                  {expirationHours === null ? "never expires" : `expires in ${expirationHours}h`}
                 </Text>
               </View>
             </View>
@@ -243,8 +243,8 @@ export default function CreateAnnouncementScreen() {
 
           <View className="mb-6">
             <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-wider">Title</Text>
-              <Text className={`text-[10px] font-bold uppercase tracking-wider ${isTitleOverLimit ? "text-danger" : "text-txt-muted"}`}>
+              <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.12em]">Title</Text>
+              <Text className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${isTitleOverLimit ? "text-danger" : "text-txt-muted"}`}>
                 {titleCharCount}/{TITLE_MAX_LENGTH}
               </Text>
             </View>
@@ -261,8 +261,8 @@ export default function CreateAnnouncementScreen() {
 
           <View className="mb-6">
             <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-wider">Message</Text>
-              <Text className={`text-[10px] font-bold uppercase tracking-wider ${isContentOverLimit ? "text-danger" : "text-txt-muted"}`}>
+              <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.12em]">Message</Text>
+              <Text className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${isContentOverLimit ? "text-danger" : "text-txt-muted"}`}>
                 {contentCharCount}/{CONTENT_MAX_LENGTH}
               </Text>
             </View>
@@ -296,12 +296,12 @@ export default function CreateAnnouncementScreen() {
                   <IconChip name={option.icon} color={option.accent} background={`${option.accent}22`} />
                   <View className="flex-1 ml-3">
                     <View className="flex-row items-center gap-2">
-                      <Text className="text-sm font-bold" style={isSelected ? { color: option.accent } : undefined}>
+                      <Text className="text-sm font-semibold" style={isSelected ? { color: option.accent } : undefined}>
                         {option.label}
                       </Text>
                       {isDisabled && (
                         <View className="bg-surface-overlay border-2 border-surface-border px-2 py-0.5">
-                          <Text className="text-txt-muted text-[10px] uppercase font-bold tracking-wider">Admin only</Text>
+                          <Text className="text-txt-muted text-[10px] uppercase font-semibold tracking-[0.12em]">admin only</Text>
                         </View>
                       )}
                     </View>
@@ -326,7 +326,7 @@ export default function CreateAnnouncementScreen() {
                   activeOpacity={0.85}
                 >
                   <View className="flex-1">
-                    <Text className={`text-sm font-bold ${isSelected ? "text-primary" : "text-txt-primary"}`}>
+                    <Text className={`text-sm font-semibold ${isSelected ? "text-primary" : "text-txt-primary"}`}>
                       {option.label}
                     </Text>
                     <Text className="text-txt-muted text-xs mt-1">{option.description}</Text>
@@ -341,7 +341,11 @@ export default function CreateAnnouncementScreen() {
             <View className="mb-6">
               <SectionLabel>select team</SectionLabel>
               {isLoadingTeams ? (
-                <View className="items-center py-6"><ActivityIndicator color="#00ABA9" /></View>
+                <View className="items-center py-6 flex-row justify-center gap-3">
+                  <View className="h-px w-8 bg-primary" />
+                  <Text className="text-txt-secondary text-[10px] font-semibold uppercase tracking-[0.2em]">loading teams</Text>
+                  <View className="h-px w-8 bg-primary" />
+                </View>
               ) : teams.length === 0 ? (
                 <View className="bg-surface border-2 border-surface-border p-6 items-center">
                   <Ionicons name="people-outline" size={32} color="#8A8A8A" />
@@ -360,9 +364,9 @@ export default function CreateAnnouncementScreen() {
                           disabled={isSubmitting}
                           activeOpacity={0.85}
                         >
-                          <Text className={`text-xs font-bold uppercase tracking-wider ${isSelected ? "text-txt-inverse" : "text-txt-secondary"}`}>
-                            {team.name}
-                          </Text>
+                    <Text className={`text-xs font-semibold uppercase tracking-[0.12em] ${isSelected ? "text-txt-inverse" : "text-txt-secondary"}`}>
+                      {team.name}
+                    </Text>
                         </TouchableOpacity>
                       );
                     })}
@@ -384,12 +388,12 @@ export default function CreateAnnouncementScreen() {
                   disabled={isSubmitting}
                   activeOpacity={0.85}
                 >
-                  <Text className={`text-xs font-bold uppercase tracking-wider ${isSelected ? "text-txt-inverse" : "text-txt-primary"}`}>
-                    {option.label}
-                  </Text>
-                  <Text className={`text-[10px] font-bold uppercase tracking-wider mt-1 ${isSelected ? "text-txt-inverse/80" : "text-txt-muted"}`}>
-                    {option.description}
-                  </Text>
+                    <Text className={`text-xs font-semibold uppercase tracking-[0.12em] ${isSelected ? "text-txt-inverse" : "text-txt-primary"}`}>
+                      {option.label}
+                    </Text>
+                    <Text className={`text-[10px] font-semibold uppercase tracking-[0.12em] mt-1 ${isSelected ? "text-txt-inverse/85" : "text-txt-muted"}`}>
+                      {option.description}
+                    </Text>
                 </TouchableOpacity>
               );
             })}
@@ -400,8 +404,8 @@ export default function CreateAnnouncementScreen() {
               <View className="flex-1 mr-4">
                 <View className="flex-row items-center gap-2">
                   <Ionicons name="warning" size={18} color={isUrgent ? "#E51400" : "#5C5C5C"} />
-                  <Text className={`text-sm font-bold ${isUrgent ? "text-danger" : "text-txt-primary"}`}>
-                    Mark as Urgent
+                  <Text className={`text-sm font-semibold ${isUrgent ? "text-danger" : "text-txt-primary"}`}>
+                    mark as urgent
                   </Text>
                 </View>
                 <Text className="text-txt-muted text-xs mt-1">

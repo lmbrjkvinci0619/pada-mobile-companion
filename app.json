@@ -48,6 +48,11 @@
     "experiments": {
       "typedRoutes": true
     },
+    "updates": {
+      "enabled": false,
+      "fallbackToCacheTimeout": 2000,
+      "checkAutomatically": "NEVER"
+    },
     "extra": {
       "eas": {
         "projectId": "203ec5d8-6e91-42ec-b644-3c2dc7165d04"

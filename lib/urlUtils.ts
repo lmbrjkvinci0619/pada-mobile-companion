@@ -2,38 +2,36 @@ import { Linking } from "react-native";
 import { TOPSCORE_BASE_URL, PADA_ORG_URL } from "@/constants/config";
 
 /**
+ * Normalize the TopScore base URL to a canonical host root (no trailing /api).
+ * Per TopScore API doc Section 2, the configured base URL may or may not
+ * include the `/api` suffix. This helper always returns the host root so
+ * callers can safely append path components.
+ */
+export function normalizeTopScoreBaseUrl(): string {
+  if (TOPSCORE_BASE_URL.endsWith("/api")) return TOPSCORE_BASE_URL.slice(0, -4);
+  if (TOPSCORE_BASE_URL.endsWith("/api/")) return TOPSCORE_BASE_URL.slice(0, -5);
+  return TOPSCORE_BASE_URL.replace(/\/$/, "");
+}
+
+/**
  * Constructs a TopScore URL from a path.
  *
- * IMPORTANT: TopScore API has two URL conventions:
- * 1. Base URL without /api suffix (RECOMMENDED): https://pada.usetopscore.com
- *    - Paths should include /api prefix: /api/events
- * 2. Base URL with /api suffix: https://pada.usetopscore.com/api
- *    - Paths should NOT include /api prefix: /events
+ * Per doc Section 2 the base URL has two acceptable configurations:
+ *   1. https://pada.usetopscore.com       (paths prepend `/api`)
+ *   2. https://pada.usetopscore.com/api   (paths do NOT prepend `/api`)
  *
- * This function handles BOTH conventions by checking if the base URL already
- * contains /api. If it does, we strip the /api from paths to avoid duplication.
- * If it doesn't, we ensure paths start with /api.
+ * This helper handles both by inspecting the configured base URL.
  */
 export function getTopScoreUrl(path: string): string {
-  const base = TOPSCORE_BASE_URL.endsWith("/api")
-    ? TOPSCORE_BASE_URL.slice(0, -3)
-    : TOPSCORE_BASE_URL.endsWith("/api/")
-    ? TOPSCORE_BASE_URL.slice(0, -4)
-    : TOPSCORE_BASE_URL;
-
+  const base = normalizeTopScoreBaseUrl();
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const baseIncludesApi = TOPSCORE_BASE_URL.includes("/api");
 
-  const hasApiInBase = TOPSCORE_BASE_URL.includes("/api");
-  if (hasApiInBase) {
-    if (normalizedPath.startsWith("/api")) {
-      return `${base}${normalizedPath}`;
-    }
+  if (baseIncludesApi) {
+    if (normalizedPath.startsWith("/api")) return `${base}${normalizedPath}`;
     return `${base}/api${normalizedPath}`;
   }
-
-  if (!normalizedPath.startsWith("/api")) {
-    return `${base}/api${normalizedPath}`;
-  }
+  if (!normalizedPath.startsWith("/api")) return `${base}/api${normalizedPath}`;
   return `${base}${normalizedPath}`;
 }
 
@@ -55,13 +53,13 @@ export function getTeamsPageUrl(): string {
 
 export function getRegistrationUrl(registrationId: string, eventId?: string, teamId?: string, leagueId?: string): string {
   if (eventId) {
-    return getTopScoreUrl(`/events/${eventId}`);
+    return `${PADA_ORG_URL}/e/${eventId}`;
   }
   if (teamId) {
-    return getTopScoreUrl(`/teams/${teamId}`);
+    return `${PADA_ORG_URL}/t/${teamId}`;
   }
   if (leagueId) {
-    return getTopScoreUrl(`/leagues/${leagueId}`);
+    return `${PADA_ORG_URL}/l/${leagueId}`;
   }
   return getEventsPageUrl();
 }
@@ -107,6 +105,14 @@ export function openUrl(url: string): void {
   }
 }
 
+/**
+ * Try to open a custom-scheme deep link (e.g. `venmo://`) in its native app.
+ * Falls back to a web URL if the app isn't installed or the scheme fails.
+ */
+export function openWithAppFallback(appUrl: string, webUrl: string): void {
+  Linking.openURL(appUrl).catch(() => openUrl(webUrl));
+}
+
 export function openPadaOrg(path: string): void {
   Linking.openURL(`${PADA_ORG_URL}${path}`).catch((err) => {
     console.error("Failed to open URL:", err);
@@ -125,6 +131,9 @@ export function openExternalPage(path: string): void {
 
 export const EXTERNAL_URLS = {
   donate: `${PADA_ORG_URL}/donate`,
+  devDonatePaypal: "https://paypal.me/michaelsvinci",
+  devDonateVenmo: "venmo://paycharge?txn=pay&recipients=Michael-Vinci&amount=&note=PadaHub",
+  devDonateVenmoWeb: "https://account.venmo.com/u/Michael-Vinci",
   privacy: "https://www.usetopscore.com/privacy-policy",
   terms: `${PADA_ORG_URL}/terms`,
   help: "https://help.ultimatecentral.com/",

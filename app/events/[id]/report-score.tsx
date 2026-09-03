@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,6 +12,7 @@ import { invalidateQueries } from "@/lib/queryClient";
 import type { EventStatus } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { PageHeader, SectionLabel } from "@/components/ui/Page";
+import { LoaderBar } from "@/components/ui/LoaderBar";
 
 function ScoreAdjuster({
   teamName,
@@ -24,7 +25,7 @@ function ScoreAdjuster({
 }) {
   return (
     <View className="bg-surface border-2 border-surface-border p-5 items-center flex-1">
-      <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-wider text-center h-10" numberOfLines={2}>
+      <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.12em] text-center h-10" numberOfLines={2}>
         {teamName}
       </Text>
       <Text className="text-txt-primary text-6xl font-light my-4">{score}</Text>
@@ -129,9 +130,15 @@ export default function ReportScoreScreen() {
 
   if (isLoadingGame) {
     return (
-      <SafeAreaView className="flex-1 bg-bg justify-center items-center">
-        <ActivityIndicator size="large" color="#00ABA9" />
-        <Text className="text-txt-muted mt-4 uppercase tracking-wider text-[11px] font-bold">Loading game data...</Text>
+      <SafeAreaView className="flex-1 bg-bg">
+        <PageHeader title="report score" back={() => router.back()} />
+        <LoaderBar visible />
+        <View className="flex-1 items-center justify-center px-6">
+          <Ionicons name="football-outline" size={48} color="#8A8A8A" />
+          <Text className="text-txt-muted mt-3 text-[11px] uppercase tracking-[0.18em] font-semibold text-center">
+            loading game data
+          </Text>
+        </View>
       </SafeAreaView>
     );
   }
@@ -140,7 +147,7 @@ export default function ReportScoreScreen() {
     return (
       <SafeAreaView className="flex-1 bg-bg justify-center items-center p-6">
         <Ionicons name="warning-outline" size={64} color="#5C5C5C" />
-        <Text className="text-txt-primary text-xl font-bold uppercase tracking-wider mt-4 text-center">No Game Found</Text>
+        <Text className="text-txt-primary text-xl font-semibold uppercase tracking-[0.12em] mt-4 text-center">no game found</Text>
         <Text className="text-txt-muted mt-2 text-center">This event does not have a game to report scores for.</Text>
         <Button label="Go Back" variant="primary" className="mt-6" onPress={() => router.back()} />
       </SafeAreaView>
@@ -151,7 +158,7 @@ export default function ReportScoreScreen() {
     return (
       <SafeAreaView className="flex-1 bg-bg items-center justify-center px-6" edges={["top", "bottom"]}>
         <Ionicons name="lock-closed" size={48} color="#E51400" />
-        <Text className="text-txt-primary text-xl font-bold uppercase tracking-wider mt-4 text-center">Permission Required</Text>
+        <Text className="text-txt-primary text-xl font-semibold uppercase tracking-[0.12em] mt-4 text-center">permission required</Text>
         <Text className="text-txt-muted text-center mt-2">
           Only the captain of this specific team (and authorized event coordinators or score reporters) may report scores.
         </Text>
@@ -171,10 +178,10 @@ export default function ReportScoreScreen() {
         back={() => router.back()}
         right={
           isSubmitting ? (
-            <ActivityIndicator color="#00ABA9" />
+            <Text className="text-primary-700 text-xs font-semibold uppercase tracking-[0.12em]">saving…</Text>
           ) : (
             <TouchableOpacity onPress={handleSubmit} disabled={isSubmitting}>
-              <Text className="text-primary text-xs font-bold uppercase tracking-wider">Save</Text>
+              <Text className="text-primary-700 text-xs font-semibold uppercase tracking-[0.12em]">save</Text>
             </TouchableOpacity>
           )
         }
@@ -222,7 +229,7 @@ function StatusOption({
       onPress={onPress}
       activeOpacity={0.85}
     >
-      <Text className={`text-sm font-bold uppercase tracking-wider ${selected ? "text-primary" : "text-txt-primary"}`}>
+      <Text className={`text-sm font-semibold uppercase tracking-[0.12em] ${selected ? "text-primary" : "text-txt-primary"}`}>
         {label}
       </Text>
       {selected && <Ionicons name="checkmark" size={20} color="#00ABA9" />}

@@ -1,23 +1,27 @@
 import React, { useCallback, useMemo } from "react";
 import { Tabs, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, Text } from "react-native";
 import { useAuthStore } from "@/store/authStore";
 import { useAnnouncements } from "@/hooks/useApi";
+import { LoaderBar } from "@/components/ui/LoaderBar";
 
 const TabBarBadge = React.memo(function TabBarBadge({ count }: { count: number }) {
   if (count === 0) return null;
   return (
-    <View className="absolute -top-1 -right-1 min-w-4 h-4 bg-danger items-center justify-center px-1 border-2 border-bg">
-      <Text className="text-txt-inverse text-[10px] font-bold">{count > 9 ? "9+" : count}</Text>
-    </View>
+      <View className="absolute -top-1 -right-1 min-w-4 h-4 bg-danger items-center justify-center px-1 border-2 border-bg">
+          <Text className="text-txt-inverse text-[10px] font-semibold">{count > 9 ? "9+" : count}</Text>
+        </View>
   );
 });
 
 function TabsLoading() {
   return (
-    <View className="flex-1 items-center justify-center bg-bg">
-      <ActivityIndicator size="large" color="#00ABA9" />
+    <View className="flex-1 bg-bg">
+      <LoaderBar visible />
+      <View className="flex-1 items-center justify-center">
+          <Text className="text-txt-muted text-[11px] font-semibold uppercase tracking-[0.2em]">loading</Text>
+      </View>
     </View>
   );
 }
@@ -59,7 +63,7 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: "#5C5C5C",
         tabBarLabelStyle: {
           fontFamily: "System",
-          fontWeight: "700",
+          fontWeight: "600",
           fontSize: 10,
           marginTop: 2,
           textTransform: "uppercase",

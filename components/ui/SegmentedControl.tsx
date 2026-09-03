@@ -37,7 +37,7 @@ export function Segmented<T extends string>({
           >
             <Text
               className={cn(
-                "text-xs font-bold uppercase tracking-wider",
+                "text-xs font-semibold uppercase tracking-[0.12em]",
                 active ? "text-txt-inverse" : "text-txt-secondary",
               )}
             >

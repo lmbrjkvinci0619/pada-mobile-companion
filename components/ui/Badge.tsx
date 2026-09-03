@@ -58,7 +58,7 @@ export const Badge = React.memo(function Badge({
     >
       <Text
         className={cn(
-          "font-bold uppercase tracking-wider",
+          "font-semibold uppercase tracking-[0.12em]",
           size === "sm" ? "text-[10px]" : "text-xs",
           textVariant[variant],
         )}

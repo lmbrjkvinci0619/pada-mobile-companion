@@ -41,11 +41,37 @@ interface RateLimitEntry {
 }
 
 const loginAttempts = new Map<string, RateLimitEntry>();
+const MAX_TRACKED_IDENTIFIERS = 1000;
 const LOGIN_MAX_ATTEMPTS = 5;
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_COOLDOWN_MS = 5 * 60 * 1000;
+const LOGIN_CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
+let lastLoginCleanup = Date.now();
+
+function cleanupExpiredLoginAttempts(): void {
+  const now = Date.now();
+  if (now - lastLoginCleanup < LOGIN_CLEANUP_INTERVAL_MS) return;
+  lastLoginCleanup = now;
+  let deleted = 0;
+  for (const [key, entry] of loginAttempts.entries()) {
+    if (now > entry.resetAt) {
+      loginAttempts.delete(key);
+      deleted++;
+    }
+    if (deleted > 100) break;
+  }
+  if (loginAttempts.size > MAX_TRACKED_IDENTIFIERS) {
+    let removed = 0;
+    for (const key of loginAttempts.keys()) {
+      loginAttempts.delete(key);
+      removed++;
+      if (removed >= 100) break;
+    }
+  }
+}
 
 export function checkLoginRateLimit(identifier: string): { allowed: boolean; retryAfterMs?: number } {
+  cleanupExpiredLoginAttempts();
   const now = Date.now();
   const entry = loginAttempts.get(identifier);
 
@@ -63,6 +89,7 @@ export function checkLoginRateLimit(identifier: string): { allowed: boolean; ret
 }
 
 export function recordFailedLogin(identifier: string): void {
+  cleanupExpiredLoginAttempts();
   const now = Date.now();
   const entry = loginAttempts.get(identifier);
 
@@ -78,6 +105,7 @@ export function clearLoginRateLimit(identifier: string): void {
 }
 
 export function getLoginAttemptsRemaining(identifier: string): number {
+  cleanupExpiredLoginAttempts();
   const now = Date.now();
   const entry = loginAttempts.get(identifier);
 

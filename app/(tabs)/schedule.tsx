@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { View, Text, ScrollView, RefreshControl, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, RefreshControl, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar, DateData } from "react-native-calendars";
 import { format, parseISO, isSameDay } from "date-fns";
@@ -10,6 +10,8 @@ import type { Event } from "@/types";
 import { PageHeader, SectionLabel } from "@/components/ui/Page";
 import { Badge } from "@/components/ui/Badge";
 import { Segmented } from "@/components/ui/SegmentedControl";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { LoaderBar } from "@/components/ui/LoaderBar";
 import { cn } from "@/utils/cn";
 
 function isSameDayLocal(eventDateStr: string | undefined, selectedDateStr: string): boolean {
@@ -43,13 +45,13 @@ const EventCard = React.memo(function EventCard({ event, onPress }: { event: Eve
     <TouchableOpacity onPress={onPress} activeOpacity={0.85} className="mb-3">
       <View className="flex-row bg-surface border-2 border-surface-border">
         <View className="w-16 items-center justify-center bg-primary py-4 border-r-2 border-surface-border">
-          <Text className="text-txt-inverse font-bold text-base">{start}</Text>
-          <Text className="text-txt-inverse text-[10px] font-bold uppercase tracking-wider">{ampm}</Text>
+          <Text className="text-txt-inverse font-semibold text-base">{start}</Text>
+          <Text className="text-txt-inverse text-[10px] font-semibold uppercase tracking-[0.12em]">{ampm}</Text>
         </View>
         <View className="flex-1 p-4">
-          <Text className="text-txt-primary font-bold text-base" numberOfLines={1}>{event.title}</Text>
-          <Text className="text-txt-secondary text-xs mt-1 uppercase tracking-wider font-bold">
-            {event.teamName ?? "Team TBD"}
+          <Text className="text-txt-primary font-semibold text-base" numberOfLines={1}>{event.title}</Text>
+          <Text className="text-txt-secondary text-xs mt-1 uppercase tracking-[0.12em] font-semibold">
+            {event.teamName ?? "team tbd"}
           </Text>
         </View>
         <View className="pr-4 self-center">
@@ -112,8 +114,9 @@ export default function ScheduleScreen() {
 
   if (isLoading && !refreshing) {
     return (
-      <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <ActivityIndicator size="large" color="#00ABA9" />
+      <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
+        <PageHeader title="schedule" subtitle="timeline" />
+        <LoaderBar visible />
       </SafeAreaView>
     );
   }
@@ -121,6 +124,7 @@ export default function ScheduleScreen() {
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
       <PageHeader title="schedule" subtitle="timeline" />
+      <LoaderBar visible={refreshing} />
 
       <View className="px-5 pt-3 pb-2">
         <Segmented
@@ -150,10 +154,12 @@ export default function ScheduleScreen() {
               </SectionLabel>
 
               {selectedEvents.length === 0 ? (
-                <View className="bg-surface border-2 border-surface-border py-8 items-center">
-                  <Ionicons name="calendar-outline" size={36} color="#8A8A8A" />
-                  <Text className="text-txt-secondary text-xs font-bold mt-2 lowercase">no events scheduled.</Text>
-                </View>
+                <EmptyState
+                  icon="calendar-outline"
+                  title="no events on this day"
+                  subtitle="Pick another day or switch to All Events to see the full season."
+                  accent="muted"
+                />
               ) : (
                 selectedEvents.map((event) => (
                   <EventCard
@@ -169,10 +175,12 @@ export default function ScheduleScreen() {
           <View className="px-5 py-4">
             <SectionLabel>all upcoming</SectionLabel>
             {sortedEvents.length === 0 ? (
-              <View className="bg-surface border-2 border-surface-border py-8 items-center">
-                <Ionicons name="calendar-outline" size={36} color="#8A8A8A" />
-                <Text className="text-txt-secondary text-xs font-bold mt-2 lowercase">no events.</Text>
-              </View>
+              <EmptyState
+                icon="calendar-outline"
+                title="no events"
+                subtitle="The season calendar is empty right now."
+                accent="muted"
+              />
             ) : (
               sortedEvents.map((event) => (
                 <EventCard

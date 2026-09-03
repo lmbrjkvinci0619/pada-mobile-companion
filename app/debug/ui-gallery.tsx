@@ -6,6 +6,9 @@ import { useAuthRedirect } from '@/hooks/useAuthRedirect';
 import { Card, CardSection } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { LoaderBar } from '@/components/ui/LoaderBar';
+import { PagerDots } from '@/components/ui/PagerDots';
 import { ReadOnlyBanner } from '@/components/ui/ReadOnlyBanner';
 import { Tile, TileGrid, TileCell } from '@/components/ui/Tile';
 import { Pivot, PivotPanorama } from '@/components/ui/Pivot';
@@ -103,7 +106,7 @@ export default function UIGallery() {
               {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
                 <View key={size} className="items-center gap-1">
                   <Avatar size={size} name="PADA" border={size !== "xs"} accent="#00ABA9" />
-                  <Text className="text-txt-muted text-[10px] uppercase tracking-wider">{size}</Text>
+                  <Text className="text-txt-muted text-[10px] uppercase tracking-[0.12em]">{size}</Text>
                 </View>
               ))}
             </View>
@@ -152,7 +155,7 @@ export default function UIGallery() {
           </CardSection>
 
           <CardSection title="section labels" className="mb-8">
-            <SectionLabel action={<Text className="text-primary text-[11px] font-bold uppercase tracking-[0.18em]">all</Text>}>
+            <SectionLabel action={<Text className="text-primary-700 text-[11px] font-semibold uppercase tracking-[0.18em]">all</Text>}>
               announcements
             </SectionLabel>
             <Text className="text-txt-secondary text-sm">
@@ -160,9 +163,22 @@ export default function UIGallery() {
             </Text>
           </CardSection>
 
-          <CardSection title="banners" className="mb-12">
+          <CardSection title="banners" className="mb-8">
             <ReadOnlyBanner />
             <ReadOnlyBanner message="Custom message without link" showLink={false} />
+          </CardSection>
+
+          <CardSection title="states" className="mb-8">
+            <EmptyState
+              icon="calendar-outline"
+              title="no events scheduled"
+              subtitle="When your team schedules a game, it will appear here."
+              accent="muted"
+            />
+            <View className="h-4" />
+            <LoaderBar visible />
+            <View className="h-3" />
+            <PagerDots count={3} active={1} />
           </CardSection>
         </View>
       </ScrollView>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -82,7 +82,7 @@ export default function UserSettingsScreen() {
       <View className="flex-row items-center gap-3 flex-1">
         {children}
         <View className="flex-1">
-          <Text className={`text-sm font-bold ${danger ? "text-danger" : "text-txt-primary"}`}>{title}</Text>
+          <Text className={`text-sm font-semibold ${danger ? "text-danger" : "text-txt-primary"}`}>{title}</Text>
           {subtitle && <Text className="text-txt-secondary text-xs mt-0.5">{subtitle}</Text>}
         </View>
       </View>
@@ -131,18 +131,18 @@ export default function UserSettingsScreen() {
             </View>
           ) : (
             <TouchableOpacity className="mt-4" onPress={() => setIsEditing(true)}>
-              <Text className="text-txt-primary text-xl font-bold lowercase tracking-tight">
+                <Text className="text-txt-primary text-xl font-light lowercase tracking-tight">
                 {localDisplayName || `${user?.firstName} ${user?.lastName}`}
               </Text>
-              <View className="flex-row items-center justify-center gap-1 mt-1">
-                <Text className="text-primary text-[11px] font-bold uppercase tracking-[0.18em]">Edit profile</Text>
-                <Ionicons name="pencil" size={12} color="#00ABA9" />
-              </View>
+                <View className="flex-row items-center justify-center gap-1 mt-1">
+                  <Text className="text-primary-700 text-[11px] font-semibold uppercase tracking-[0.18em]">edit profile</Text>
+                  <Ionicons name="pencil" size={12} color="#00ABA9" />
+                </View>
             </TouchableOpacity>
           )}
 
           <View className="bg-primary-50 border-2 border-primary px-3 py-1 mt-3">
-            <Text className="text-primary text-[10px] font-bold uppercase tracking-[0.2em]">{user?.role}</Text>
+            <Text className="text-primary text-[10px] font-semibold uppercase tracking-[0.2em]">{user?.role}</Text>
           </View>
           <Text className="text-txt-secondary text-xs mt-2">{user?.email}</Text>
         </View>
@@ -197,7 +197,7 @@ export default function UserSettingsScreen() {
         </View>
 
         <View className="items-center pb-8">
-          <Text className="text-txt-muted text-[11px] font-bold uppercase tracking-[0.2em]">PADA Mobile Companion v1.0.0</Text>
+          <Text className="text-txt-muted text-[11px] font-semibold uppercase tracking-[0.2em]">pada mobile companion v1.0.0</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

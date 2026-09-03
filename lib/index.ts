@@ -24,3 +24,4 @@ export {
   clearLoginRateLimit,
   getLoginAttemptsRemaining,
 } from "./validation";
+export { normalizeTopScoreBaseUrl, getTopScoreUrl, openUrl } from "./urlUtils";

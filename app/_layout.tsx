@@ -4,7 +4,7 @@ import { useFonts, Inter_300Light, Inter_400Regular, Inter_500Medium, Inter_600S
 import { Slot } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState, Component, ReactNode } from "react";
-import { View, ActivityIndicator, Text, TouchableOpacity, LogBox, StatusBar } from "react-native";
+import { View, Text, TouchableOpacity, LogBox, StatusBar } from "react-native";
 import { useAuthStore } from "@/store/authStore";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -12,6 +12,7 @@ import { TOPSCORE_BASE_URL, SUPABASE_URL, SUPABASE_ANON_KEY } from "@/constants/
 import { registerForPushNotificationsAsync, setupNotificationListeners } from "@/services/notifications";
 import { router } from "expo-router";
 import { USE_MOCK_DATA } from "@/constants/mockData";
+import { LoaderBar } from "@/components/ui/LoaderBar";
 
 LogBox.ignoreLogs(["Warning: ..."]);
 
@@ -21,7 +22,7 @@ function MockDataWarning() {
   if (!USE_MOCK_DATA) return null;
   return (
     <View className="absolute top-12 left-0 right-0 z-50 bg-warning py-2 px-4">
-      <Text className="text-txt-primary text-[10px] font-bold uppercase tracking-[0.2em] text-center">
+        <Text className="text-txt-primary text-[10px] font-semibold uppercase tracking-[0.2em] text-center">
         DEVELOPMENT MODE — Using mock data. Set EXPO_PUBLIC_USE_MOCK_DATA=false for production.
       </Text>
     </View>
@@ -81,12 +82,12 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
     if (this.state.hasError) {
       return (
         <View className="flex-1 items-center justify-center bg-bg p-6">
-          <Text className="text-danger text-xl font-bold uppercase tracking-wider mb-2">Something went wrong</Text>
+          <Text className="text-danger text-xl font-semibold uppercase tracking-[0.12em] mb-2">something went wrong</Text>
           <Text className="text-txt-secondary text-center mb-4">
             {this.state.error?.message || "An unexpected error occurred"}
           </Text>
           <TouchableOpacity className="bg-primary px-6 py-3" onPress={this.handleRetry} activeOpacity={0.85}>
-            <Text className="text-txt-inverse font-bold uppercase tracking-wider text-xs">Try Again</Text>
+            <Text className="text-txt-inverse font-semibold uppercase tracking-[0.12em] text-xs">try again</Text>
           </TouchableOpacity>
         </View>
       );
@@ -97,8 +98,11 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
 
 function InitialLoading() {
   return (
-    <View className="flex-1 items-center justify-center bg-bg">
-      <ActivityIndicator size="large" color="#00ABA9" />
+    <View className="flex-1 bg-bg">
+      <LoaderBar visible />
+      <View className="flex-1 items-center justify-center">
+        <Text className="text-txt-muted text-[11px] font-semibold uppercase tracking-[0.2em]">starting up</Text>
+      </View>
     </View>
   );
 }
@@ -182,9 +186,9 @@ export default function RootLayout() {
   if (error) {
     return (
       <View className="flex-1 items-center justify-center bg-bg p-6">
-        <Text className="text-danger text-lg font-bold uppercase tracking-wider mb-2">Something went wrong</Text>
+        <Text className="text-danger text-lg font-semibold uppercase tracking-[0.12em] mb-2">something went wrong</Text>
         <Text className="text-txt-secondary text-center mb-4">{error}</Text>
-        <Text className="text-txt-muted text-xs uppercase tracking-wider font-bold">Please restart the app</Text>
+        <Text className="text-txt-muted text-xs uppercase tracking-[0.12em] font-semibold">please restart the app</Text>
       </View>
     );
   }

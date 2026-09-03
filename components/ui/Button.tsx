@@ -80,7 +80,7 @@ export const Button = React.memo(function Button({
       ) : (
         icon ? <View>{icon}</View> : null
       )}
-      <Text className={cn("font-bold uppercase tracking-wider", variantText[variant], textSize[size])}>
+      <Text className={cn("font-semibold uppercase tracking-[0.12em]", variantText[variant], textSize[size])}>
         {label}
       </Text>
     </TouchableOpacity>

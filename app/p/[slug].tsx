@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView, View, Text, ActivityIndicator } from "react-native";
+import { ScrollView, View, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -7,6 +7,7 @@ import { format, parseISO } from "date-fns";
 import { useArticles } from "@/hooks/useApi";
 import { Badge } from "@/components/ui/Badge";
 import { PageHeader } from "@/components/ui/Page";
+import { LoaderBar } from "@/components/ui/LoaderBar";
 
 export default function PageDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -16,8 +17,9 @@ export default function PageDetailScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <ActivityIndicator size="large" color="#00ABA9" />
+      <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
+        <PageHeader title="article" back />
+        <LoaderBar visible />
       </SafeAreaView>
     );
   }
@@ -51,7 +53,7 @@ export default function PageDetailScreen() {
           <View className="flex-row items-center gap-2 mb-3">
             {page.category && <Badge label={page.category} variant="primary" />}
             {page.publishedAt && (
-              <Text className="text-txt-secondary text-[10px] font-bold uppercase tracking-wider">
+              <Text className="text-txt-secondary text-[10px] font-semibold uppercase tracking-[0.12em]">
                 {format(parseISO(page.publishedAt), "MMMM d, yyyy").toLowerCase()}
               </Text>
             )}
@@ -62,8 +64,8 @@ export default function PageDetailScreen() {
           </Text>
 
           {page.authorName && (
-            <Text className="text-txt-secondary text-xs uppercase tracking-wider font-bold mb-6">
-              By {page.authorName}
+            <Text className="text-txt-secondary text-xs uppercase tracking-[0.12em] font-semibold mb-6">
+              by {page.authorName.toLowerCase()}
             </Text>
           )}
 

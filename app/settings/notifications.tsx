@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { View, Text, ScrollView, Switch, TouchableOpacity, Alert, ActivityIndicator, Modal, RefreshControl } from "react-native";
+import { View, Text, ScrollView, Switch, TouchableOpacity, Alert, Modal, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -10,6 +10,7 @@ import { fetchUserPreferences, saveUserPreferences } from "@/services/preference
 import { clearHiddenAnnouncements, getHiddenAnnouncementCount } from "@/services/announcements";
 import * as Notifications from "expo-notifications";
 import { PageHeader, SectionLabel, IconChip } from "@/components/ui/Page";
+import { LoaderBar } from "@/components/ui/LoaderBar";
 import type { NotificationPreferences } from "@/types";
 
 const TIME_OPTIONS = [
@@ -52,11 +53,11 @@ const TimePickerModal = ({
         <View className="bg-bg border-t-4 border-primary">
           <View className="flex-row justify-between items-center px-4 py-4 border-b-2 border-surface-border">
             <TouchableOpacity onPress={onClose}>
-              <Text className="text-txt-secondary text-xs font-bold uppercase tracking-wider">Cancel</Text>
+              <Text className="text-txt-secondary text-xs font-semibold uppercase tracking-[0.12em]">cancel</Text>
             </TouchableOpacity>
-            <Text className="text-txt-primary font-bold text-sm uppercase tracking-wider">Select Time</Text>
+            <Text className="text-txt-primary font-semibold text-sm uppercase tracking-[0.12em]">select time</Text>
             <TouchableOpacity onPress={handleDone}>
-              <Text className="text-primary text-xs font-bold uppercase tracking-wider">Done</Text>
+              <Text className="text-primary-700 text-xs font-semibold uppercase tracking-[0.12em]">done</Text>
             </TouchableOpacity>
           </View>
           <ScrollView className="max-h-[300px]" showsVerticalScrollIndicator={false}>
@@ -69,7 +70,7 @@ const TimePickerModal = ({
                 onPress={() => setSelectedIndex(index)}
                 activeOpacity={0.85}
               >
-                <Text className={`text-base ${selectedIndex === index ? "text-primary font-bold" : "text-txt-primary"}`}>
+                <Text className={`text-base ${selectedIndex === index ? "text-primary font-semibold" : "text-txt-primary"}`}>
                   {time}
                 </Text>
                 {selectedIndex === index && <Ionicons name="checkmark-circle" size={22} color="#00ABA9" />}
@@ -105,7 +106,7 @@ const ToggleRow = ({
     <View className="flex-row items-center gap-3 flex-1">
       <IconChip name={iconName} color={iconColor} background={iconBackground} />
       <View className="flex-1">
-        <Text className={`text-sm font-bold ${disabled ? "text-txt-muted" : "text-txt-primary"}`}>{title}</Text>
+        <Text className={`text-sm font-semibold ${disabled ? "text-txt-muted" : "text-txt-primary"}`}>{title}</Text>
         {subtitle && <Text className="text-txt-secondary text-xs mt-0.5">{subtitle}</Text>}
       </View>
     </View>
@@ -138,7 +139,7 @@ const QuietHoursButton = ({
     disabled={disabled}
     activeOpacity={0.85}
   >
-    <Text className={`text-sm font-bold uppercase tracking-wider ${disabled ? "text-txt-muted" : "text-txt-primary"}`}>{label}</Text>
+    <Text className={`text-sm font-semibold uppercase tracking-[0.12em] ${disabled ? "text-txt-muted" : "text-txt-primary"}`}>{label}</Text>
     <View className="flex-row items-center gap-2">
       <Text className={`text-xs ${disabled ? "text-txt-muted" : "text-txt-secondary"}`}>
         {time || "Not set"}
@@ -293,9 +294,9 @@ export default function NotificationSettingsScreen() {
 
   if (isLoadingPreferences && !user) {
     return (
-      <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <ActivityIndicator size="large" color="#00ABA9" />
-        <Text className="text-txt-muted mt-4">Loading settings...</Text>
+      <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
+        <PageHeader title="notifications" subtitle="preferences" back={() => router.back()} />
+        <LoaderBar visible />
       </SafeAreaView>
     );
   }
@@ -310,15 +311,15 @@ export default function NotificationSettingsScreen() {
           <View className="flex-row items-center gap-3">
             {hasChanges && (
               <TouchableOpacity onPress={handleReset}>
-                <Text className="text-txt-secondary text-xs font-bold uppercase tracking-wider">Reset</Text>
+                <Text className="text-txt-secondary text-xs font-semibold uppercase tracking-[0.12em]">reset</Text>
               </TouchableOpacity>
             )}
             {isSyncing ? (
-              <ActivityIndicator color="#00ABA9" size="small" />
+              <Text className="text-primary-700 text-xs font-semibold uppercase tracking-[0.18em]">saving…</Text>
             ) : (
               <TouchableOpacity onPress={handleSave} disabled={!hasChanges}>
-                <Text className={`font-bold text-xs uppercase tracking-wider ${hasChanges ? "text-primary" : "text-txt-muted"}`}>
-                  Save
+                <Text className={`font-semibold text-xs uppercase tracking-[0.12em] ${hasChanges ? "text-primary-700" : "text-txt-muted"}`}>
+                  save
                 </Text>
               </TouchableOpacity>
             )}
@@ -337,7 +338,7 @@ export default function NotificationSettingsScreen() {
               <View className="flex-row items-center gap-3 flex-1">
                 <IconChip name="notifications" color="#00ABA9" background="#00ABA922" />
                 <View className="flex-1">
-                  <Text className="text-txt-primary text-sm font-bold">Push Notifications</Text>
+                  <Text className="text-txt-primary text-sm font-semibold">push notifications</Text>
                   <Text className="text-txt-secondary text-xs mt-0.5">Receive notifications on your device</Text>
                 </View>
               </View>
@@ -451,7 +452,7 @@ export default function NotificationSettingsScreen() {
                 }))}
                 activeOpacity={0.85}
               >
-                <Text className="text-danger text-xs font-bold uppercase tracking-wider">Clear Quiet Hours</Text>
+                <Text className="text-danger text-xs font-semibold uppercase tracking-[0.12em]">clear quiet hours</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -465,8 +466,8 @@ export default function NotificationSettingsScreen() {
                 <View className="flex-row items-center gap-3">
                   <IconChip name="eye-off" color="#E51400" background="#E5140022" />
                   <View className="flex-1">
-                    <Text className="text-txt-primary text-sm font-bold">{hiddenCount} hidden</Text>
-                    <Text className="text-txt-secondary text-xs mt-0.5">Announcements dismissed from feed</Text>
+                    <Text className="text-txt-primary text-sm font-semibold">{hiddenCount} hidden</Text>
+                    <Text className="text-txt-secondary text-xs mt-0.5">announcements dismissed from feed</Text>
                   </View>
                 </View>
                 <TouchableOpacity
@@ -474,7 +475,7 @@ export default function NotificationSettingsScreen() {
                   onPress={handleClearHiddenAnnouncements}
                   activeOpacity={0.85}
                 >
-                  <Text className="text-primary text-xs font-bold uppercase tracking-wider">Show All Announcements</Text>
+                  <Text className="text-primary-700 text-xs font-semibold uppercase tracking-[0.12em]">show all announcements</Text>
                 </TouchableOpacity>
               </>
             ) : (
@@ -494,13 +495,13 @@ export default function NotificationSettingsScreen() {
             activeOpacity={0.85}
           >
             <Ionicons name="notifications" size={20} color="#00ABA9" />
-            <Text className="text-primary text-xs font-bold uppercase tracking-wider">Send Test Notification</Text>
+            <Text className="text-primary-700 text-xs font-semibold uppercase tracking-[0.12em]">send test notification</Text>
           </TouchableOpacity>
         </View>
 
         {lastSyncTimestamp && (
           <View className="px-5 pb-4">
-            <Text className="text-txt-muted text-[10px] font-bold uppercase tracking-wider text-center">
+            <Text className="text-txt-muted text-[10px] font-semibold uppercase tracking-[0.12em] text-center">
               Last synced: {new Date(lastSyncTimestamp).toLocaleString()}
             </Text>
           </View>

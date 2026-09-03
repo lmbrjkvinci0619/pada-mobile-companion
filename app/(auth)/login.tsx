@@ -7,12 +7,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/authStore";
-import { APP_NAME, SPORT_EMOJI } from "@/constants/config";
+import { APP_NAME } from "@/constants/config";
 import { Button } from "@/components/ui/Button";
 import { isValidEmail } from "@/lib/validation";
 import { openUrl } from "@/lib/urlUtils";
@@ -51,31 +50,35 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="items-center mb-10">
-          <View className="w-24 h-24 bg-primary items-center justify-center mb-5 border-2 border-primary-700">
-            <Text className="text-5xl">{SPORT_EMOJI}</Text>
+          <View className="w-20 h-20 bg-primary items-center justify-center mb-5 border-2 border-primary-700">
+            <Text className="text-txt-inverse text-4xl font-black leading-none">p</Text>
           </View>
-          <Text className="text-primary text-5xl font-light lowercase tracking-tight">
+          <Text className="text-txt-primary text-[44px] font-light lowercase tracking-tight leading-none">
             {APP_NAME}
           </Text>
-          <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-[0.2em] mt-2 text-center">
-            your pada.org ultimate frisbee companion
-          </Text>
+          <View className="flex-row items-center gap-2 mt-3">
+            <View className="h-px w-6 bg-primary" />
+            <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.2em]">
+              pada.org companion
+            </Text>
+            <View className="h-px w-6 bg-primary" />
+          </View>
         </View>
 
         <View className="w-full bg-surface border-2 border-surface-border p-6 gap-5">
-          <Text className="text-txt-primary text-xl font-bold uppercase tracking-[0.2em] text-center">
-            Sign In
+          <Text className="text-txt-primary text-xl font-semibold uppercase tracking-[0.2em] text-center">
+            sign in
           </Text>
 
           {(error || validationError) && (
             <View className="flex-row items-start gap-3 bg-danger/10 border-2 border-danger px-4 py-3">
               <Ionicons name="alert-circle" size={18} color="#E51400" />
-              <Text className="text-danger text-sm font-bold flex-1">{validationError || error}</Text>
+              <Text className="text-danger text-sm font-semibold flex-1">{validationError || error}</Text>
             </View>
           )}
 
           <View className="gap-2">
-            <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-[0.18em]">Email</Text>
+            <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.18em]">email</Text>
             <View className="flex-row items-center bg-surface border-2 border-surface-border px-4 py-3 gap-3">
               <Ionicons name="mail-outline" size={18} color="#5C5C5C" />
               <TextInput
@@ -93,7 +96,7 @@ export default function LoginScreen() {
           </View>
 
           <View className="gap-2">
-            <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-[0.18em]">Password</Text>
+            <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.18em]">password</Text>
             <View className="flex-row items-center bg-surface border-2 border-surface-border px-4 py-3 gap-3">
               <Ionicons name="lock-closed-outline" size={18} color="#5C5C5C" />
               <TextInput
@@ -124,8 +127,8 @@ export default function LoginScreen() {
             >
               {rememberMe && <Ionicons name="checkmark" size={12} color="#FFFFFF" />}
             </View>
-            <Text className="text-txt-secondary text-xs font-bold uppercase tracking-wider">
-              Stay signed in for 30 days
+            <Text className="text-txt-secondary text-xs font-semibold uppercase tracking-[0.12em]">
+              stay signed in for 30 days
             </Text>
           </TouchableOpacity>
 
@@ -141,7 +144,7 @@ export default function LoginScreen() {
             className="items-center"
             onPress={() => openUrl("https://pada.usetopscore.com/password_resets/new")}
           >
-            <Text className="text-primary text-[11px] font-bold uppercase tracking-[0.2em]">
+            <Text className="text-primary-700 text-[11px] font-semibold uppercase tracking-[0.2em]">
               forgot password?
             </Text>
           </TouchableOpacity>

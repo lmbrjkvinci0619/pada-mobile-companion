@@ -81,7 +81,7 @@ export const Avatar = React.memo(function Avatar({
       className={cn(commonClasses, "items-center justify-center")}
       style={{ backgroundColor: accent ?? seedColor(name) }}
     >
-      <Text className={cn("text-txt-inverse font-bold", text)}>
+      <Text className={cn("text-txt-inverse font-semibold", text)}>
         {getInitials(name)}
       </Text>
     </View>

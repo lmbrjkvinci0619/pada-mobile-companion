@@ -40,10 +40,10 @@ export function Pivot<T extends string>({
                 onChange?.(item.key);
               }}
               activeOpacity={0.7}
-              className={cn(
-                "px-4 py-3",
-                isActive ? "border-b-4 border-primary" : "border-b-4 border-transparent",
-              )}
+            className={cn(
+              "px-4 py-3 border-b-2",
+              isActive ? "border-primary" : "border-transparent",
+            )}
             >
               <Text
                 className={cn(
@@ -70,21 +70,31 @@ export function PivotPanorama({
   subtitle,
   children,
   right,
+  unread,
 }: {
   title: string;
   subtitle?: string;
   children?: React.ReactNode;
   right?: React.ReactNode;
+  unread?: number;
 }) {
   return (
-    <View className="px-5 pt-4 pb-3 bg-bg">
+    <View className="px-5 pt-4 pb-3 bg-bg border-b-2 border-surface-border">
       <View className="flex-row items-end justify-between">
         <View className="flex-1 pr-3">
-          <Text className="text-primary text-[44px] font-light lowercase leading-[0.95] tracking-tight">
-            {title}
-          </Text>
+          <View className="flex-row items-center gap-2">
+            {unread ? (
+              <View className="w-2.5 h-2.5 bg-primary" accessibilityLabel={`${unread} unread`} />
+            ) : null}
+            <Text
+              className="text-txt-primary text-[44px] font-light lowercase leading-[0.95] tracking-tight"
+              numberOfLines={1}
+            >
+              {title}
+            </Text>
+          </View>
           {subtitle && (
-            <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-[0.2em] mt-2">
+            <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.2em] mt-2">
               {subtitle}
             </Text>
           )}

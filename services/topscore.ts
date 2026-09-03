@@ -1,4 +1,5 @@
 import { apiClient, buildFieldsParam, MAX_PER_PAGE } from "@/lib/apiClient";
+import { ensureEndpoint } from "@/lib/endpointGuard";
 import type {
   User,
   Registration,
@@ -121,8 +122,16 @@ import {
 // Basic Auth (handled automatically by apiClient).
 
 export async function fetchCurrentUser(signal?: AbortSignal): Promise<User> {
-  const data = await apiClient.get<ApiPerson>("/api/persons/me", { signal });
-  return mapPerson(data);
+  const rawData = await apiClient.getRaw<{ result?: ApiPerson | ApiPerson[]; status?: number }>("/api/persons/me", { signal });
+  const result = rawData?.result;
+  if (!result) {
+    throw new Error("Invalid response from /api/persons/me: expected person object");
+  }
+  const person = Array.isArray(result) ? result[0] : result;
+  if (!person || typeof person !== "object") {
+    throw new Error("Invalid person data from /api/persons/me");
+  }
+  return mapPerson(person);
 }
 
 export async function fetchUserById(personId: string, signal?: AbortSignal): Promise<User | null> {
@@ -156,21 +165,23 @@ export async function updateProfile(
   }>,
   signal?: AbortSignal
 ): Promise<User> {
-  const data = await apiClient.post<ApiPerson>(
-    `/api/persons/${personId}`,
-    { ...updates, _method: "PUT" },
-    { signal }
-  );
-  return mapPerson(data);
+  // NOTE: Per actual API testing (July 2026), /api/persons/{id} returns 404.
+  // TopScore API does NOT support direct profile updates via API.
+  // Profile updates must be done through the website at pada.org.
+  // This function exists for API compatibility but will always fail.
+  console.error("updateProfile: /api/persons/{id} endpoint does not exist (404). TopScore API does not support profile updates via API. Please update profile through the website.");
+  throw new Error("Profile updates are not supported via API. Please update your profile at pada.org.");
 }
 
 // ─── Family ──────────────────────────────────────────────────────────────────
 
 export async function fetchFamily(signal?: AbortSignal): Promise<Family | null> {
   try {
+    await ensureEndpoint("/api/family", "GET");
     const data = await apiClient.get<ApiFamily>("/api/family", { signal });
     return mapFamily(data);
-  } catch {
+  } catch (e) {
+    console.warn("fetchFamily failed:", e);
     return null;
   }
 }
@@ -180,6 +191,7 @@ export async function addFamilyMember(
   relationship: string,
   signal?: AbortSignal
 ): Promise<{ success: boolean; message: string }> {
+  await ensureEndpoint("/api/family/invite", "POST");
   const data = await apiClient.post<{ success: boolean; message: string }>(
     "/api/family/invite",
     { email, relationship },
@@ -192,12 +204,14 @@ export async function removeFamilyMember(
   personId: string,
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
+  await ensureEndpoint(`/api/family/${personId}`, "POST");
   return apiClient.post<{ success: boolean }>(`/api/family/${personId}`, { _method: "DELETE" }, { signal });
 }
 
 // ─── Memberships ─────────────────────────────────────────────────────────────
 
 export async function fetchMemberships(signal?: AbortSignal): Promise<Membership[]> {
+  await ensureEndpoint("/api/memberships", "GET");
   const data = await apiClient.get<ApiMembership[]>("/api/memberships", { signal });
   return data.map(mapMembership);
 }
@@ -207,6 +221,7 @@ export async function purchaseMembership(
   paymentToken: string,
   signal?: AbortSignal
 ): Promise<{ success: boolean; membership_id?: string; error?: string }> {
+  await ensureEndpoint("/api/memberships/purchase", "POST");
   return apiClient.post<{ success: boolean; membership_id?: string; error?: string }>(
     "/api/memberships/purchase",
     { type: membershipType, payment_token: paymentToken },
@@ -265,12 +280,12 @@ export async function fetchRegistrationById(
   registrationId: string,
   signal?: AbortSignal
 ): Promise<Registration | null> {
-  try {
-    const data = await apiClient.get<ApiRegistration>(`/api/registrations/${registrationId}`, { signal });
-    return mapRegistration(data);
-  } catch {
-    return null;
-  }
+  // NOTE: Per actual API testing (July 2026), /api/registrations/{id} returns 404.
+  // TopScore API does not support fetching a single registration by ID directly.
+  // Registrations must be fetched with context (event_id, team_id, or person_id).
+  // This function will always return null because the endpoint does not exist.
+  console.warn("fetchRegistrationById: /api/registrations/{id} endpoint does not exist (404). TopScore API requires event_id, team_id, or person_id to fetch registrations. Use fetchRegistrations() with proper context instead.");
+  return null;
 }
 
 // ─── Teams ────────────────────────────────────────────────────────────────────
@@ -349,6 +364,7 @@ export async function updateTeamMemberRole(
   role: string,
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
+  await ensureEndpoint(`/api/teams/${teamId}/roster/${personId}`, "POST");
   return apiClient.post<{ success: boolean }>(
     `/api/teams/${teamId}/roster/${personId}`,
     { role, _method: "PUT" },
@@ -361,6 +377,7 @@ export async function removeTeamMember(
   personId: string,
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
+  await ensureEndpoint(`/api/teams/${teamId}/roster/${personId}`, "POST");
   return apiClient.delete<{ success: boolean }>(
     `/api/teams/${teamId}/roster/${personId}`,
     { signal }
@@ -506,9 +523,9 @@ export async function fetchPastEvents(
 
 // ─── Schedule Export / Calendar Sync ─────────────────────────────────────────
 // NOTE: Per endpoint verification (July 2026), /api/schedule returns 404.
-// The /api/teams/{teamId}/schedule/export endpoint is UNTESTED - it may also return 404.
-// This function may need adjustment based on actual API capabilities.
-// TODO: Verify /api/teams/{teamId}/schedule/export with /api/help?endpoint=/api/teams/{teamId}/schedule/export
+// The /api/teams/{teamId}/schedule/export endpoint is SPECULATIVE - not in official
+// spec and may return 404. This function has fallback behavior that returns empty
+// URLs rather than crashing when the endpoint is unavailable.
 
 export async function fetchScheduleExport(
   teamId: string,
@@ -517,18 +534,17 @@ export async function fetchScheduleExport(
   // Per TopScore API spec, schedule export endpoint pattern should be:
   // GET /api/teams/{id}/schedule/export
   // However endpoint testing shows /api/schedule returns 404.
-  // The /api/teams/{teamId}/schedule/export may have similar issues.
-  // Using team-based path as fallback - verify with /api/help?endpoint=/api/teams/{id}/schedule/export
+  // The /api/teams/{teamId}/schedule/export is marked SPECULATIVE - not verified.
+  // This function may fail if the endpoint doesn't exist on the server.
   try {
+    await ensureEndpoint(`/api/teams/${teamId}/schedule/export`, "GET");
     const { data } = await apiClient.getWithMeta<ApiSchedule>(
       `/api/teams/${teamId}/schedule/export`,
       { signal }
     );
     return mapScheduleExport(data);
   } catch (error) {
-    // If the team schedule export endpoint doesn't exist, return empty URLs
-    // This prevents the app from crashing when the endpoint is unavailable
-    console.warn("fetchScheduleExport: Team schedule export endpoint may not exist. Returning empty export data.", error instanceof Error ? error.message : "Unknown error");
+    console.warn("fetchScheduleExport: Team schedule export endpoint unavailable or returned error.", error instanceof Error ? error.message : "Unknown error");
     return {
       teamId: teamId,
       icsUrl: "",
@@ -544,6 +560,7 @@ export async function generateCalendarUrl(
   type: "google" | "outlook" | "ics",
   signal?: AbortSignal
 ): Promise<string> {
+  await ensureEndpoint(`/api/teams/${teamId}/schedule/url`, "GET");
   const data = await apiClient.get<{ url: string }>(
     `/api/teams/${teamId}/schedule/url?type=${type}`,
     { signal }
@@ -612,6 +629,7 @@ export async function fetchEventStandings(
   eventId: string,
   signal?: AbortSignal
 ): Promise<EventStandings> {
+  await ensureEndpoint(`/api/events/${eventId}/standings`, "GET");
   const data = await apiClient.get<ApiStandings>(
     `/api/events/${eventId}/standings`,
     { signal }
@@ -623,6 +641,7 @@ export async function fetchTeamStandings(
   teamId: string,
   signal?: AbortSignal
 ): Promise<TeamStanding[]> {
+  await ensureEndpoint(`/api/teams/${teamId}/standings`, "GET");
   const data = await apiClient.get<ApiStandings>(
     `/api/teams/${teamId}/standings`,
     { signal }
@@ -637,12 +656,14 @@ export async function fetchEventAttendance(
   signal?: AbortSignal
 ): Promise<EventAttendance | null> {
   try {
+    await ensureEndpoint(`/api/events/${eventId}/attendance`, "GET");
     const data = await apiClient.get<ApiAttendance>(
       `/api/events/${eventId}/attendance`,
       { signal }
     );
     return mapEventAttendance(data);
-  } catch {
+  } catch (e) {
+    console.warn("fetchEventAttendance failed:", e);
     return null;
   }
 }
@@ -653,6 +674,7 @@ export async function updateAttendance(
   notes?: string,
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
+  await ensureEndpoint(`/api/events/${eventId}/attendance`, "POST");
   return apiClient.post<{ success: boolean }>(
     `/api/events/${eventId}/attendance`,
     { status, notes, _method: "PUT" },
@@ -672,6 +694,7 @@ export async function fetchTeamAttendance(
   if (endDate) params.push(`end_date=${endDate}`);
   if (params.length > 0) path += `?${params.join("&")}`;
 
+  await ensureEndpoint(path, "GET");
   const data = await apiClient.get<ApiAttendance[]>(path, { signal });
   return data.map(mapEventAttendance);
 }
@@ -682,6 +705,7 @@ export async function fetchPractices(
   teamId: string,
   signal?: AbortSignal
 ): Promise<Practice[]> {
+  await ensureEndpoint(`/api/teams/${teamId}/practices`, "GET");
   const data = await apiClient.get<ApiPractice[]>(`/api/teams/${teamId}/practices`, { signal });
   return data.map(mapPractice);
 }
@@ -697,6 +721,7 @@ export async function createPractice(
   },
   signal?: AbortSignal
 ): Promise<Practice> {
+  await ensureEndpoint(`/api/teams/${teamId}/practices`, "POST");
   const data = await apiClient.post<ApiPractice>(
     `/api/teams/${teamId}/practices`,
     {
@@ -716,12 +741,13 @@ export async function updatePractice(
   updates: Partial<{
     name: string;
     start_date: string;
-    end_date?: string;
-    location_id?: number;
-    notes?: string;
+    end_date: string;
+    location_id: number;
+    notes: string;
   }>,
   signal?: AbortSignal
 ): Promise<Practice> {
+  await ensureEndpoint(`/api/practices/${practiceId}`, "POST");
   const data = await apiClient.post<ApiPractice>(
     `/api/practices/${practiceId}`,
     { ...updates, _method: "PUT" },
@@ -734,6 +760,7 @@ export async function deletePractice(
   practiceId: string,
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
+  await ensureEndpoint(`/api/practices/${practiceId}`, "POST");
   return apiClient.post<{ success: boolean }>(`/api/practices/${practiceId}`, { _method: "DELETE" }, { signal });
 }
 
@@ -742,6 +769,7 @@ export async function updatePracticeAttendance(
   status: "attending" | "declined" | "maybe",
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
+  await ensureEndpoint(`/api/practices/${practiceId}/attendance`, "POST");
   return apiClient.post<{ success: boolean }>(
     `/api/practices/${practiceId}/attendance`,
     { status },
@@ -752,20 +780,21 @@ export async function updatePracticeAttendance(
 // ─── Score Reporting ──────────────────────────────────────────────────────────
 
 export async function reportScore(
-  eventId: string,
+  gameId: string,
   homeScore: number,
   awayScore: number,
   isOvertime: boolean = false,
   status?: import("@/types").EventStatus,
   signal?: AbortSignal
 ): Promise<{ success: boolean; score_id?: string }> {
-  if (!eventId) {
-    throw new Error("eventId is required");
+  if (!gameId) {
+    throw new Error("gameId is required");
   }
   if (homeScore < 0 || awayScore < 0) {
     throw new Error("Scores must be non-negative");
   }
   const payload: Record<string, unknown> = {
+    game_id: gameId,
     home_score: homeScore,
     away_score: awayScore,
     is_overtime: isOvertime,
@@ -776,27 +805,29 @@ export async function reportScore(
   }
 
   return apiClient.post<{ success: boolean; score_id?: string }>(
-    `/api/events/${eventId}/scores`,
+    "/api/games/report-score",
     payload,
     { signal }
   );
 }
 
 export async function updateScore(
-  eventId: string,
+  gameId: string,
   homeScore: number,
   awayScore: number,
   isOvertime: boolean = false,
   status?: import("@/types").EventStatus,
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
-  if (!eventId) {
-    throw new Error("eventId is required");
+  if (!gameId) {
+    throw new Error("gameId is required");
   }
   if (homeScore < 0 || awayScore < 0) {
     throw new Error("Scores must be non-negative");
   }
+  await ensureEndpoint("/api/games/report-score", "POST");
   const payload: Record<string, unknown> = {
+    game_id: gameId,
     home_score: homeScore,
     away_score: awayScore,
     is_overtime: isOvertime,
@@ -807,7 +838,7 @@ export async function updateScore(
   }
 
   return apiClient.post<{ success: boolean }>(
-    `/api/events/${eventId}/scores`,
+    "/api/games/report-score",
     { ...payload, _method: "PUT" },
     { signal }
   );
@@ -839,11 +870,13 @@ export async function fetchArticleBySlug(
 // ─── Waivers ─────────────────────────────────────────────────────────────────
 
 export async function fetchWaivers(signal?: AbortSignal): Promise<Waiver[]> {
+  await ensureEndpoint("/api/waivers", "GET");
   const data = await apiClient.get<ApiWaiver[]>("/api/waivers", { signal });
   return data.map(mapWaiver);
 }
 
 export async function fetchUnsignedWaivers(signal?: AbortSignal): Promise<Waiver[]> {
+  await ensureEndpoint("/api/waivers?unsigned=true", "GET");
   const data = await apiClient.get<ApiWaiver[]>("/api/waivers?unsigned=true", { signal });
   return data.map(mapWaiver);
 }
@@ -864,6 +897,7 @@ export async function fetchEventWaivers(
   eventId: string,
   signal?: AbortSignal
 ): Promise<Waiver[]> {
+  await ensureEndpoint(`/api/events/${eventId}/waivers`, "GET");
   const data = await apiClient.get<ApiWaiver[]>(`/api/events/${eventId}/waivers`, { signal });
   return data.map(mapWaiver);
 }
@@ -881,6 +915,7 @@ export async function fetchPolls(
   if (eventId) params.push(`event_id=${eventId}`);
   if (params.length > 0) path += `?${params.join("&")}`;
 
+  await ensureEndpoint(path, "GET");
   const data = await apiClient.get<ApiPoll[]>(path, { signal });
   return data.map(mapPoll);
 }
@@ -899,6 +934,7 @@ export async function votePoll(
   optionId: number,
   signal?: AbortSignal
 ): Promise<{ success: boolean; votes: number }> {
+  await ensureEndpoint(`/api/polls/${pollId}/vote`, "POST");
   return apiClient.post<{ success: boolean; votes: number }>(
     `/api/polls/${pollId}/vote`,
     { option_id: optionId, _method: "PUT" },
@@ -916,6 +952,7 @@ export async function createPoll(
   },
   signal?: AbortSignal
 ): Promise<Poll> {
+  await ensureEndpoint("/api/polls", "POST");
   const result = await apiClient.post<ApiPoll>("/api/polls", data, { signal });
   return mapPoll(result);
 }
@@ -936,6 +973,7 @@ export async function sendMailMessage(
   body: string,
   signal?: AbortSignal
 ): Promise<{ success: boolean; message_id?: string }> {
+  await ensureEndpoint("/api/mail/send", "POST");
   return apiClient.post<{ success: boolean; message_id?: string }>(
     "/api/mail/send",
     { recipients, subject, body },
@@ -957,6 +995,7 @@ export async function markNotificationRead(
   notificationId: string,
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
+  await ensureEndpoint(`/api/notifications/${notificationId}/read`, "POST");
   return apiClient.post<{ success: boolean }>(
     `/api/notifications/${notificationId}/read`,
     { _method: "PUT" },
@@ -967,6 +1006,7 @@ export async function markNotificationRead(
 export async function markAllNotificationsRead(
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
+  await ensureEndpoint("/api/notifications/read-all", "POST");
   return apiClient.post<{ success: boolean }>(
     "/api/notifications/read-all",
     {},
@@ -978,6 +1018,7 @@ export async function deleteNotification(
   notificationId: string,
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
+  await ensureEndpoint(`/api/notifications/${notificationId}`, "POST");
   return apiClient.post<{ success: boolean }>(
     `/api/notifications/${notificationId}`,
     { _method: "DELETE" },
@@ -1064,6 +1105,7 @@ export async function fetchEventRoster(
   eventId: string,
   signal?: AbortSignal
 ): Promise<import("@/types").TeamMember[]> {
+  await ensureEndpoint(`/api/events/${eventId}/roster`, "GET");
   const { data: rawData } = await apiClient.getWithMeta<ApiRegistration | ApiRegistration[]>(
     `/api/events/${eventId}/roster`,
     { signal }
@@ -1091,6 +1133,7 @@ export async function inviteRosterMember(
   role: import("@/types").TeamRole,
   signal?: AbortSignal
 ): Promise<{ success: boolean; invitation_id?: string }> {
+  await ensureEndpoint(`/api/teams/${teamId}/roster/invite`, "POST");
   return apiClient.post<{ success: boolean; invitation_id?: string }>(
     `/api/teams/${teamId}/roster/invite`,
     { person_email: email, role },
@@ -1103,6 +1146,7 @@ export async function respondToRosterInvitation(
   response: "accepted" | "declined",
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
+  await ensureEndpoint(`/api/roster-invitations/${invitationId}/respond`, "POST");
   return apiClient.post<{ success: boolean }>(
     `/api/roster-invitations/${invitationId}/respond`,
     { response },
@@ -1114,6 +1158,7 @@ export async function fetchRosterInvitations(
   teamId: string,
   signal?: AbortSignal
 ): Promise<ApiRosterInvitation[]> {
+  await ensureEndpoint(`/api/teams/${teamId}/roster/invitations`, "GET");
   return apiClient.get<ApiRosterInvitation[]>(
     `/api/teams/${teamId}/roster/invitations`,
     { signal }
@@ -1125,6 +1170,7 @@ export async function cancelRosterInvitation(
   invitationId: string,
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
+  await ensureEndpoint(`/api/teams/${teamId}/roster/invitations/${invitationId}`, "POST");
   return apiClient.post<{ success: boolean }>(
     `/api/teams/${teamId}/roster/invitations/${invitationId}`,
     { _method: "DELETE" },
@@ -1139,6 +1185,7 @@ export async function fetchTeamStats(
   signal?: AbortSignal
 ): Promise<import("@/types").TeamStats | null> {
   try {
+    await ensureEndpoint(`/api/teams/${teamId}/stats`, "GET");
     const data = await apiClient.get<ApiTeamStats>(
       `/api/teams/${teamId}/stats`,
       { signal }
@@ -1167,6 +1214,7 @@ export async function fetchEventAttendanceSurvey(
   signal?: AbortSignal
 ): Promise<import("@/types").AttendanceSurvey | null> {
   try {
+    await ensureEndpoint(`/api/events/${eventId}/attendance/survey`, "GET");
     const data = await apiClient.get<ApiAttendanceSurvey>(
       `/api/events/${eventId}/attendance/survey`,
       { signal }
@@ -1195,6 +1243,7 @@ export async function submitAttendanceSurveyResponse(
   responses: Array<{ question_id: number; answer: string | boolean }>,
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
+  await ensureEndpoint(`/api/events/${eventId}/attendance/survey`, "POST");
   return apiClient.post<{ success: boolean }>(
     `/api/events/${eventId}/attendance/survey`,
     { responses },
@@ -1207,6 +1256,7 @@ export async function fetchEventRosterSettings(
   signal?: AbortSignal
 ): Promise<import("@/types").EventRosterSettings | null> {
   try {
+    await ensureEndpoint(`/api/events/${eventId}/roster/settings`, "GET");
     const data = await apiClient.get<ApiEventRosterSettings>(
       `/api/events/${eventId}/roster/settings`,
       { signal }
@@ -1232,6 +1282,7 @@ export async function fetchRegistrationsByPerson(
   personId: string,
   signal?: AbortSignal
 ): Promise<import("@/types").Registration[]> {
+  await ensureEndpoint(`/api/persons/${personId}/registrations`, "GET");
   const { data: rawData } = await apiClient.getWithMeta<ApiRegistration[]>(
     `/api/persons/${personId}/registrations`,
     { signal }
@@ -1244,6 +1295,7 @@ export async function fetchRegistrationsByTeam(
   teamId: string,
   signal?: AbortSignal
 ): Promise<import("@/types").Registration[]> {
+  await ensureEndpoint(`/api/teams/${teamId}/registrations`, "GET");
   const { data: rawData } = await apiClient.getWithMeta<ApiRegistration[]>(
     `/api/teams/${teamId}/registrations`,
     { signal }
@@ -1256,6 +1308,7 @@ export async function fetchRegistrationsByEvent(
   eventId: string,
   signal?: AbortSignal
 ): Promise<import("@/types").Registration[]> {
+  await ensureEndpoint(`/api/events/${eventId}/registrations`, "GET");
   const { data: rawData } = await apiClient.getWithMeta<ApiRegistration[]>(
     `/api/events/${eventId}/registrations`,
     { signal }
@@ -1269,11 +1322,12 @@ export async function updateRegistrationStatus(
   status: import("@/types").RegistrationStatus,
   signal?: AbortSignal
 ): Promise<{ success: boolean }> {
-  return apiClient.post<{ success: boolean }>(
-    `/api/registrations/${registrationId}`,
-    { status, _method: "PUT" },
-    { signal }
-  );
+  // NOTE: Per actual API testing (July 2026), /api/registrations/{id} returns 404.
+  // TopScore API does not support direct registration status updates via API.
+  // Status updates must be done through the website.
+  // This function exists for API compatibility but will always fail.
+  console.error("updateRegistrationStatus: /api/registrations/{id} endpoint does not exist (404). TopScore API does not support registration status updates via API. Please update registration status through the website.");
+  throw new Error("Registration status updates are not supported via API. Please update your registration at pada.org.");
 }
 
 // ─── Search ─────────────────────────────────────────────────────────────────

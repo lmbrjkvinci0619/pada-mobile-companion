@@ -47,20 +47,6 @@ jest.mock('expo-notifications', () => ({
   removeNotificationSubscription: jest.fn(),
 }));
 
-// Mock MMKV v4
-jest.mock('react-native-mmkv', () => ({
-  createMMKV: jest.fn(() => ({
-    getString: jest.fn(),
-    getAllKeys: jest.fn(() => []),
-    set: jest.fn(),
-    remove: jest.fn(),
-    clearAll: jest.fn(),
-    contains: jest.fn(),
-    getBoolean: jest.fn(),
-    getNumber: jest.fn(),
-  })),
-}));
-
 // Mock NativeWind / Tailwind
 jest.mock('nativewind', () => ({
   styled: (Component) => Component,

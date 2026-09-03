@@ -1,10 +1,12 @@
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useState, useRef } from "react";
 import {
   ScrollView,
   View,
   Text,
   TouchableOpacity,
   RefreshControl,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -14,14 +16,16 @@ import { useAuthStore } from "@/store/authStore";
 import { useEvents, useAnnouncements, useRegistrations, useArticles } from "@/hooks/useApi";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 import { Tile, TileGrid, TileCell } from "@/components/ui/Tile";
 import { Hub, HubPanel } from "@/components/ui/Hub";
 import { PivotPanorama } from "@/components/ui/Pivot";
 import { SectionLabel, IconChip } from "@/components/ui/Page";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { LoaderBar } from "@/components/ui/LoaderBar";
+import { PagerDots } from "@/components/ui/PagerDots";
+import { DonateFooter } from "@/components/ui/DonateFooter";
 import type { Event, Article } from "@/types";
 import { EXTERNAL_URLS, openUrl } from "@/lib/urlUtils";
-import { cn } from "@/utils/cn";
 
 function eventDateLabel(dateStr: string): string {
   const d = parseISO(dateStr);
@@ -29,17 +33,6 @@ function eventDateLabel(dateStr: string): string {
   if (isTomorrow(d)) return "Tomorrow";
   return format(d, "EEE, MMM d");
 }
-
-const PanelTitle = React.memo(function PanelTitle({ children }: { children: string }) {
-  return (
-    <View className="mb-3">
-      <View className="h-1 w-10 bg-primary mb-3" />
-      <Text className="text-txt-primary text-[28px] font-light lowercase tracking-tight leading-tight">
-        {children}
-      </Text>
-    </View>
-  );
-});
 
 const AnnouncementRow = React.memo(function AnnouncementRow({
   ann,
@@ -62,15 +55,12 @@ const AnnouncementRow = React.memo(function AnnouncementRow({
         <View className="flex-row items-center gap-2 mb-1">
           {!ann.isRead && <View className="w-2 h-2 bg-primary" />}
           {ann.isUrgent && <Badge label="Urgent" variant="danger" />}
-          <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-wider">
+          <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.12em]">
             {format(new Date(ann.createdAt), "MMM d").toLowerCase()}
           </Text>
         </View>
         <Text
-          className={cn(
-            "text-sm font-bold leading-snug",
-            ann.isRead ? "text-txt-secondary" : "text-txt-primary",
-          )}
+          className={`text-sm font-semibold leading-snug ${ann.isRead ? "text-txt-secondary" : "text-txt-primary"}`}
           numberOfLines={1}
         >
           {ann.title}
@@ -116,14 +106,14 @@ const ArticleTile = React.memo(function ArticleTile({ article }: { article: Arti
         </View>
         <View className="p-3">
           {article.category && <Badge label={article.category} variant="primary" className="mb-2" />}
-          <Text className="text-txt-primary text-sm font-bold leading-snug" numberOfLines={2}>
-            {article.title}
-          </Text>
-          {article.publishedAt && (
-            <Text className="text-txt-secondary text-[10px] font-bold uppercase tracking-wider mt-2">
-              {format(parseISO(article.publishedAt), "MMM d, yyyy").toLowerCase()}
+            <Text className="text-txt-primary text-sm font-semibold leading-snug" numberOfLines={2}>
+              {article.title}
             </Text>
-          )}
+            {article.publishedAt && (
+              <Text className="text-txt-secondary text-[10px] font-semibold uppercase tracking-[0.12em] mt-2">
+                {format(parseISO(article.publishedAt), "MMM d, yyyy").toLowerCase()}
+              </Text>
+            )}
         </View>
       </View>
     </TouchableOpacity>
@@ -134,7 +124,7 @@ export default function HomeScreen() {
   const { user, isAuthenticated } = useAuthStore();
   const { data: events = [], isLoading: eventsLoading, refetch: refetchEvents } = useEvents();
   const { data: registrations = [] } = useRegistrations();
-  const { data: announcements = [], isLoading: announcementsLoading } = useAnnouncements(user?.id || "");
+  const { data: announcements = [], isLoading: announcementsLoading, refetch: refetchAnnouncements } = useAnnouncements(user?.id || "");
   const { data: articles = [] } = useArticles();
   const [refreshing, setRefreshing] = React.useState(false);
 
@@ -193,21 +183,28 @@ export default function HomeScreen() {
 
   const liveEvent = useMemo(() => events.find((e) => e.status === "in_progress"), [events]);
 
+  const unreadAnnouncements = useMemo(
+    () => announcements.filter((a) => !a.isRead).length,
+    [announcements],
+  );
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await refetchEvents();
+    await Promise.all([refetchEvents(), refetchAnnouncements()]);
     setRefreshing(false);
-  }, [refetchEvents]);
+  }, [refetchEvents, refetchAnnouncements]);
 
-  const isLoading = eventsLoading || announcementsLoading;
+  const isLoading = (eventsLoading || announcementsLoading) && events.length === 0;
 
-  if (isLoading && !refreshing) {
-    return (
-      <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <Ionicons name="sync" size={28} color="#00ABA9" />
-      </SafeAreaView>
-    );
-  }
+  const [activePanel, setActivePanel] = useState(0);
+  const activePanelRef = useRef(0);
+  activePanelRef.current = activePanel;
+  const onHubScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const panelWidth = e.nativeEvent.layoutMeasurement.width - 32;
+    if (panelWidth <= 0) return;
+    const idx = Math.round(e.nativeEvent.contentOffset.x / panelWidth);
+    if (idx !== activePanelRef.current) setActivePanel(idx);
+  }, []);
 
   const greeting = isAuthenticated ? (user?.firstName ?? "player").toLowerCase() : "guest";
 
@@ -234,9 +231,11 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
+      <LoaderBar visible={isLoading} />
       <PivotPanorama
         title="padahub"
         subtitle={format(new Date(), "EEEE, MMMM d").toLowerCase()}
+        unread={unreadAnnouncements}
         right={
           <TouchableOpacity onPress={() => router.push("/(tabs)/profile")} activeOpacity={0.85}>
             <Avatar
@@ -249,12 +248,17 @@ export default function HomeScreen() {
         }
       />
 
-      <Hub className="flex-1">
+      <Hub className="flex-1" onScroll={onHubScroll}>
         <HubPanel title="home">
           <ScrollView showsVerticalScrollIndicator={false} className="flex-1" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00ABA9" />}>
-            <Text className="text-txt-secondary text-sm mb-4">
-              hello, {greeting}.
-            </Text>
+            <View className="mb-5">
+              <Text className="text-txt-primary text-[28px] font-light lowercase tracking-tight leading-tight">
+                hello, {greeting}.
+              </Text>
+          <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.18em] mt-1">
+            {format(new Date(), "EEEE · MMMM d").toLowerCase()}
+          </Text>
+            </View>
 
             {!isAuthenticated && (
               <Tile
@@ -334,12 +338,12 @@ export default function HomeScreen() {
               </TileCell>
             </TileGrid>
 
-            <View className="h-5" />
+            <View className="h-6" />
 
             <SectionLabel
               action={
                 <TouchableOpacity onPress={() => router.push("/(tabs)/schedule")}>
-                  <Text className="text-primary text-[11px] font-bold uppercase tracking-[0.18em]">all</Text>
+                  <Text className="text-primary-700 text-[11px] font-semibold uppercase tracking-[0.18em]">all</Text>
                 </TouchableOpacity>
               }
             >
@@ -347,10 +351,12 @@ export default function HomeScreen() {
             </SectionLabel>
 
             {upcomingGames.length === 0 ? (
-              <View className="bg-surface border-2 border-surface-border py-6 items-center">
-                <Ionicons name="calendar-outline" size={28} color="#8A8A8A" />
-                <Text className="text-txt-secondary text-xs font-bold mt-2 lowercase">no games scheduled.</Text>
-              </View>
+              <EmptyState
+                icon="calendar-outline"
+                title="no games scheduled"
+                subtitle="When your team schedules a game, it will appear here."
+                accent="muted"
+              />
             ) : (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-1">
                 <View className="flex-row px-1">
@@ -365,12 +371,12 @@ export default function HomeScreen() {
           </ScrollView>
         </HubPanel>
 
-        <HubPanel title="alerts">
-          <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
+        <HubPanel title="alerts" signal={unreadAnnouncements > 0 ? "unread" : null}>
+          <ScrollView showsVerticalScrollIndicator={false} className="flex-1" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00ABA9" />}>
             <SectionLabel
               action={
                 <TouchableOpacity onPress={() => router.push("/announcements")}>
-                  <Text className="text-primary text-[11px] font-bold uppercase tracking-[0.18em]">all</Text>
+                  <Text className="text-primary-700 text-[11px] font-semibold uppercase tracking-[0.18em]">all</Text>
                 </TouchableOpacity>
               }
             >
@@ -378,10 +384,12 @@ export default function HomeScreen() {
             </SectionLabel>
 
             {announcements.length === 0 ? (
-              <View className="bg-surface border-2 border-surface-border py-8 items-center">
-                <Ionicons name="megaphone-outline" size={32} color="#8A8A8A" />
-                <Text className="text-txt-secondary text-xs font-bold mt-2 lowercase">no active announcements.</Text>
-              </View>
+              <EmptyState
+                icon="megaphone-outline"
+                title="no active announcements"
+                subtitle="You're all caught up. PADA posts here when there's news."
+                accent="muted"
+              />
             ) : (
               <View className="border-t-2 border-surface-border">
                 {announcements.slice(0, 6).map((ann) => (
@@ -390,7 +398,7 @@ export default function HomeScreen() {
               </View>
             )}
 
-            <View className="h-5" />
+            <View className="h-6" />
             <SectionLabel>quick links</SectionLabel>
             <TileGrid>
               <TileCell basis="1/2">
@@ -434,7 +442,7 @@ export default function HomeScreen() {
         </HubPanel>
 
         <HubPanel title="explore">
-          <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
+          <ScrollView showsVerticalScrollIndicator={false} className="flex-1" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00ABA9" />}>
             <TouchableOpacity
               onPress={() => openUrl(EXTERNAL_URLS.about)}
               activeOpacity={0.9}
@@ -443,7 +451,7 @@ export default function HomeScreen() {
               <View className="flex-row items-start gap-3">
                 <IconChip name="information-circle" color="#339933" background="#33993322" />
                 <View className="flex-1">
-                  <Text className="text-txt-primary text-sm font-bold uppercase tracking-wider">About PADA</Text>
+                    <Text className="text-txt-primary text-sm font-semibold uppercase tracking-[0.12em]">About PADA</Text>
                   <Text className="text-txt-secondary text-xs mt-1" numberOfLines={3}>
                     Portland Ultimate Frisbee Association — building community through spirit of the game since 1985.
                   </Text>
@@ -453,10 +461,11 @@ export default function HomeScreen() {
 
             <SectionLabel>events</SectionLabel>
             {publicEvents.length === 0 ? (
-              <View className="bg-surface border-2 border-surface-border py-6 items-center">
-                <Ionicons name="calendar-outline" size={28} color="#8A8A8A" />
-                <Text className="text-txt-secondary text-xs font-bold mt-2">no upcoming events.</Text>
-              </View>
+              <EmptyState
+                icon="calendar-outline"
+                title="no upcoming events"
+                accent="muted"
+              />
             ) : (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-1">
                 <View className="flex-row px-1">
@@ -469,14 +478,14 @@ export default function HomeScreen() {
               </ScrollView>
             )}
 
-            <View className="h-5" />
+            <View className="h-6" />
 
             {recentArticles.length > 0 && (
               <>
                 <SectionLabel
                   action={
                     <TouchableOpacity onPress={() => router.push("/p")}>
-                      <Text className="text-primary text-[11px] font-bold uppercase tracking-[0.18em]">all</Text>
+                      <Text className="text-primary-700 text-[11px] font-semibold uppercase tracking-[0.18em]">all</Text>
                     </TouchableOpacity>
                   }
                 >
@@ -496,6 +505,12 @@ export default function HomeScreen() {
           </ScrollView>
         </HubPanel>
       </Hub>
+
+      <View className="bg-bg border-t-2 border-surface-border">
+        <PagerDots count={3} active={activePanel} />
+      </View>
+      <DonateFooter />
+      <LoaderBar visible={refreshing || (eventsLoading && events.length > 0)} />
     </SafeAreaView>
   );
 }

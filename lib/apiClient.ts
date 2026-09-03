@@ -1,15 +1,19 @@
-import { TOPSCORE_BASE_URL, TOPSCORE_USE_OAUTH2, API_USER_AGENT, APP_USER_AGENT } from "@/constants/config";
+import { TOPSCORE_BASE_URL, APP_USER_AGENT, TOPSCORE_USE_OAUTH2, TOPSCORE_CLIENT_ID } from "@/constants/config";
 import { getValidAccessToken } from "@/services/auth";
 import { ApiError, AuthError, NetworkError } from "./errors";
 import { buildApiCsrfSignature, buildSignedUrl, clearApiCsrfCache } from "./apiCsrf";
+import { normalizeTopScoreBaseUrl } from "./urlUtils";
 
 const DEFAULT_TIMEOUT = 15000;
+const MIN_TIMEOUT = 5000;
+const MAX_TIMEOUT = 60000;
 const RETRY_DELAY_BASE = 1000;
 const MAX_RETRIES = 2;
 const MAX_RATE_LIMIT_RETRIES = 3;
 
-// Re-export User-Agent values from config for backward compatibility
-export { API_USER_AGENT as TOPSCORE_USER_AGENT, APP_USER_AGENT as PADA_USER_AGENT } from "@/constants/config";
+// Re-export constants for backward compatibility with existing call sites/tests.
+export { TOPSCORE_USE_OAUTH2, TOPSCORE_CLIENT_ID } from "@/constants/config";
+export { APP_USER_AGENT as PADA_USER_AGENT } from "@/constants/config";
 
 interface RequestConfig {
   method?: "GET" | "POST";
@@ -152,7 +156,7 @@ function buildFormEncodedBody(body: unknown): string {
     if (value === undefined || value === null) continue;
     if (Array.isArray(value)) {
       for (const v of value) {
-        params.append(key, String(v));
+        params.append(`${key}[]`, String(v));
       }
     } else {
       params.append(key, String(value));
@@ -236,6 +240,8 @@ async function request<T>(
     skipCsrf = false,
   } = config;
 
+  const clampedTimeout = Math.min(Math.max(timeout, MIN_TIMEOUT), MAX_TIMEOUT);
+
   const cacheKey = getCacheKey(path, method);
   const cacheTtl = method === "GET" ? 60000 : 0;
 
@@ -272,10 +278,22 @@ async function request<T>(
       }
     }
 
-    const requestUrl = csrfSignedUrl ?? `${TOPSCORE_BASE_URL}${path}`;
+    // For GET requests using Basic Auth, add auth_token query parameter. GET requests do not require CSRF signatures.
+    let requestUrl: string;
+    if (method === "GET" && token && !TOPSCORE_USE_OAUTH2) {
+      const [pathWithoutHash, hash] = path.split("#");
+      const [purePath, existingQuery = ""] = pathWithoutHash.split("?");
+      const base = `${normalizeTopScoreBaseUrl()}${purePath}`;
+      const params = new URLSearchParams(existingQuery);
+      params.set("auth_token", token);
+      const qs = params.toString();
+      requestUrl = `${base}?${qs}${hash ? `#${hash}` : ""}`;
+    } else {
+      requestUrl = csrfSignedUrl ?? `${normalizeTopScoreBaseUrl()}${path}`;
+    }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    const timeoutId = setTimeout(() => controller.abort(), clampedTimeout);
     const externalSignal = signal;
 
     const onExternalAbort = () => controller.abort();
@@ -290,7 +308,7 @@ async function request<T>(
 
     const requestHeaders: Record<string, string> = {
       "Content-Type": contentType,
-      "User-Agent": API_USER_AGENT,
+      "User-Agent": APP_USER_AGENT,
       ...(token && TOPSCORE_USE_OAUTH2 ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     };
@@ -315,12 +333,12 @@ async function request<T>(
           clearCache();
           const newToken = await getValidAccessToken();
           if (newToken) {
-            const retryUrl = csrfSignedUrl ?? `${TOPSCORE_BASE_URL}${path}`;
+            const retryUrl = csrfSignedUrl ?? `${normalizeTopScoreBaseUrl()}${path}`;
             const retryRes = await fetch(retryUrl, {
               method,
               headers: {
                 "Content-Type": "application/json",
-                "User-Agent": API_USER_AGENT,
+                "User-Agent": APP_USER_AGENT,
                 Authorization: `Bearer ${newToken}`,
                 ...headers,
               },
@@ -349,23 +367,24 @@ async function request<T>(
 
         if (res.status === 419 && isWriteMethod && !skipCsrf && token && !TOPSCORE_USE_OAUTH2) {
           clearApiCsrfCache();
-          const newCsrf = await buildApiCsrfSignature();
-          const retryUrl = buildSignedUrl(path, token, newCsrf);
-          const retryBody = body ? buildFormEncodedBody(body) : undefined;
-          const retryRes = await fetch(retryUrl, {
-            method,
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-              "User-Agent": API_USER_AGENT,
-              ...headers,
-            },
-            body: retryBody,
-            signal: controller.signal,
-          });
-          clearTimeout(timeoutId);
-          if (externalSignal) externalSignal.removeEventListener("abort", onExternalAbort);
+          try {
+            const newCsrf = await buildApiCsrfSignature();
+            const retryUrl = buildSignedUrl(path, token, newCsrf);
+            const retryBody = body ? buildFormEncodedBody(body) : undefined;
+            const retryRes = await fetch(retryUrl, {
+              method,
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "User-Agent": APP_USER_AGENT,
+                ...headers,
+              },
+              body: retryBody,
+              signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
+            if (externalSignal) externalSignal.removeEventListener("abort", onExternalAbort);
 
-if (!retryRes.ok) {
+            if (!retryRes.ok) {
               const err = await retryRes.json().catch(() => ({}));
               const message = getErrorMessageFromBody(err, retryRes.status);
               const errorDetails = extractErrorDetails(err);
@@ -375,7 +394,12 @@ if (!retryRes.ok) {
             const rawData = responseText.length > 0 ? JSON.parse(responseText) : {};
             const data = unwrapResponse<T>(rawData);
             return data as T;
+          } catch (csrfError) {
+            clearTimeout(timeoutId);
+            if (externalSignal) externalSignal.removeEventListener("abort", onExternalAbort);
+            throw csrfError;
           }
+        }
 
         if (res.status >= 500) {
           if (attemptIndex < MAX_RETRIES) {
@@ -470,41 +494,49 @@ export interface ApiResponseMeta<T> {
 
 /**
  * TopScore API Client
- * 
+ *
  * Based on TopScore API spec v1.0 (docs/topscore_api.md)
- * 
+ *
  * IMPORTANT API NOTES:
- * 
- * 1. HTTP Methods: Only GET and POST are supported. There are no PUT, PATCH, or DELETE endpoints.
- *    All modifications use POST with _method override (e.g., _method: "PUT" for updates).
- *    This is implemented automatically by apiClient.put(), apiClient.patch(), apiClient.delete().
- * 
- * 2. Authentication:
- *    - Basic Auth: Uses auth_token (client_id) as query param + api_csrf signature for POST requests
- *    - OAuth2: Uses Bearer token in Authorization header (RECOMMENDED per spec Section 3.2)
- * 
- * 3. POST Body Format: 
+ *
+ * 1. HTTP Methods: Per spec §4, TopScore ONLY supports GET and POST. There
+ *    are NO PUT/PATCH/DELETE endpoints. The `apiClient` only exposes `get`/`post`
+ *    (with `getRaw` / `getWithMeta` variants). Update operations are not part of
+ *    PadaHub's read-only scope.
+ *
+ * 2. Authentication (spec §3):
+ *    - Basic Auth: Uses `auth_token=CLIENT_ID` as query param on GET, plus
+ *      `api_csrf` HMAC-SHA256 signature query param on POST.
+ *    - OAuth2: Bearer token in `Authorization` header (RECOMMENDED per §3.2).
+ *    - Mode is selected by `TOPSCORE_USE_OAUTH2` (auto true when both client
+ *      id + secret are configured).
+ *
+ * 3. POST Body Format:
  *    - Basic Auth: application/x-www-form-urlencoded (handled automatically)
  *    - OAuth2: application/json
- * 
- * 4. Response Format (per spec Section 5):
+ *
+ * 4. Response Format (per spec §5):
  *    { status: number, count: number, result: T | T[], errors: [] }
- *    - Single-object endpoints (e.g., /api/me) return: { result: { ... } }
- *    - List endpoints (e.g., /api/events) return: { result: [{ ... }] }
- * 
- * 5. Endpoint Verification Status:
- *    - VERIFIED: Confirmed working via /api/help or actual API testing
- *    - SPECULATIVE: Marked as possible but NOT verified - needs testing via /api/help
- *    Use isVerifiedEndpoint() and needsVerification() to check endpoint status.
- * 
- * 6. CSRF Signatures (Basic Auth only):
- *    - Valid for 1 hour (3600 seconds) per spec Section 3.1
- *    - We cache for 55 minutes with 5-minute refresh buffer
- *    - Nonce must be at least 10 characters (we use 16)
- * 
- * 7. Rate Limiting:
- *    - 429 response triggers exponential backoff retry
- *    - Retry-After header respected if present
+ *    - Most endpoints return `result: [{ ... }]` (array), including list endpoints.
+ *    - Single-object endpoints like /api/me and /api/persons/me may return
+ *      `result: [{ ... }]` (array with one element) based on actual API behavior.
+ *    - The unwrapper handles both shapes transparently by checking for array.
+ *
+ * 5. CSRF Signatures (Basic Auth POST only, spec §3.1):
+ *    - Valid for 1 hour (3600 seconds).
+ *    - Cached for 55 minutes with a 5-minute refresh buffer.
+ *    - Nonce is 16 random alphanumeric characters (spec minimum is 10).
+ *    - When POST requests return 419 the signature is regenerated and the
+ *      request retried once.
+ *
+ * 6. Rate Limiting (spec §9):
+ *    - 429 response triggers exponential backoff retry (`MAX_RATE_LIMIT_RETRIES`).
+ *    - Server-provided `Retry-After` header is honored when present.
+ *
+ * 7. Speculative endpoints:
+ *    Several helper functions in `services/topscore.ts` target endpoints not
+ *    documented in the spec. They are guarded at runtime; they log a warning
+ *    before returning null when the endpoint is not reachable.
  */
 
 export const apiClient = {
@@ -522,6 +554,15 @@ export const apiClient = {
   },
   post: <T>(path: string, body: unknown, config?: Omit<RequestConfig, "method">) =>
     request<T>(path, { ...config, method: "POST", body }),
+  /**
+   * Experimental shortcut that POSTs with `_method=PUT` body override.
+   *
+   * The TopScore spec (§4) ONLY documents GET and POST. There are no official
+   * PUT/PATCH/DELETE endpoints, and `_method` body overrides are NOT documented
+   * as a TopScore convention. These helpers are kept only because a small
+   * number of internal speculative features still call them; their endpoints
+   * are not verified. Prefer calling `post` directly with explicit bodies.
+   */
   put: <T>(path: string, body: unknown, config?: Omit<RequestConfig, "method">) =>
     request<T>(path, { ...config, method: "POST", body: { ...(body as object), _method: "PUT" } }),
   patch: <T>(path: string, body: unknown, config?: Omit<RequestConfig, "method">) =>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -11,6 +11,7 @@ import { fetchAnnouncementById, markAnnouncementAsRead } from "@/services/announ
 import { queryKeys } from "@/lib/queryKeys";
 import { PageHeader, SectionLabel, IconChip } from "@/components/ui/Page";
 import { Badge } from "@/components/ui/Badge";
+import { LoaderBar } from "@/components/ui/LoaderBar";
 import type { Announcement, AnnouncementType } from "@/types";
 
 const TYPE_ACCENTS: Record<AnnouncementType, string> = {
@@ -65,8 +66,9 @@ export default function AnnouncementDetail() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <ActivityIndicator size="large" color="#00ABA9" />
+      <SafeAreaView className="flex-1 bg-bg">
+        <PageHeader title="announcement" back />
+        <LoaderBar visible />
       </SafeAreaView>
     );
   }
@@ -93,17 +95,13 @@ export default function AnnouncementDetail() {
       <ScrollView className="flex-1" contentContainerClassName="px-5 pt-4 pb-8" showsVerticalScrollIndicator={false}>
         <View className="mb-4">
           <View className="flex-row items-center gap-2 mb-3">
-            <View className="px-2 py-0.5 border-2 self-start" style={{ borderColor: accent, backgroundColor: `${accent}1A` }}>
-              <Text style={{ color: accent }} className="text-[10px] font-bold uppercase tracking-wider">
-                {typeLabel}
-              </Text>
-            </View>
+            <Badge label={typeLabel} accent={accent} />
             {announcement.isUrgent && <Badge label="Urgent" variant="danger" />}
           </View>
           <Text className="text-txt-primary text-3xl font-light lowercase tracking-tight mb-2">
             {announcement.title}
           </Text>
-          <Text className="text-txt-secondary text-xs uppercase tracking-wider font-bold">
+          <Text className="text-txt-secondary text-xs uppercase tracking-[0.12em] font-semibold">
             By {announcement.authorName} · {format(new Date(announcement.createdAt), "MMM d, yyyy 'at' h:mm a")}
           </Text>
         </View>
@@ -111,7 +109,7 @@ export default function AnnouncementDetail() {
         {isExpired && (
           <View className="bg-danger/10 border-2 border-danger px-4 py-3 mb-4 flex-row items-center gap-2">
             <Ionicons name="alert-circle" size={18} color="#E51400" />
-            <Text className="text-danger text-xs uppercase tracking-wider font-bold">This announcement has expired</Text>
+            <Text className="text-danger text-xs uppercase tracking-[0.12em] font-semibold">this announcement has expired</Text>
           </View>
         )}
 
@@ -162,8 +160,8 @@ function DetailRow({
 }) {
   return (
     <View className={`flex-row items-center justify-between px-4 py-3 ${last ? "" : "border-b-2 border-surface-border"}`}>
-      <Text className="text-txt-secondary text-xs font-bold uppercase tracking-wider">{label}</Text>
-      <Text className="text-txt-primary text-sm font-bold" style={accent ? { color: accent } : undefined}>
+      <Text className="text-txt-secondary text-xs font-semibold uppercase tracking-[0.12em]">{label}</Text>
+      <Text className="text-txt-primary text-sm font-semibold" style={accent ? { color: accent } : undefined}>
         {value}
       </Text>
     </View>

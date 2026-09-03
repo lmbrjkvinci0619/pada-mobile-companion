@@ -7,9 +7,18 @@ if (!process.env.EXPO_PUBLIC_TOPSCORE_BASE_URL) {
   console.warn("EXPO_PUBLIC_TOPSCORE_BASE_URL is not set. Using fallback URL.");
 }
 
+function normalizeBaseUrlLocal(): string {
+  const base = TOPSCORE_BASE_URL.endsWith("/api")
+    ? TOPSCORE_BASE_URL.slice(0, -4)
+    : TOPSCORE_BASE_URL.endsWith("/api/")
+    ? TOPSCORE_BASE_URL.slice(0, -5)
+    : TOPSCORE_BASE_URL;
+  return base.replace(/\/$/, "");
+}
+
 export const TOPSCORE_OAUTH_URL =
   process.env.EXPO_PUBLIC_TOPSCORE_OAUTH_URL ??
-  `${TOPSCORE_BASE_URL}/api/oauth/server`;
+  `${normalizeBaseUrlLocal()}/api/oauth/server`;
 
 if (!process.env.EXPO_PUBLIC_TOPSCORE_OAUTH_URL) {
   console.warn(
@@ -24,10 +33,9 @@ export const TOPSCORE_CLIENT_ID = process.env.EXPO_PUBLIC_TOPSCORE_CLIENT_ID ?? 
 export const TOPSCORE_CLIENT_SECRET = process.env.EXPO_PUBLIC_TOPSCORE_CLIENT_SECRET ?? "";
 
 // Determines whether to use OAuth2 Bearer tokens (true) or Basic Auth with CSRF (false).
-// Defaults to true (OAuth2) when TopScore credentials are configured.
-// Set to false only if using Basic Auth with api_csrf signatures instead of OAuth2.
-// TopScore API spec v1.0 documents OAuth2 as the recommended authentication method.
-export const TOPSCORE_USE_OAUTH2 = process.env.EXPO_PUBLIC_TOPSCORE_USE_OAUTH2 !== "false" && !!TOPSCORE_CLIENT_ID;
+// Defaults to true (OAuth2 client_credentials grant) — gets an app-level token that auto-refreshes.
+// Set to false only for Basic Auth with api_csrf signatures (limited data, per-user creds).
+export const TOPSCORE_USE_OAUTH2 = process.env.EXPO_PUBLIC_TOPSCORE_USE_OAUTH2 !== "false";
 
 // ─── Supabase ────────────────────────────────────────────────────────────────
 
@@ -71,10 +79,15 @@ export const PADA_ORG_URL = "https://pada.org";
 export const PADA_REGISTER_URL = "https://pada.org/e";
 
 // ─── User Agent ──────────────────────────────────────────────────────────────
-// Used in API requests to identify the client to TopScore's servers.
-// Per API spec Section 2, include a descriptive User-Agent to pass bot filters.
+// Per API spec Section 2: include a descriptive User-Agent to pass bot filters.
+// - APP_USER_AGENT is the recommended value for the PadaHub mobile app, and is
+//   the default used for every outbound API request.
+// - API_USER_AGENT matches the literal example shown in the spec and is kept
+//   for parity with curl / Postman examples; do not use it in production
+//   requests unless explicitly debugging against the spec example.
 export const API_USER_AGENT = "TopScore API v1.0.0";
 export const APP_USER_AGENT = "Pada.org Mobile App/1.0";
+export const DEFAULT_USER_AGENT = APP_USER_AGENT;
 
 // ─── Sport ───────────────────────────────────────────────────────────────────
 

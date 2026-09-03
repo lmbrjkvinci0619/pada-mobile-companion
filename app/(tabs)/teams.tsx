@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from "react";
-import { FlatList, View, Text, TouchableOpacity, RefreshControl, ActivityIndicator } from "react-native";
+import { FlatList, View, Text, TouchableOpacity, RefreshControl } from "react-native";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,6 +9,8 @@ import { useTeams } from "@/hooks/useApi";
 import { Badge } from "@/components/ui/Badge";
 import { ReadOnlyBanner } from "@/components/ui/ReadOnlyBanner";
 import { PageHeader } from "@/components/ui/Page";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { LoaderBar } from "@/components/ui/LoaderBar";
 import type { Team } from "@/types";
 
 const TEAM_ACCENTS = ["#00ABA9", "#1BA1E2", "#339933", "#F09609", "#D80073", "#A200FF"];
@@ -25,7 +28,7 @@ const TeamCard = React.memo(function TeamCard({ team, onPress }: { team: Team; o
       <View className="bg-surface-raised border-2 border-surface-border">
         <View className="flex-row" style={{ backgroundColor: accent }}>
           <View className="flex-1 p-4">
-            <Text className="text-txt-inverse text-[10px] font-bold uppercase tracking-[0.2em]">
+            <Text className="text-txt-inverse text-[10px] font-semibold uppercase tracking-[0.2em]">
               {team.sport ?? "Ultimate"}
             </Text>
             <Text className="text-txt-inverse text-2xl font-light lowercase tracking-tight mt-1" numberOfLines={1}>
@@ -34,7 +37,7 @@ const TeamCard = React.memo(function TeamCard({ team, onPress }: { team: Team; o
           </View>
           {team.season && (
             <View className="bg-white px-3 self-start m-3">
-              <Text className="text-txt-primary text-[10px] font-bold uppercase tracking-wider">
+              <Text className="text-txt-primary text-[10px] font-semibold uppercase tracking-[0.12em]">
                 {team.season}
               </Text>
             </View>
@@ -42,20 +45,20 @@ const TeamCard = React.memo(function TeamCard({ team, onPress }: { team: Team; o
         </View>
 
         <View className="p-4">
-          <Text className="text-txt-secondary text-[11px] font-bold uppercase tracking-wider">
+          <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.12em]">
             {team.division ?? "Division Not Set"}
           </Text>
 
           <View className="flex-row items-center gap-4 mt-3 pt-3 border-t-2 border-surface-border">
             <View className="flex-row items-center gap-1.5">
               <Ionicons name="people" size={14} color="#5C5C5C" />
-              <Text className="text-txt-secondary text-xs font-bold">
+              <Text className="text-txt-secondary text-xs font-semibold">
                 {team.roster?.length || 0} members
               </Text>
             </View>
             <View className="flex-row items-center gap-1.5">
               <Ionicons name="location" size={14} color="#5C5C5C" />
-              <Text className="text-txt-secondary text-xs font-bold uppercase tracking-wider">PADA</Text>
+              <Text className="text-txt-secondary text-xs font-semibold uppercase tracking-[0.12em]">PADA</Text>
             </View>
           </View>
         </View>
@@ -81,8 +84,10 @@ export default function TeamsScreen() {
 
   if (isLoading && !refreshing) {
     return (
-      <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <ActivityIndicator size="large" color="#00ABA9" />
+      <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
+        <PageHeader title="my teams" subtitle="pada.org" />
+        <ReadOnlyBanner />
+        <LoaderBar visible />
       </SafeAreaView>
     );
   }
@@ -92,6 +97,7 @@ export default function TeamsScreen() {
       <PageHeader title="my teams" subtitle="pada.org" />
 
       <ReadOnlyBanner />
+      <LoaderBar visible={refreshing} />
 
       <FlatList
         data={teams}
@@ -109,11 +115,13 @@ export default function TeamsScreen() {
         windowSize={5}
         removeClippedSubviews
         ListEmptyComponent={
-          <View className="mt-20 items-center gap-3">
-            <Ionicons name="people-outline" size={48} color="#8A8A8A" />
-            <Text className="text-txt-secondary text-sm font-bold text-center lowercase">
-              no teams found.{"\n"}register on the pada.org website.
-            </Text>
+          <View className="mt-8">
+            <EmptyState
+              icon="people-outline"
+              title="no teams found"
+              subtitle="Register on the pada.org website to see your teams here."
+              accent="muted"
+            />
           </View>
         }
       />

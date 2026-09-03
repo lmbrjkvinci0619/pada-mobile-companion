@@ -1,14 +1,27 @@
 #!/usr/bin/env node
 /**
  * TopScore API Endpoint Verification Script
- * 
- * This script verifies which endpoints actually exist on the TopScore API
+ *
+ * Verifies which endpoints actually exist on the TopScore API
  * by checking /api/help and testing specific endpoints.
+ *
+ * Credentials are read from the environment to avoid leaking secrets:
+ *   TOPSCORE_BASE_URL   default: https://pada.usetopscore.com/api
+ *   TOPSCORE_CLIENT_ID  required for client_credentials grant
+ *   TOPSCORE_CLIENT_SECRET required for client_credentials grant
  */
 
-const BASE_URL = "https://pada.usetopscore.com/api";
-const CLIENT_ID = "wfQ6ltkMBMlsPlLMx8F38p10Bw2voIKnhWjjoSK8hInM1jVQqL";
-const CLIENT_SECRET = "Cq1QeyigouWGdHFsBrvX";
+const BASE_URL = process.env.TOPSCORE_BASE_URL || "https://pada.usetopscore.com/api";
+const CLIENT_ID = process.env.TOPSCORE_CLIENT_ID;
+const CLIENT_SECRET = process.env.TOPSCORE_CLIENT_SECRET;
+
+if (!CLIENT_ID || !CLIENT_SECRET) {
+  console.error(
+    "Missing TOPSCORE_CLIENT_ID / TOPSCORE_CLIENT_SECRET environment variables. " +
+    "Set them in your shell or .env before running this script."
+  );
+  process.exit(1);
+}
 
 async function getAccessToken() {
   const body = new URLSearchParams({
