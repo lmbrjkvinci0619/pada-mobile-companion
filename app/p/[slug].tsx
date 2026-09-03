@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView, View, Text } from "react-native";
+import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,6 +8,7 @@ import { useArticles } from "@/hooks/useApi";
 import { Badge } from "@/components/ui/Badge";
 import { PageHeader } from "@/components/ui/Page";
 import { LoaderBar } from "@/components/ui/LoaderBar";
+import { Section, EyebrowTight, Body } from "@/components/ui";
 
 export default function PageDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -30,10 +31,12 @@ export default function PageDetailScreen() {
         <PageHeader title="article" back />
         <View className="flex-1 items-center justify-center p-6">
           <Ionicons name="alert-circle-outline" size={48} color="#8A8A8A" />
-          <Text className="text-txt-primary text-2xl font-light lowercase tracking-tight mt-4">page not found</Text>
-          <Text className="text-txt-secondary text-sm mt-2 text-center">
+          <Section tone="primary" className="mt-4">
+            page not found
+          </Section>
+          <Body tone="secondary" className="text-sm mt-2 text-center">
             This page may have been removed or the link is invalid.
-          </Text>
+          </Body>
         </View>
       </SafeAreaView>
     );
@@ -53,26 +56,26 @@ export default function PageDetailScreen() {
           <View className="flex-row items-center gap-2 mb-3">
             {page.category && <Badge label={page.category} variant="primary" />}
             {page.publishedAt && (
-              <Text className="text-txt-secondary text-[10px] font-semibold uppercase tracking-[0.12em]">
+              <EyebrowTight tone="secondary">
                 {format(parseISO(page.publishedAt), "MMMM d, yyyy").toLowerCase()}
-              </Text>
+              </EyebrowTight>
             )}
           </View>
 
-          <Text className="text-txt-primary text-3xl font-light lowercase tracking-tight mb-4 leading-tight">
+          <Section tone="primary" className="text-3xl mb-4 leading-tight">
             {page.title}
-          </Text>
+          </Section>
 
           {page.authorName && (
-            <Text className="text-txt-secondary text-xs uppercase tracking-[0.12em] font-semibold mb-6">
+            <EyebrowTight tone="secondary" className="mb-6">
               by {page.authorName.toLowerCase()}
-            </Text>
+            </EyebrowTight>
           )}
 
           <View className="bg-surface border border-surface-border p-4">
-            <Text className="text-txt-primary text-sm leading-6">
+            <Body tone="primary" className="text-sm leading-6">
               {page.content || page.summary || "No content available."}
-            </Text>
+            </Body>
           </View>
         </View>
       </ScrollView>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { View, Text, ScrollView, Switch, TouchableOpacity, Alert, Modal, RefreshControl } from "react-native";
+import { View, ScrollView, Switch, TouchableOpacity, Alert, Modal, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -11,6 +11,7 @@ import { clearHiddenAnnouncements, getHiddenAnnouncementCount } from "@/services
 import * as Notifications from "expo-notifications";
 import { PageHeader, SectionLabel, IconChip } from "@/components/ui/Page";
 import { LoaderBar } from "@/components/ui/LoaderBar";
+import { Body, EyebrowTight, Subtitle } from "@/components/ui";
 import type { NotificationPreferences } from "@/types";
 
 const TIME_OPTIONS = [
@@ -52,12 +53,12 @@ const TimePickerModal = ({
       <View className="flex-1 bg-black/60 justify-end">
         <View className="bg-bg border-t border-primary">
           <View className="flex-row justify-between items-center px-4 py-4 border-b border-surface-border">
-            <TouchableOpacity onPress={onClose}>
-              <Text className="text-txt-secondary text-xs font-semibold uppercase tracking-[0.12em]">cancel</Text>
+            <TouchableOpacity onPress={onClose} accessibilityRole="button" accessibilityLabel="cancel">
+              <EyebrowTight tone="secondary">cancel</EyebrowTight>
             </TouchableOpacity>
-            <Text className="text-txt-primary font-semibold text-sm uppercase tracking-[0.12em]">select time</Text>
-            <TouchableOpacity onPress={handleDone}>
-              <Text className="text-primary text-xs font-semibold uppercase tracking-[0.12em]">done</Text>
+            <EyebrowTight tone="primary">select time</EyebrowTight>
+            <TouchableOpacity onPress={handleDone} accessibilityRole="button" accessibilityLabel="confirm time">
+              <EyebrowTight tone="primaryAccent">done</EyebrowTight>
             </TouchableOpacity>
           </View>
           <ScrollView className="max-h-[300px]" showsVerticalScrollIndicator={false}>
@@ -68,11 +69,16 @@ const TimePickerModal = ({
                   selectedIndex === index ? "bg-primary-50" : ""
                 }`}
                 onPress={() => setSelectedIndex(index)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: selectedIndex === index }}
                 activeOpacity={0.85}
               >
-                <Text className={`text-base ${selectedIndex === index ? "text-primary font-semibold" : "text-txt-primary"}`}>
+                <Body
+                  tone={selectedIndex === index ? "primaryAccent" : "primary"}
+                  className={`text-base ${selectedIndex === index ? "font-semibold" : ""}`}
+                >
                   {time}
-                </Text>
+                </Body>
                 {selectedIndex === index && <Ionicons name="checkmark-circle" size={22} color="#00ABA9" />}
               </TouchableOpacity>
             ))}
@@ -102,22 +108,25 @@ const ToggleRow = ({
   iconBackground: string;
   disabled?: boolean;
 }) => (
-  <View className={`flex-row items-center justify-between px-4 py-4 border-b border-surface-border ${disabled ? "opacity-50" : ""}`}>
-    <View className="flex-row items-center gap-3 flex-1">
-      <IconChip name={iconName} color={iconColor} background={iconBackground} />
-      <View className="flex-1">
-        <Text className={`text-sm font-semibold ${disabled ? "text-txt-muted" : "text-txt-primary"}`}>{title}</Text>
-        {subtitle && <Text className="text-txt-secondary text-xs mt-0.5">{subtitle}</Text>}
+    <View className={`flex-row items-center justify-between px-4 py-4 border-b border-surface-border ${disabled ? "opacity-50" : ""}`}>
+      <View className="flex-row items-center gap-3 flex-1">
+        <IconChip name={iconName} color={iconColor} background={iconBackground} />
+        <View className="flex-1">
+          <Body tone={disabled ? "muted" : "primary"} className="text-sm font-semibold">
+            {title}
+          </Body>
+          {subtitle && <Subtitle tone="secondary" className="mt-0.5">{subtitle}</Subtitle>}
+        </View>
       </View>
+      <Switch
+        value={value}
+        onValueChange={onValueChange}
+        trackColor={{ false: "#D8D8D8", true: "#00ABA9" }}
+        thumbColor="#FFFFFF"
+        disabled={disabled}
+        accessibilityLabel={title}
+      />
     </View>
-    <Switch
-      value={value}
-      onValueChange={onValueChange}
-      trackColor={{ false: "#D8D8D8", true: "#00ABA9" }}
-      thumbColor="#FFFFFF"
-      disabled={disabled}
-    />
-  </View>
 );
 
 const QuietHoursButton = ({
@@ -131,22 +140,24 @@ const QuietHoursButton = ({
   onPress: () => void;
   disabled?: boolean;
 }) => (
-  <TouchableOpacity
-    className={`flex-1 px-4 py-4 flex-row items-center justify-between border border-surface-border ${
-      disabled ? "bg-surface" : "bg-surface-raised"
-    }`}
-    onPress={onPress}
-    disabled={disabled}
-    activeOpacity={0.85}
-  >
-    <Text className={`text-sm font-semibold uppercase tracking-[0.12em] ${disabled ? "text-txt-muted" : "text-txt-primary"}`}>{label}</Text>
-    <View className="flex-row items-center gap-2">
-      <Text className={`text-xs ${disabled ? "text-txt-muted" : "text-txt-secondary"}`}>
-        {time || "Not set"}
-      </Text>
-      <Ionicons name="time-outline" size={18} color={disabled ? "#8A8A8A" : "#5C5C5C"} />
-    </View>
-  </TouchableOpacity>
+    <TouchableOpacity
+      className={`flex-1 px-4 py-4 flex-row items-center justify-between border border-surface-border ${
+        disabled ? "bg-surface" : "bg-surface-raised"
+      }`}
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={`${label} ${time || "not set"}`}
+      activeOpacity={0.85}
+    >
+      <EyebrowTight tone={disabled ? "muted" : "primary"}>{label}</EyebrowTight>
+      <View className="flex-row items-center gap-2">
+        <Body tone={disabled ? "muted" : "secondary"} className="text-xs">
+          {time || "Not set"}
+        </Body>
+        <Ionicons name="time-outline" size={18} color={disabled ? "#8A8A8A" : "#5C5C5C"} />
+      </View>
+    </TouchableOpacity>
 );
 
 export default function NotificationSettingsScreen() {
@@ -310,17 +321,15 @@ export default function NotificationSettingsScreen() {
         right={
           <View className="flex-row items-center gap-3">
             {hasChanges && (
-              <TouchableOpacity onPress={handleReset}>
-                <Text className="text-txt-secondary text-xs font-semibold uppercase tracking-[0.12em]">reset</Text>
+              <TouchableOpacity onPress={handleReset} accessibilityRole="button" accessibilityLabel="reset notification settings">
+                <EyebrowTight tone="secondary">reset</EyebrowTight>
               </TouchableOpacity>
             )}
             {isSyncing ? (
-              <Text className="text-primary text-xs font-semibold uppercase tracking-[0.18em]">saving…</Text>
+              <EyebrowTight tone="primaryAccent" className="tracking-[0.18em]">saving…</EyebrowTight>
             ) : (
-              <TouchableOpacity onPress={handleSave} disabled={!hasChanges}>
-                <Text className={`font-semibold text-xs uppercase tracking-[0.12em] ${hasChanges ? "text-primary" : "text-txt-muted"}`}>
-                  save
-                </Text>
+              <TouchableOpacity onPress={handleSave} disabled={!hasChanges} accessibilityRole="button" accessibilityLabel="save notification settings">
+                <EyebrowTight tone={hasChanges ? "primaryAccent" : "muted"}>save</EyebrowTight>
               </TouchableOpacity>
             )}
           </View>
@@ -338,8 +347,8 @@ export default function NotificationSettingsScreen() {
               <View className="flex-row items-center gap-3 flex-1">
                 <IconChip name="notifications" color="#00ABA9" background="#00ABA922" />
                 <View className="flex-1">
-                  <Text className="text-txt-primary text-sm font-semibold">push notifications</Text>
-                  <Text className="text-txt-secondary text-xs mt-0.5">Receive notifications on your device</Text>
+                  <Body tone="primary" className="text-sm font-semibold">push notifications</Body>
+                  <Subtitle tone="secondary" className="mt-0.5">Receive notifications on your device</Subtitle>
                 </View>
               </View>
               <Switch
@@ -347,6 +356,7 @@ export default function NotificationSettingsScreen() {
                 onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, pushEnabled: val }))}
                 trackColor={{ false: "#D8D8D8", true: "#00ABA9" }}
                 thumbColor="#FFFFFF"
+                accessibilityLabel="push notifications"
               />
             </View>
           </View>
@@ -427,7 +437,9 @@ export default function NotificationSettingsScreen() {
         <View className="px-5 pb-4">
           <SectionLabel>quiet hours</SectionLabel>
           <View className="bg-surface border border-surface-border p-4 gap-3">
-            <Text className="text-txt-secondary text-xs">Notifications will be silenced during these hours</Text>
+            <Body tone="secondary" className="text-xs">
+              Notifications will be silenced during these hours
+            </Body>
             <View className="flex-row gap-3">
               <QuietHoursButton
                 label="Start"
@@ -450,9 +462,11 @@ export default function NotificationSettingsScreen() {
                   quietHoursStart: undefined,
                   quietHoursEnd: undefined,
                 }))}
+                accessibilityRole="button"
+                accessibilityLabel="clear quiet hours"
                 activeOpacity={0.85}
               >
-                <Text className="text-danger text-xs font-semibold uppercase tracking-[0.12em]">clear quiet hours</Text>
+                <EyebrowTight tone="danger">clear quiet hours</EyebrowTight>
               </TouchableOpacity>
             )}
           </View>
@@ -466,22 +480,30 @@ export default function NotificationSettingsScreen() {
                 <View className="flex-row items-center gap-3">
                   <IconChip name="eye-off" color="#E51400" background="#E5140022" />
                   <View className="flex-1">
-                    <Text className="text-txt-primary text-sm font-semibold">{hiddenCount} hidden</Text>
-                    <Text className="text-txt-secondary text-xs mt-0.5">announcements dismissed from feed</Text>
+                    <Body tone="primary" className="text-sm font-semibold">
+                      {hiddenCount} hidden
+                    </Body>
+                    <Subtitle tone="secondary" className="mt-0.5">
+                      announcements dismissed from feed
+                    </Subtitle>
                   </View>
                 </View>
                 <TouchableOpacity
                   className="items-center py-3 border-t border-surface-border"
                   onPress={handleClearHiddenAnnouncements}
+                  accessibilityRole="button"
+                  accessibilityLabel="show all announcements"
                   activeOpacity={0.85}
                 >
-                  <Text className="text-primary text-xs font-semibold uppercase tracking-[0.12em]">show all announcements</Text>
+                  <EyebrowTight tone="primaryAccent">show all announcements</EyebrowTight>
                 </TouchableOpacity>
               </>
             ) : (
               <View className="flex-row items-center gap-3">
                 <IconChip name="checkmark-circle" color="#339933" background="#33993322" />
-                <Text className="text-txt-secondary text-sm">No hidden announcements</Text>
+                <Body tone="secondary" className="text-sm">
+                  No hidden announcements
+                </Body>
               </View>
             )}
           </View>
@@ -492,18 +514,20 @@ export default function NotificationSettingsScreen() {
           <TouchableOpacity
             className="bg-surface border border-surface-border p-4 flex-row items-center justify-center gap-3"
             onPress={handleTestNotification}
+            accessibilityRole="button"
+            accessibilityLabel="send test notification"
             activeOpacity={0.85}
           >
             <Ionicons name="notifications" size={20} color="#00ABA9" />
-            <Text className="text-primary text-xs font-semibold uppercase tracking-[0.12em]">send test notification</Text>
+            <EyebrowTight tone="primaryAccent">send test notification</EyebrowTight>
           </TouchableOpacity>
         </View>
 
         {lastSyncTimestamp && (
           <View className="px-5 pb-4">
-            <Text className="text-txt-muted text-[10px] font-semibold uppercase tracking-[0.12em] text-center">
+            <EyebrowTight tone="muted" className="text-center">
               Last synced: {new Date(lastSyncTimestamp).toLocaleString()}
-            </Text>
+            </EyebrowTight>
           </View>
         )}
 

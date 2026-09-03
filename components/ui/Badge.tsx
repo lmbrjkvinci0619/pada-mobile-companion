@@ -1,6 +1,7 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import { cn } from "@/utils/cn";
+import { EyebrowTight } from "./Typography";
 
 type Variant =
   | "default"
@@ -47,16 +48,15 @@ export const Badge = React.memo(function Badge({
       )}
       style={isAccent ? { borderColor: accent } : undefined}
     >
-      <Text
+      <EyebrowTight
         className={cn(
-          "font-semibold uppercase tracking-[0.12em]",
           size === "sm" ? "text-[10px]" : "text-xs",
-          isAccent ? "" : (variant === "default" || variant === "ghost" ? "text-txt-secondary" : ""),
         )}
         style={isAccent ? { color: accent } : undefined}
+        tone={isAccent ? "primary" : variant === "default" || variant === "ghost" ? "secondary" : "primary"}
       >
         {label}
-      </Text>
+      </EyebrowTight>
     </View>
   );
 });

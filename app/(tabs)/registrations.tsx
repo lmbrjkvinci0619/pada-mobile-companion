@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from "react";
 import {
-  ScrollView, View, Text, TouchableOpacity, RefreshControl,
+  ScrollView, View, TouchableOpacity, RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -13,6 +13,7 @@ import { ReadOnlyBanner } from "@/components/ui/ReadOnlyBanner";
 import { PageHeader, SectionLabel } from "@/components/ui/Page";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoaderBar } from "@/components/ui/LoaderBar";
+import { Body, EyebrowTight, Eyebrow, Subtitle } from "@/components/ui";
 import { openRegistrationInBrowser } from "@/lib/urlUtils";
 import type { Registration, RegistrationStatus, RegistrationType } from "@/types";
 
@@ -61,13 +62,13 @@ const RegistrationCard = React.memo(function RegistrationCard({ reg }: { reg: Re
           <Ionicons name={TYPE_ICONS[reg.type]} size={20} color="#FFFFFF" />
         </View>
         <View className="flex-1">
-          <Text className="text-txt-primary font-semibold text-base" numberOfLines={1}>
+          <Body tone="primary" className="font-semibold text-base" numberOfLines={1}>
             {reg.organizationName}
-          </Text>
+          </Body>
           {reg.seasonName && (
-            <Text className="text-txt-secondary text-xs mt-0.5">
+            <Subtitle tone="secondary" className="mt-0.5">
               {reg.seasonName}
-            </Text>
+            </Subtitle>
           )}
         </View>
         {statusBadge(reg.status)}
@@ -76,14 +77,14 @@ const RegistrationCard = React.memo(function RegistrationCard({ reg }: { reg: Re
       <View className="flex-row items-center gap-4 px-4 py-2 bg-surface-overlay border-t border-surface-border">
         <View className="flex-row items-center gap-1.5">
           <Ionicons name="pricetag-outline" size={13} color="#5C5C5C" />
-          <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.12em]">{reg.type}</Text>
+          <EyebrowTight tone="secondary">{reg.type}</EyebrowTight>
         </View>
         <View className="flex-row items-center gap-1.5">
           <Ionicons name="calendar-outline" size={13} color="#5C5C5C" />
-          <Text className="text-txt-secondary text-[11px] font-semibold">
+          <Eyebrow tone="secondary" className="font-semibold normal-case tracking-normal text-[11px]">
             {format(parseISO(reg.startDate), "MMM d, yyyy").toLowerCase()}
             {reg.endDate ? ` – ${format(parseISO(reg.endDate), "MMM d, yyyy").toLowerCase()}` : ""}
-          </Text>
+          </Eyebrow>
         </View>
       </View>
     </TouchableOpacity>

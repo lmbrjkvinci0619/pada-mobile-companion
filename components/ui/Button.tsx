@@ -1,12 +1,12 @@
 import React from "react";
 import {
   TouchableOpacity,
-  Text,
   ActivityIndicator,
   View,
   type TouchableOpacityProps,
 } from "react-native";
 import { cn } from "@/utils/cn";
+import { Label } from "./Typography";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger" | "success" | "outline";
 type Size = "sm" | "md" | "lg";
@@ -26,15 +26,6 @@ const variantContainer: Record<Variant, string> = {
   danger:    "bg-danger active:opacity-90",
   success:   "bg-success active:opacity-90",
   outline:   "bg-transparent active:bg-primary-50 border border-primary",
-};
-
-const variantText: Record<Variant, string> = {
-  primary:   "text-txt-inverse",
-  secondary: "text-txt-primary",
-  ghost:     "text-primary",
-  danger:    "text-txt-inverse",
-  success:   "text-txt-inverse",
-  outline:   "text-primary",
 };
 
 const containerSize: Record<Size, string> = {
@@ -59,7 +50,6 @@ export const Button = React.memo(function Button({
   className,
   ...props
 }: ButtonProps) {
-  const isMuted = variant === "ghost" || variant === "secondary" || variant === "outline";
   return (
     <TouchableOpacity
       {...props}
@@ -75,14 +65,27 @@ export const Button = React.memo(function Button({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={isMuted ? "#00ABA9" : "#FFFFFF"}
+          color={
+            variant === "primary" || variant === "danger" || variant === "success"
+              ? "#FFFFFF"
+              : "#00ABA9"
+          }
         />
       ) : (
         icon ? <View>{icon}</View> : null
       )}
-      <Text className={cn("font-semibold uppercase tracking-[0.12em]", variantText[variant], textSize[size])}>
+      <Label
+        tone={
+          variant === "primary" || variant === "danger" || variant === "success"
+            ? "inverse"
+            : variant === "ghost" || variant === "outline"
+              ? "primaryAccent"
+              : "primary"
+        }
+        className={cn(textSize[size])}
+      >
         {label}
-      </Text>
+      </Label>
     </TouchableOpacity>
   );
 });

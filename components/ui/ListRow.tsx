@@ -1,7 +1,8 @@
 import React from "react";
-import { View, Text, TouchableOpacity, type ViewStyle } from "react-native";
+import { View, TouchableOpacity, type ViewStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { cn } from "@/utils/cn";
+import { Body, Subtitle } from "./Typography";
 
 interface ListRowProps {
   icon?: React.ReactNode;
@@ -35,26 +36,21 @@ export const ListRow = React.memo(function ListRow({
       <View className="flex-row items-center gap-3 flex-1">
         {icon}
         <View className="flex-1">
-          <Text
+          <Body
             numberOfLines={1}
-            className={cn(
-              "text-sm",
-              destructive ? "text-danger font-semibold" : "text-txt-primary font-semibold",
-              disabled && "text-txt-muted",
-            )}
+            className={cn("text-sm font-semibold", disabled && "text-txt-muted")}
+            tone={destructive ? "danger" : disabled ? "muted" : "primary"}
           >
             {title}
-          </Text>
+          </Body>
           {subtitle && (
-            <Text
+            <Subtitle
               numberOfLines={1}
-              className={cn(
-                "text-xs mt-0.5",
-                disabled ? "text-txt-muted" : "text-txt-secondary",
-              )}
+              className={cn("mt-0.5", disabled && "text-txt-muted")}
+              tone={disabled ? "muted" : "secondary"}
             >
               {subtitle}
-            </Text>
+            </Subtitle>
           )}
         </View>
       </View>

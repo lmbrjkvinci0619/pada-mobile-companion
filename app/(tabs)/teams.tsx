@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { FlatList, View, Text, TouchableOpacity, RefreshControl } from "react-native";
+import { FlatList, View, TouchableOpacity, RefreshControl } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, Redirect } from "expo-router";
@@ -11,6 +11,7 @@ import { ReadOnlyBanner } from "@/components/ui/ReadOnlyBanner";
 import { PageHeader } from "@/components/ui/Page";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoaderBar } from "@/components/ui/LoaderBar";
+import { Section, Body, Eyebrow, Subtitle, EyebrowTight } from "@/components/ui";
 import type { Team } from "@/types";
 
 const TEAM_ACCENTS = ["#00ABA9", "#1BA1E2", "#339933", "#F09609", "#D80073", "#A200FF"];
@@ -28,37 +29,35 @@ const TeamCard = React.memo(function TeamCard({ team, onPress }: { team: Team; o
       <View className="bg-surface-raised border border-surface-border">
         <View className="flex-row" style={{ backgroundColor: accent }}>
           <View className="flex-1 p-4">
-            <Text className="text-txt-inverse text-[10px] font-semibold uppercase tracking-[0.2em]">
+            <Eyebrow tone="inverse" className="text-[10px] tracking-[0.2em]">
               {team.sport ?? "Ultimate"}
-            </Text>
-            <Text className="text-txt-inverse text-2xl font-light lowercase tracking-tight mt-1" numberOfLines={1}>
+            </Eyebrow>
+            <Section tone="inverse" numberOfLines={1} className="text-2xl mt-1">
               {team.name}
-            </Text>
+            </Section>
           </View>
           {team.season && (
             <View className="bg-white px-3 self-start m-3">
-              <Text className="text-txt-primary text-[10px] font-semibold uppercase tracking-[0.12em]">
-                {team.season}
-              </Text>
+              <EyebrowTight tone="primary">{team.season}</EyebrowTight>
             </View>
           )}
         </View>
 
         <View className="p-4">
-          <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.12em]">
+          <EyebrowTight tone="secondary">
             {team.division ?? "Division Not Set"}
-          </Text>
+          </EyebrowTight>
 
           <View className="flex-row items-center gap-4 mt-3 pt-3 border-t border-surface-border">
             <View className="flex-row items-center gap-1.5">
               <Ionicons name="people" size={14} color="#5C5C5C" />
-              <Text className="text-txt-secondary text-xs font-semibold">
+              <Subtitle tone="secondary" className="font-semibold">
                 {team.roster?.length || 0} members
-              </Text>
+              </Subtitle>
             </View>
             <View className="flex-row items-center gap-1.5">
               <Ionicons name="location" size={14} color="#5C5C5C" />
-              <Text className="text-txt-secondary text-xs font-semibold uppercase tracking-[0.12em]">PADA</Text>
+              <EyebrowTight tone="secondary">PADA</EyebrowTight>
             </View>
           </View>
         </View>

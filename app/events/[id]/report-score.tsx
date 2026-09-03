@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
+import { View, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -13,6 +13,7 @@ import type { EventStatus } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { PageHeader, SectionLabel } from "@/components/ui/Page";
 import { LoaderBar } from "@/components/ui/LoaderBar";
+import { Hero, EyebrowTight, Body, Label } from "@/components/ui";
 
 function ScoreAdjuster({
   teamName,
@@ -25,14 +26,16 @@ function ScoreAdjuster({
 }) {
   return (
     <View className="bg-surface border border-surface-border p-5 items-center flex-1">
-      <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.12em] text-center h-10" numberOfLines={2}>
+      <EyebrowTight tone="secondary" className="text-center h-10" numberOfLines={2}>
         {teamName}
-      </Text>
-      <Text className="text-txt-primary text-6xl font-light my-4">{score}</Text>
+      </EyebrowTight>
+      <Hero tone="primary" className="text-6xl my-4">{score}</Hero>
       <View className="flex-row gap-3">
         <TouchableOpacity
           className="w-12 h-12 bg-surface-overlay border border-surface-border items-center justify-center"
           onPress={() => onChange(Math.max(0, score - 1))}
+          accessibilityRole="button"
+          accessibilityLabel={`decrease ${teamName} score`}
           activeOpacity={0.85}
         >
           <Ionicons name="remove" size={24} color="#000000" />
@@ -40,6 +43,8 @@ function ScoreAdjuster({
         <TouchableOpacity
           className="w-12 h-12 bg-primary items-center justify-center"
           onPress={() => onChange(score + 1)}
+          accessibilityRole="button"
+          accessibilityLabel={`increase ${teamName} score`}
           activeOpacity={0.85}
         >
           <Ionicons name="add" size={24} color="#FFFFFF" />
@@ -135,9 +140,9 @@ export default function ReportScoreScreen() {
         <LoaderBar visible />
         <View className="flex-1 items-center justify-center px-6">
           <Ionicons name="football-outline" size={48} color="#8A8A8A" />
-          <Text className="text-txt-muted mt-3 text-[11px] uppercase tracking-[0.18em] font-semibold text-center">
+          <Body tone="muted" className="mt-3 text-center">
             loading game data
-          </Text>
+          </Body>
         </View>
       </SafeAreaView>
     );
@@ -147,8 +152,12 @@ export default function ReportScoreScreen() {
     return (
       <SafeAreaView className="flex-1 bg-bg justify-center items-center p-6">
         <Ionicons name="warning-outline" size={64} color="#5C5C5C" />
-        <Text className="text-txt-primary text-xl font-semibold uppercase tracking-[0.12em] mt-4 text-center">no game found</Text>
-        <Text className="text-txt-muted mt-2 text-center">This event does not have a game to report scores for.</Text>
+        <Label tone="primary" className="text-xl mt-4 text-center">
+          no game found
+        </Label>
+        <Body tone="muted" className="mt-2 text-center">
+          This event does not have a game to report scores for.
+        </Body>
         <Button label="Go Back" variant="primary" className="mt-6" onPress={() => router.back()} />
       </SafeAreaView>
     );
@@ -158,10 +167,12 @@ export default function ReportScoreScreen() {
     return (
       <SafeAreaView className="flex-1 bg-bg items-center justify-center px-6" edges={["top", "bottom"]}>
         <Ionicons name="lock-closed" size={48} color="#E51400" />
-        <Text className="text-txt-primary text-xl font-semibold uppercase tracking-[0.12em] mt-4 text-center">permission required</Text>
-        <Text className="text-txt-muted text-center mt-2">
+        <Label tone="primary" className="text-xl mt-4 text-center">
+          permission required
+        </Label>
+        <Body tone="muted" className="text-center mt-2">
           Only the captain of this specific team (and authorized event coordinators or score reporters) may report scores.
-        </Text>
+        </Body>
         <Button label="Go Back" variant="outline" onPress={() => router.back()} className="mt-6" />
       </SafeAreaView>
     );
@@ -178,10 +189,10 @@ export default function ReportScoreScreen() {
         back={() => router.back()}
         right={
           isSubmitting ? (
-            <Text className="text-primary text-xs font-semibold uppercase tracking-[0.12em]">saving…</Text>
+            <EyebrowTight tone="primaryAccent">saving…</EyebrowTight>
           ) : (
             <TouchableOpacity onPress={handleSubmit} disabled={isSubmitting}>
-              <Text className="text-primary text-xs font-semibold uppercase tracking-[0.12em]">save</Text>
+              <EyebrowTight tone="primaryAccent">save</EyebrowTight>
             </TouchableOpacity>
           )
         }
@@ -227,11 +238,11 @@ function StatusOption({
     <TouchableOpacity
       className={`px-5 py-4 flex-row items-center justify-between ${last ? "" : "border-b border-surface-border"} ${selected ? "bg-primary-50" : ""}`}
       onPress={onPress}
+      accessibilityRole="radio"
+      accessibilityState={{ selected }}
       activeOpacity={0.85}
     >
-      <Text className={`text-sm font-semibold uppercase tracking-[0.12em] ${selected ? "text-primary" : "text-txt-primary"}`}>
-        {label}
-      </Text>
+      <Label tone={selected ? "primaryAccent" : "primary"}>{label}</Label>
       {selected && <Ionicons name="checkmark" size={20} color="#00ABA9" />}
     </TouchableOpacity>
   );

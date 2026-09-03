@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { View, Text, ScrollView, RefreshControl, TouchableOpacity } from "react-native";
+import { View, ScrollView, RefreshControl, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar, DateData } from "react-native-calendars";
 import { format, parseISO, isSameDay } from "date-fns";
@@ -8,10 +8,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useEvents } from "@/hooks/useApi";
 import type { Event } from "@/types";
 import { PageHeader, SectionLabel } from "@/components/ui/Page";
-import { Badge } from "@/components/ui/Badge";
 import { Segmented } from "@/components/ui/SegmentedControl";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoaderBar } from "@/components/ui/LoaderBar";
+import { Body, EyebrowTight } from "@/components/ui";
 import { cn } from "@/utils/cn";
 
 function isSameDayLocal(eventDateStr: string | undefined, selectedDateStr: string): boolean {
@@ -45,14 +45,18 @@ const EventCard = React.memo(function EventCard({ event, onPress }: { event: Eve
     <TouchableOpacity onPress={onPress} activeOpacity={0.85} className="mb-3">
       <View className="flex-row bg-surface border border-surface-border">
         <View className="w-16 items-center justify-center bg-primary py-4 border-r border-surface-border">
-          <Text className="text-txt-inverse font-semibold text-base">{start}</Text>
-          <Text className="text-txt-inverse text-[10px] font-semibold uppercase tracking-[0.12em]">{ampm}</Text>
+          <Body tone="inverse" className="font-semibold text-base">
+            {start}
+          </Body>
+          <EyebrowTight tone="inverse">{ampm}</EyebrowTight>
         </View>
         <View className="flex-1 p-4">
-          <Text className="text-txt-primary font-semibold text-base" numberOfLines={1}>{event.title}</Text>
-          <Text className="text-txt-secondary text-xs mt-1 uppercase tracking-[0.12em] font-semibold">
+          <Body tone="primary" className="font-semibold text-base" numberOfLines={1}>
+            {event.title}
+          </Body>
+          <EyebrowTight tone="secondary" className="mt-1">
             {event.teamName ?? "team tbd"}
-          </Text>
+          </EyebrowTight>
         </View>
         <View className="pr-4 self-center">
           <Ionicons name="chevron-forward" size={18} color="#5C5C5C" />

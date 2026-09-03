@@ -1,13 +1,12 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, TouchableOpacity } from "react-native";
 import { openUrl, openWithAppFallback, EXTERNAL_URLS } from "@/lib/urlUtils";
+import { Meta, Label } from "./Typography";
 
 export const DonateFooter = React.memo(function DonateFooter() {
   return (
     <View className="items-center gap-1 py-4 bg-bg border-t border-surface-border">
-      <Text className="text-txt-secondary text-[10px] font-semibold uppercase tracking-[0.18em]">
-        toss a coin to your developer
-      </Text>
+      <Meta tone="secondary">toss a coin to your developer</Meta>
       <View className="flex-row items-center gap-4 mt-1">
         <TouchableOpacity
           onPress={() => openUrl(EXTERNAL_URLS.devDonatePaypal)}
@@ -15,9 +14,7 @@ export const DonateFooter = React.memo(function DonateFooter() {
           accessibilityRole="link"
           accessibilityLabel="tip the developer on PayPal"
         >
-          <Text className="text-primary text-[11px] font-semibold uppercase tracking-[0.12em]">
-            paypal
-          </Text>
+          <Label tone="primaryAccent">paypal</Label>
         </TouchableOpacity>
         <View className="w-px h-3 bg-surface-border" />
         <TouchableOpacity
@@ -26,9 +23,7 @@ export const DonateFooter = React.memo(function DonateFooter() {
           accessibilityRole="link"
           accessibilityLabel="tip the developer on Venmo"
         >
-          <Text className="text-primary text-[11px] font-semibold uppercase tracking-[0.12em]">
-            venmo
-          </Text>
+          <Label tone="primaryAccent">venmo</Label>
         </TouchableOpacity>
       </View>
     </View>

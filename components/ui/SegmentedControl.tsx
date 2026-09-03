@@ -1,6 +1,7 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, TouchableOpacity } from "react-native";
 import { cn } from "@/utils/cn";
+import { Label } from "./Typography";
 
 export interface SegmentedOption<T extends string> {
   key: T;
@@ -35,14 +36,9 @@ export function Segmented<T extends string>({
               idx < options.length - 1 && "border-r border-surface-border",
             )}
           >
-            <Text
-              className={cn(
-                "text-xs font-semibold uppercase tracking-[0.12em]",
-                active ? "text-txt-inverse" : "text-txt-secondary",
-              )}
-            >
+            <Label tone={active ? "inverse" : "secondary"}>
               {opt.label}
-            </Text>
+            </Label>
           </TouchableOpacity>
         );
       })}

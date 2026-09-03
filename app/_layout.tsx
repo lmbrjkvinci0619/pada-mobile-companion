@@ -1,10 +1,10 @@
 import "../global.css";
 import React from "react";
-import { useFonts, Inter_300Light, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_900Black } from "@expo-google-fonts/inter";
+import { useFonts, Inter_300Light, Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from "@expo-google-fonts/inter";
 import { Slot } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState, Component, ReactNode } from "react";
-import { View, Text, TouchableOpacity, LogBox, StatusBar } from "react-native";
+import { View, TouchableOpacity, LogBox, StatusBar } from "react-native";
 import { useAuthStore } from "@/store/authStore";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -13,6 +13,7 @@ import { registerForPushNotificationsAsync, setupNotificationListeners } from "@
 import { router } from "expo-router";
 import { USE_MOCK_DATA } from "@/constants/mockData";
 import { LoaderBar } from "@/components/ui/LoaderBar";
+import { EyebrowTight, Body, Label } from "@/components/ui";
 
 LogBox.ignoreLogs(["Warning: ..."]);
 
@@ -22,9 +23,9 @@ function MockDataWarning() {
   if (!USE_MOCK_DATA) return null;
   return (
     <View className="absolute top-12 left-0 right-0 z-50 bg-warning py-2 px-4">
-        <Text className="text-txt-primary text-[10px] font-semibold uppercase tracking-[0.2em] text-center">
+      <EyebrowTight tone="primary" className="text-center tracking-[0.2em]">
         DEVELOPMENT MODE — Using mock data. Set EXPO_PUBLIC_USE_MOCK_DATA=false for production.
-      </Text>
+      </EyebrowTight>
     </View>
   );
 }
@@ -82,12 +83,18 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
     if (this.state.hasError) {
       return (
         <View className="flex-1 items-center justify-center bg-bg p-6">
-          <Text className="text-danger text-xl font-semibold uppercase tracking-[0.12em] mb-2">something went wrong</Text>
-          <Text className="text-txt-secondary text-center mb-4">
+          <Label tone="danger" className="text-xl mb-2">something went wrong</Label>
+          <Body tone="secondary" className="text-center mb-4">
             {this.state.error?.message || "An unexpected error occurred"}
-          </Text>
-          <TouchableOpacity className="bg-primary px-6 py-3" onPress={this.handleRetry} activeOpacity={0.85}>
-            <Text className="text-txt-inverse font-semibold uppercase tracking-[0.12em] text-xs">try again</Text>
+          </Body>
+          <TouchableOpacity
+            className="bg-primary px-6 py-3"
+            onPress={this.handleRetry}
+            accessibilityRole="button"
+            accessibilityLabel="try again"
+            activeOpacity={0.85}
+          >
+            <Label tone="inverse" className="text-xs">try again</Label>
           </TouchableOpacity>
         </View>
       );
@@ -101,7 +108,7 @@ function InitialLoading() {
     <View className="flex-1 bg-bg">
       <LoaderBar visible />
       <View className="flex-1 items-center justify-center">
-        <Text className="text-txt-muted text-[11px] font-semibold uppercase tracking-[0.2em]">starting up</Text>
+        <EyebrowTight tone="muted" className="tracking-[0.2em]">starting up</EyebrowTight>
       </View>
     </View>
   );
@@ -113,8 +120,6 @@ export default function RootLayout() {
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
-    Inter_700Bold,
-    Inter_900Black,
   });
   const [fontsTimedOut, setFontsTimedOut] = React.useState(false);
 
@@ -186,9 +191,13 @@ export default function RootLayout() {
   if (error) {
     return (
       <View className="flex-1 items-center justify-center bg-bg p-6">
-        <Text className="text-danger text-lg font-semibold uppercase tracking-[0.12em] mb-2">something went wrong</Text>
-        <Text className="text-txt-secondary text-center mb-4">{error}</Text>
-        <Text className="text-txt-muted text-xs uppercase tracking-[0.12em] font-semibold">please restart the app</Text>
+        <Label tone="danger" className="text-lg mb-2">something went wrong</Label>
+        <Body tone="secondary" className="text-center mb-4">
+          {error}
+        </Body>
+        <EyebrowTight tone="muted" className="tracking-[0.12em]">
+          please restart the app
+        </EyebrowTight>
       </View>
     );
   }

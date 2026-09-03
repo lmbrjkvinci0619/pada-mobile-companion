@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, Redirect } from "expo-router";
 import { useAuthStore } from "@/store/authStore";
@@ -10,6 +10,7 @@ import { ListRow } from "@/components/ui/ListRow";
 import { Tile, TileGrid, TileCell } from "@/components/ui/Tile";
 import { PageHeader, IconChip, SectionLabel } from "@/components/ui/Page";
 import { DonateFooter } from "@/components/ui/DonateFooter";
+import { Section, Body, Eyebrow, Subtitle, EyebrowTight } from "@/components/ui";
 import { Ionicons } from "@expo/vector-icons";
 import { EXTERNAL_URLS, openUrl } from "@/lib/urlUtils";
 
@@ -59,24 +60,20 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => router.push("/settings/profile")} className="mt-4 items-center" accessibilityRole="button" accessibilityLabel="edit profile">
-            <Text
-              numberOfLines={1}
-              style={{ textTransform: "lowercase" }}
-              className="text-txt-primary text-3xl font-light tracking-tight"
-            >
+            <Section numberOfLines={1} className="text-3xl">
               {fullName}
-            </Text>
+            </Section>
             <View className="flex-row items-center justify-center gap-2 mt-1">
-              <Text numberOfLines={1} className="text-txt-secondary text-sm">{user?.email}</Text>
+              <Body tone="secondary" className="text-sm">{user?.email}</Body>
               <Ionicons name="pencil" size={14} color="#00ABA9" />
             </View>
           </TouchableOpacity>
 
           {user?.role && (
             <View className="bg-surface-overlay border border-primary px-4 py-1 mt-3">
-              <Text className="text-primary text-[10px] font-semibold uppercase tracking-[0.2em]">
+              <Eyebrow tone="primaryAccent" className="text-[10px] tracking-[0.2em]">
                 {user.role}
-              </Text>
+              </Eyebrow>
             </View>
           )}
         </View>

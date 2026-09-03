@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
+import { View, ScrollView, TouchableOpacity } from "react-native";
 import { cn } from "@/utils/cn";
+import { Hero, Eyebrow, Body } from "./Typography";
 
 export interface PivotItem<T extends string> {
   key: T;
@@ -45,14 +46,14 @@ export function Pivot<T extends string>({
               isActive ? "border-primary" : "border-transparent",
             )}
             >
-              <Text
-                className={cn(
-                  "text-base font-light lowercase tracking-tight",
-                  isActive ? "text-txt-primary" : "text-txt-muted",
-                )}
-              >
-                {item.label}
-              </Text>
+            <Body
+              className={cn(
+                "text-base font-light lowercase tracking-tight",
+                isActive ? "text-txt-primary" : "text-txt-muted",
+              )}
+            >
+              {item.label}
+            </Body>
             </TouchableOpacity>
           );
         })}
@@ -86,17 +87,12 @@ export function PivotPanorama({
             {unread ? (
               <View className="w-2.5 h-2.5 bg-primary" accessibilityLabel={`${unread} unread`} />
             ) : null}
-            <Text
-              className="text-txt-primary text-[44px] font-light lowercase leading-[0.95] tracking-tight"
-              numberOfLines={1}
-            >
-              {title}
-            </Text>
+            <Hero numberOfLines={1}>{title}</Hero>
           </View>
           {subtitle && (
-            <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.2em] mt-2">
+            <Eyebrow tone="secondary" className="mt-2">
               {subtitle}
-            </Text>
+            </Eyebrow>
           )}
         </View>
         {right}

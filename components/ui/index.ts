@@ -12,3 +12,4 @@ export { Pivot, PivotContent, PivotPanorama } from "./Pivot";
 export { ReadOnlyBanner } from "./ReadOnlyBanner";
 export { Segmented } from "./SegmentedControl";
 export { Tile, TileGrid, TileCell } from "./Tile";
+export { Hero, Title, Section, TileTitle, Body, Subtitle, Meta, Eyebrow, EyebrowTight, Label, Typography } from "./Typography";

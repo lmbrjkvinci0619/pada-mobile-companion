@@ -1,8 +1,9 @@
 import React from "react";
 import { Stack, Redirect } from "expo-router";
 import { useAuthStore } from "@/store/authStore";
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import { LoaderBar } from "@/components/ui/LoaderBar";
+import { EyebrowTight } from "@/components/ui";
 
 export default function AuthLayout() {
   const { isAuthenticated, isLoading } = useAuthStore();
@@ -12,7 +13,7 @@ export default function AuthLayout() {
       <View className="flex-1 bg-bg">
         <LoaderBar visible />
         <View className="flex-1 items-center justify-center">
-          <Text className="text-txt-muted text-[11px] font-semibold uppercase tracking-[0.2em]">loading</Text>
+          <EyebrowTight tone="muted" className="tracking-[0.2em]">loading</EyebrowTight>
         </View>
       </View>
     );

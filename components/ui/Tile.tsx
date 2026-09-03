@@ -1,6 +1,7 @@
 import React from "react";
-import { View, Text, TouchableOpacity, type ViewStyle } from "react-native";
+import { View, TouchableOpacity, type ViewStyle } from "react-native";
 import { cn } from "@/utils/cn";
+import { Eyebrow, EyebrowTight, TileTitle, Subtitle, Meta } from "./Typography";
 
 type Accent = "primary" | "secondary" | "success" | "warning" | "danger" | "magenta" | "purple" | "black";
 
@@ -70,45 +71,34 @@ export const Tile = React.memo(function Tile({
       <View className="flex-row items-start justify-between">
         <View className="flex-1 pr-2">
           {eyebrow && (
-            <Text className="text-txt-inverse text-[10px] font-semibold uppercase tracking-[0.18em]">
+            <Eyebrow tone="inverse" className="text-[10px] tracking-[0.18em]">
               {eyebrow}
-            </Text>
+            </Eyebrow>
           )}
           {icon ? <View className="mt-1">{icon}</View> : null}
         </View>
         {badge && (
           <View className="bg-white px-2 py-0.5">
-            <Text className="text-txt-primary text-[10px] font-semibold uppercase tracking-[0.12em]">
-              {badge}
-            </Text>
+            <EyebrowTight tone="primary">{badge}</EyebrowTight>
           </View>
         )}
       </View>
 
       <View>
         {title && (
-          <Text
-            numberOfLines={2}
-            className="text-txt-inverse text-lg font-light lowercase tracking-tight leading-tight"
-          >
+          <TileTitle tone="inverse" numberOfLines={2}>
             {lc(title)}
-          </Text>
+          </TileTitle>
         )}
         {subtitle && (
-          <Text
-            numberOfLines={1}
-            className="text-txt-inverse text-xs font-normal mt-1"
-          >
+          <Subtitle tone="inverse" numberOfLines={1} className="mt-1">
             {subtitle}
-          </Text>
+          </Subtitle>
         )}
         {meta && (
-          <Text
-            numberOfLines={1}
-            className="text-txt-inverse text-[10px] font-semibold uppercase tracking-[0.18em] mt-2"
-          >
+          <Meta tone="inverse" numberOfLines={1} className="mt-2">
             {meta}
-          </Text>
+          </Meta>
         )}
       </View>
 

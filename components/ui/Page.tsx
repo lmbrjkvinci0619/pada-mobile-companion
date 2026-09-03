@@ -1,8 +1,9 @@
 import React from "react";
-import { View, Text, TouchableOpacity, type ViewProps } from "react-native";
+import { View, TouchableOpacity, type ViewProps } from "react-native";
 import { cn } from "@/utils/cn";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { Section, Eyebrow } from "./Typography";
 
 interface PageHeaderProps {
   title: string;
@@ -35,24 +36,13 @@ export function PageHeader({
             </TouchableOpacity>
           )}
           <View className="flex-1">
-            <Text
-              numberOfLines={1}
-              style={{ textTransform: "lowercase" }}
-              className={cn(
-                "text-txt-primary font-light tracking-tight leading-tight",
-                large ? "text-[40px]" : "text-[28px]",
-              )}
-            >
+            <Section numberOfLines={1} className={large ? "text-[40px]" : undefined}>
               {title}
-            </Text>
+            </Section>
             {subtitle && (
-              <Text
-                numberOfLines={1}
-                style={{ textTransform: "uppercase" }}
-                className="text-txt-secondary text-[11px] font-semibold tracking-[0.2em] mt-1"
-              >
+              <Eyebrow tone="secondary" className="mt-1">
                 {subtitle}
-              </Text>
+              </Eyebrow>
             )}
           </View>
         </View>
@@ -100,9 +90,7 @@ export function SectionLabel({
     <View className={cn("flex-row items-center justify-between mb-3", className)}>
       <View className="flex-row items-center gap-2">
         <View className="w-1 h-3.5 bg-primary" />
-        <Text className="text-txt-primary text-[11px] font-semibold uppercase tracking-[0.2em]">
-          {children}
-        </Text>
+      <Eyebrow tone="primary">{children}</Eyebrow>
       </View>
       {action}
     </View>

@@ -1,7 +1,8 @@
 import React from "react";
-import { View, Text, TouchableOpacity, Linking } from "react-native";
+import { View, TouchableOpacity, Linking } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { PADA_ORG_URL } from "@/constants/config";
+import { Body, Eyebrow } from "./Typography";
 
 interface ReadOnlyBannerProps {
   message?: string;
@@ -16,15 +17,17 @@ export const ReadOnlyBanner = React.memo(function ReadOnlyBanner({
     <View className="bg-primary flex-row items-center gap-3 px-4 py-3 mx-5 mb-3">
       <Ionicons name="information-circle" size={20} color="#FFFFFF" />
       <View className="flex-1">
-        <Text className="text-txt-inverse text-sm leading-5">{message}</Text>
+        <Body tone="inverse" className="text-sm leading-5">
+          {message}
+        </Body>
         {showLink && (
           <TouchableOpacity
             onPress={() => Linking.openURL(PADA_ORG_URL)}
             activeOpacity={0.7}
           >
-            <Text className="text-txt-inverse text-[11px] font-semibold uppercase tracking-[0.18em] mt-1 underline">
+            <Eyebrow tone="inverse" className="mt-1 underline">
               Launch Pada.org
-            </Text>
+            </Eyebrow>
           </TouchableOpacity>
         )}
       </View>

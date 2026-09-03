@@ -1,7 +1,8 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import { Image } from "expo-image";
 import { cn } from "@/utils/cn";
+import { Body } from "./Typography";
 
 interface AvatarProps {
   uri?: string;
@@ -81,9 +82,9 @@ export const Avatar = React.memo(function Avatar({
       className={cn(commonClasses, "items-center justify-center")}
       style={{ backgroundColor: accent ?? seedColor(name) }}
     >
-      <Text className={cn("text-txt-inverse font-semibold", text)}>
+      <Body tone="inverse" className={cn("font-semibold", text)}>
         {getInitials(name)}
-      </Text>
+      </Body>
     </View>
   );
 });

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
+import { View, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -10,6 +10,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { ListRow } from "@/components/ui/ListRow";
 import { PageHeader, SectionLabel, IconChip } from "@/components/ui/Page";
+import { Section, Body, EyebrowTight } from "@/components/ui";
 import { EXTERNAL_URLS, openUrl } from "@/lib/urlUtils";
 
 export default function UserSettingsScreen() {
@@ -63,7 +64,9 @@ export default function UserSettingsScreen() {
     return (
       <SafeAreaView className="flex-1 bg-bg items-center justify-center">
         <Ionicons name="person-circle-outline" size={64} color="#8A8A8A" />
-        <Text className="text-txt-muted mt-4">Please log in to view settings</Text>
+        <Body tone="muted" className="mt-4">
+          Please log in to view settings
+        </Body>
         <Button label="Log In" onPress={() => router.push("/(auth)/login")} className="mt-4" />
       </SafeAreaView>
     );
@@ -99,21 +102,32 @@ export default function UserSettingsScreen() {
               </View>
             </View>
           ) : (
-            <TouchableOpacity className="mt-4" onPress={() => setIsEditing(true)}>
-                <Text className="text-txt-primary text-xl font-light lowercase tracking-tight">
+            <TouchableOpacity
+              className="mt-4"
+              onPress={() => setIsEditing(true)}
+              accessibilityRole="button"
+              accessibilityLabel="edit profile"
+            >
+              <Section tone="primary" className="text-xl">
                 {localDisplayName || `${user?.firstName} ${user?.lastName}`}
-              </Text>
-                <View className="flex-row items-center justify-center gap-1 mt-1">
-                  <Text className="text-primary text-[11px] font-semibold uppercase tracking-[0.18em]">edit profile</Text>
-                  <Ionicons name="pencil" size={12} color="#00ABA9" />
-                </View>
+              </Section>
+              <View className="flex-row items-center justify-center gap-1 mt-1">
+                <EyebrowTight tone="primaryAccent" className="tracking-[0.18em]">
+                  edit profile
+                </EyebrowTight>
+                <Ionicons name="pencil" size={12} color="#00ABA9" />
+              </View>
             </TouchableOpacity>
           )}
 
           <View className="bg-surface-overlay border border-primary px-3 py-1 mt-3">
-            <Text className="text-primary text-[10px] font-semibold uppercase tracking-[0.2em]">{user?.role}</Text>
+            <EyebrowTight tone="primaryAccent" className="text-[10px] tracking-[0.2em]">
+              {user?.role}
+            </EyebrowTight>
           </View>
-          <Text className="text-txt-secondary text-xs mt-2">{user?.email}</Text>
+          <Body tone="secondary" className="text-xs mt-2">
+            {user?.email}
+          </Body>
         </View>
 
         <View className="px-5 mt-5 pb-2">
@@ -192,7 +206,9 @@ export default function UserSettingsScreen() {
         </View>
 
         <View className="items-center pb-8">
-          <Text className="text-txt-muted text-[11px] font-semibold uppercase tracking-[0.2em]">pada mobile companion v1.0.0</Text>
+          <EyebrowTight tone="muted" className="tracking-[0.2em]">
+            pada mobile companion v1.0.0
+          </EyebrowTight>
         </View>
       </ScrollView>
     </SafeAreaView>

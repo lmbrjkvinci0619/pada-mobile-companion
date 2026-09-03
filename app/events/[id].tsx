@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
   View,
-  Text,
   ScrollView,
   TouchableOpacity,
   Linking,
@@ -21,6 +20,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { PageHeader, SectionLabel } from "@/components/ui/Page";
 import { LoaderBar } from "@/components/ui/LoaderBar";
+import { Hero, Eyebrow, Body, EyebrowTight, Subtitle } from "@/components/ui";
 import { openUrl } from "@/lib/urlUtils";
 import { format, parseISO } from "date-fns";
 import type { ScheduleExport } from "@/types";
@@ -72,7 +72,7 @@ export default function EventDetailScreen() {
       <SafeAreaView className="flex-1 bg-bg" edges={["bottom"]}>
         <PageHeader title="event details" back={() => router.back()} />
         <View className="flex-1 items-center justify-center">
-          <Text className="text-txt-muted">event not found</Text>
+          <Body tone="muted">event not found</Body>
         </View>
       </SafeAreaView>
     );
@@ -123,25 +123,29 @@ export default function EventDetailScreen() {
 
       <ScrollView className="flex-1" contentContainerClassName="px-5 pt-4 pb-8" showsVerticalScrollIndicator={false}>
         <View className="bg-primary p-5">
-          <Text className="text-txt-inverse text-[10px] font-semibold uppercase tracking-[0.2em]">
+          <Eyebrow tone="inverse" className="text-[10px] tracking-[0.2em]">
             {event.type}
-          </Text>
-          <Text className="text-txt-inverse text-2xl font-light lowercase tracking-tight mt-1">
+          </Eyebrow>
+          <Hero tone="inverse" className="text-2xl mt-1">
             {event.title}
-          </Text>
-          <Text className="text-txt-inverse text-sm mt-2 font-normal">
+          </Hero>
+          <Body tone="inverse" className="text-sm mt-2 font-normal">
             {event.startDate ? format(parseISO(event.startDate), "EEEE, MMMM d 'at' h:mm a") : "date tbd"}
-          </Text>
+          </Body>
         </View>
 
         <View className="h-5" />
 
         <SectionLabel>location</SectionLabel>
-        <Card>
+          <Card>
           <Card.Content>
-            <Text className="text-txt-primary text-base font-semibold">{event.location?.name ?? "tbd"}</Text>
+            <Body tone="primary" className="text-base font-semibold">
+              {event.location?.name ?? "tbd"}
+            </Body>
             {event.location?.address && (
-              <Text className="text-txt-secondary text-xs mt-1">{event.location.address}</Text>
+              <Subtitle tone="secondary" className="mt-1">
+                {event.location.address}
+              </Subtitle>
             )}
 
             {event.location?.latitude != null && event.location.longitude != null && (
@@ -175,7 +179,7 @@ export default function EventDetailScreen() {
                 activeOpacity={0.85}
               >
                 <Ionicons name="navigate" size={18} color="#FFFFFF" />
-                <Text className="text-txt-inverse text-xs font-semibold uppercase tracking-[0.12em]">Directions</Text>
+                <EyebrowTight tone="inverse">Directions</EyebrowTight>
               </TouchableOpacity>
             )}
           </Card.Content>
@@ -186,7 +190,9 @@ export default function EventDetailScreen() {
             <SectionLabel>notes</SectionLabel>
             <Card>
               <Card.Content>
-                <Text className="text-txt-primary text-sm leading-6">{event.notes}</Text>
+                <Body tone="primary" className="text-sm leading-6">
+                  {event.notes}
+                </Body>
               </Card.Content>
             </Card>
           </View>
@@ -225,16 +231,20 @@ export default function EventDetailScreen() {
           className="mt-4 bg-surface border border-surface-border py-4 flex-row items-center justify-center gap-2"
           onPress={handleAddToCalendar}
           disabled={isOpeningCalendar}
+          accessibilityRole="button"
+          accessibilityLabel="add event to calendar"
           activeOpacity={0.85}
         >
           <Ionicons name="calendar-outline" size={20} color="#000000" />
-          <Text className="text-txt-primary text-sm font-semibold uppercase tracking-[0.12em]">
+          <EyebrowTight tone="primary">
             {isOpeningCalendar ? "opening calendar..." : "add to calendar"}
-          </Text>
+          </EyebrowTight>
         </TouchableOpacity>
 
         {shareError && (
-          <Text className="text-txt-muted text-xs text-center mt-2">{shareError}</Text>
+          <Body tone="muted" className="text-xs text-center mt-2">
+            {shareError}
+          </Body>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -244,8 +254,12 @@ export default function EventDetailScreen() {
 function ScoreRow({ name, score, accent }: { name: string; score: number; accent?: boolean }) {
   return (
     <View className="flex-row items-center justify-between">
-      <Text className="text-txt-primary text-base font-semibold flex-1">{name}</Text>
-      <Text className={`text-3xl font-light ${accent ? "text-primary" : "text-txt-primary"}`}>{score}</Text>
+      <Body tone="primary" className="text-base font-semibold flex-1">
+        {name}
+      </Body>
+      <Hero tone={accent ? "primaryAccent" : "primary"} className="text-3xl">
+        {score}
+      </Hero>
     </View>
   );
 }

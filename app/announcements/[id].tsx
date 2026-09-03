@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView } from "react-native";
+import { View, ScrollView } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,6 +12,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import { PageHeader, SectionLabel, IconChip } from "@/components/ui/Page";
 import { Badge } from "@/components/ui/Badge";
 import { LoaderBar } from "@/components/ui/LoaderBar";
+import { Hero, EyebrowTight, Body } from "@/components/ui";
 import type { Announcement, AnnouncementType } from "@/types";
 
 const TYPE_ACCENTS: Record<AnnouncementType, string> = {
@@ -79,7 +80,9 @@ export default function AnnouncementDetail() {
         <PageHeader title="announcement" back />
         <View className="flex-1 items-center justify-center">
           <Ionicons name="alert-circle" size={48} color="#E51400" />
-          <Text className="mt-2 text-danger">{error || "Unknown error"}</Text>
+          <Body tone="danger" className="mt-2">
+            {error || "Unknown error"}
+          </Body>
         </View>
       </SafeAreaView>
     );
@@ -98,24 +101,24 @@ export default function AnnouncementDetail() {
             <Badge label={typeLabel} accent={accent} />
             {announcement.isUrgent && <Badge label="Urgent" variant="danger" />}
           </View>
-          <Text className="text-txt-primary text-3xl font-light lowercase tracking-tight mb-2">
+          <Hero tone="primary" className="text-3xl mb-2">
             {announcement.title}
-          </Text>
-          <Text className="text-txt-secondary text-xs uppercase tracking-[0.12em] font-semibold">
+          </Hero>
+          <EyebrowTight tone="secondary">
             By {announcement.authorName} · {format(new Date(announcement.createdAt), "MMM d, yyyy 'at' h:mm a")}
-          </Text>
+          </EyebrowTight>
         </View>
 
         {isExpired && (
           <View className="bg-surface border border-danger px-4 py-3 mb-4 flex-row items-center gap-2">
             <Ionicons name="alert-circle" size={18} color="#E51400" />
-            <Text className="text-danger text-xs uppercase tracking-[0.12em] font-semibold">this announcement has expired</Text>
+            <EyebrowTight tone="danger">this announcement has expired</EyebrowTight>
           </View>
         )}
 
-        <Text className="text-txt-primary text-sm leading-6 mb-6">
+        <Body tone="primary" className="text-sm leading-6 mb-6">
           {announcement.content}
-        </Text>
+        </Body>
 
         <SectionLabel>details</SectionLabel>
         <View className="bg-surface border border-surface-border">
@@ -160,10 +163,14 @@ function DetailRow({
 }) {
   return (
     <View className={`flex-row items-center justify-between px-4 py-3 ${last ? "" : "border-b border-surface-border"}`}>
-      <Text className="text-txt-secondary text-xs font-semibold uppercase tracking-[0.12em]">{label}</Text>
-      <Text className="text-txt-primary text-sm font-semibold" style={accent ? { color: accent } : undefined}>
+      <EyebrowTight tone="secondary">{label}</EyebrowTight>
+      <Body
+        tone="primary"
+        className="text-sm font-semibold"
+        style={accent ? { color: accent } : undefined}
+      >
         {value}
-      </Text>
+      </Body>
     </View>
   );
 }

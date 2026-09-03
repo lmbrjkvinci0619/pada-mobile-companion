@@ -1,6 +1,7 @@
 import React from "react";
-import { View, Text, type ViewProps } from "react-native";
+import { View, type ViewProps } from "react-native";
 import { cn } from "@/utils/cn";
+import { Body, Subtitle, Eyebrow } from "./Typography";
 
 interface CardProps extends ViewProps {
   variant?: "default" | "raised" | "accent";
@@ -59,8 +60,8 @@ function CardHeader({
       <View className="flex-1 flex-row items-center gap-3">
         {icon}
         <View className="flex-1">
-          {title && <Text className="text-txt-primary font-semibold text-base">{title}</Text>}
-          {subtitle && <Text className="text-txt-secondary text-xs mt-0.5">{subtitle}</Text>}
+          {title && <Body tone="primary" className="font-semibold">{title}</Body>}
+          {subtitle && <Subtitle tone="secondary" className="mt-0.5">{subtitle}</Subtitle>}
         </View>
       </View>
       {children}
@@ -98,9 +99,9 @@ export function CardSection({
   return (
     <View className={cn("gap-3", className)}>
       {title && (
-        <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.18em] px-1">
-          {title}
-        </Text>
+      <Eyebrow tone="secondary" className="px-1">
+        {title}
+      </Eyebrow>
       )}
       {children}
     </View>

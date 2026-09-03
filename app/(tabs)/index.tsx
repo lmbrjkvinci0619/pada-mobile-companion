@@ -2,7 +2,6 @@ import React, { useMemo, useCallback, useState, useRef } from "react";
 import {
   ScrollView,
   View,
-  Text,
   TouchableOpacity,
   RefreshControl,
   NativeScrollEvent,
@@ -17,13 +16,14 @@ import { useEvents, useAnnouncements, useRegistrations, useArticles } from "@/ho
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Tile, TileGrid, TileCell } from "@/components/ui/Tile";
-import { Hub, HubPanel } from "@/components/ui/Hub";
+import { Hub, HubPanel, useHubMetrics } from "@/components/ui/Hub";
 import { PivotPanorama } from "@/components/ui/Pivot";
 import { SectionLabel, IconChip } from "@/components/ui/Page";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoaderBar } from "@/components/ui/LoaderBar";
 import { PagerDots } from "@/components/ui/PagerDots";
 import { DonateFooter } from "@/components/ui/DonateFooter";
+import { Section, Eyebrow, Body, Subtitle, Label } from "@/components/ui";
 import type { Event, Article } from "@/types";
 import { EXTERNAL_URLS, openUrl } from "@/lib/urlUtils";
 
@@ -53,21 +53,22 @@ const AnnouncementRow = React.memo(function AnnouncementRow({
       </View>
       <View className="flex-1">
         <View className="flex-row items-center gap-2 mb-1">
-          {!ann.isRead && <View className="w-2 h-2 bg-primary" />}
+          {!ann.isRead && <View className="w-2 h-2 bg-primary" accessibilityLabel="unread" />}
           {ann.isUrgent && <Badge label="Urgent" variant="danger" />}
-          <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.12em]">
+          <Eyebrow tone="secondary" className="tracking-[0.12em]">
             {format(new Date(ann.createdAt), "MMM d").toLowerCase()}
-          </Text>
+          </Eyebrow>
         </View>
-        <Text
-          className={`text-sm font-semibold leading-snug ${ann.isRead ? "text-txt-secondary" : "text-txt-primary"}`}
+        <Body
+          tone={ann.isRead ? "secondary" : "primary"}
+          className="text-sm font-semibold leading-snug"
           numberOfLines={1}
         >
           {ann.title}
-        </Text>
-        <Text className="text-txt-secondary text-xs mt-1" numberOfLines={2}>
+        </Body>
+        <Subtitle tone="secondary" className="mt-1" numberOfLines={2}>
           {ann.content}
-        </Text>
+        </Subtitle>
       </View>
     </TouchableOpacity>
   );
@@ -106,14 +107,14 @@ const ArticleTile = React.memo(function ArticleTile({ article }: { article: Arti
         </View>
         <View className="p-3">
           {article.category && <Badge label={article.category} variant="primary" className="mb-2" />}
-            <Text className="text-txt-primary text-sm font-semibold leading-snug" numberOfLines={2}>
-              {article.title}
-            </Text>
-            {article.publishedAt && (
-              <Text className="text-txt-secondary text-[10px] font-semibold uppercase tracking-[0.12em] mt-2">
-                {format(parseISO(article.publishedAt), "MMM d, yyyy").toLowerCase()}
-              </Text>
-            )}
+          <Body tone="primary" className="text-sm font-semibold leading-snug" numberOfLines={2}>
+            {article.title}
+          </Body>
+          {article.publishedAt && (
+            <Eyebrow tone="secondary" className="text-[10px] mt-2">
+              {format(parseISO(article.publishedAt), "MMM d, yyyy").toLowerCase()}
+            </Eyebrow>
+          )}
         </View>
       </View>
     </TouchableOpacity>
@@ -199,12 +200,13 @@ export default function HomeScreen() {
   const [activePanel, setActivePanel] = useState(0);
   const activePanelRef = useRef(0);
   activePanelRef.current = activePanel;
+  const { stride } = useHubMetrics();
   const onHubScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetX = e.nativeEvent.contentOffset.x;
     if (offsetX < 0) return;
-    const idx = Math.round(offsetX / (e.nativeEvent.layoutMeasurement.width - 20));
+    const idx = Math.round(offsetX / stride);
     if (idx !== activePanelRef.current && idx >= 0) setActivePanel(idx);
-  }, []);
+  }, [stride]);
 
   const greeting = isAuthenticated ? (user?.firstName ?? "player").toLowerCase() : "guest";
 
@@ -252,13 +254,9 @@ export default function HomeScreen() {
         <HubPanel title="home">
           <ScrollView showsVerticalScrollIndicator={false} className="flex-1" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00ABA9" />}>
             <View className="mb-5">
-              <Text
-                numberOfLines={1}
-                style={{ textTransform: "lowercase" }}
-                className="text-txt-primary text-[28px] font-light tracking-tight leading-tight"
-              >
+              <Section numberOfLines={1}>
                 hello, {greeting}
-              </Text>
+              </Section>
             </View>
 
             {!isAuthenticated && (
@@ -344,7 +342,7 @@ export default function HomeScreen() {
             <SectionLabel
               action={
                 <TouchableOpacity onPress={() => router.push("/(tabs)/schedule")}>
-                  <Text className="text-primary text-[11px] font-semibold uppercase tracking-[0.18em]">all</Text>
+                  <Eyebrow tone="primaryAccent" className="tracking-[0.18em]">all</Eyebrow>
                 </TouchableOpacity>
               }
             >
@@ -377,7 +375,7 @@ export default function HomeScreen() {
             <SectionLabel
               action={
                 <TouchableOpacity onPress={() => router.push("/announcements")}>
-                  <Text className="text-primary text-[11px] font-semibold uppercase tracking-[0.18em]">all</Text>
+                  <Eyebrow tone="primaryAccent" className="tracking-[0.18em]">all</Eyebrow>
                 </TouchableOpacity>
               }
             >
@@ -452,10 +450,10 @@ export default function HomeScreen() {
               <View className="flex-row items-start gap-3">
                 <IconChip name="information-circle" color="#339933" background="#33993322" />
                 <View className="flex-1">
-                    <Text className="text-txt-primary text-sm font-semibold uppercase tracking-[0.12em]">About PADA</Text>
-                  <Text className="text-txt-secondary text-xs mt-1" numberOfLines={3}>
+                  <Label tone="primary" className="tracking-[0.12em]">About PADA</Label>
+                  <Subtitle tone="secondary" className="mt-1" numberOfLines={3}>
                     Portland Ultimate Frisbee Association — building community through spirit of the game since 1985.
-                  </Text>
+                  </Subtitle>
                 </View>
               </View>
             </TouchableOpacity>
@@ -486,7 +484,7 @@ export default function HomeScreen() {
                 <SectionLabel
                   action={
                     <TouchableOpacity onPress={() => router.push("/p")}>
-                      <Text className="text-primary text-[11px] font-semibold uppercase tracking-[0.18em]">all</Text>
+                      <Eyebrow tone="primaryAccent" className="tracking-[0.18em]">all</Eyebrow>
                     </TouchableOpacity>
                   }
                 >

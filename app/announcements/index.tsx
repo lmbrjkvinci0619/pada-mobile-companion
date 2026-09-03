@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, FlatList, TouchableOpacity, RefreshControl, Alert } from "react-native";
+import { View, FlatList, TouchableOpacity, RefreshControl, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import { format, formatDistanceToNow, isPast } from "date-fns";
@@ -8,6 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoaderBar } from "@/components/ui/LoaderBar";
+import { Body, EyebrowTight, Label } from "@/components/ui";
 import { useAuthStore } from "@/store/authStore";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { fetchAnnouncements, hideAnnouncement } from "@/services/announcements";
@@ -76,26 +77,28 @@ const AnnouncementItem = React.memo(function AnnouncementItem({
     >
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center gap-2 flex-1">
-          {!item.isRead && <View className="w-2 h-2 bg-primary" />}
+          {!item.isRead && <View className="w-2 h-2 bg-primary" accessibilityLabel="unread" />}
           <Badge label={label} accent={accent} />
           {item.isUrgent && <Badge label="Urgent" variant="danger" />}
-          <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.12em]">
+          <EyebrowTight tone="secondary">
             {format(new Date(item.createdAt), "MMM d, yyyy").toLowerCase()}
-          </Text>
+          </EyebrowTight>
         </View>
         <View className="flex-row items-center gap-2">
           {item.expiresAt && (
             <View className="flex-row items-center gap-1">
               <Ionicons name="time-outline" size={12} color="#5C5C5C" />
-              <Text className="text-txt-secondary text-[10px] uppercase font-semibold tracking-[0.12em]">
+              <Body tone="secondary" className="text-[10px] font-semibold tracking-[0.12em]">
                 {isExpired ? "Expired" : `Expires ${formatDistanceToNow(new Date(item.expiresAt), { addSuffix: true })}`}
-              </Text>
+              </Body>
             </View>
           )}
           {showDismiss && (
             <TouchableOpacity
               onPress={handleDismiss}
               className="w-7 h-7 bg-danger items-center justify-center"
+              accessibilityRole="button"
+              accessibilityLabel="hide announcement"
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <Ionicons name="close" size={14} color="#FFFFFF" />
@@ -103,8 +106,12 @@ const AnnouncementItem = React.memo(function AnnouncementItem({
           )}
         </View>
       </View>
-      <Text className="text-txt-primary font-semibold text-base">{item.title}</Text>
-      <Text className="text-txt-secondary text-sm" numberOfLines={2}>{item.content}</Text>
+      <Body tone="primary" className="font-semibold text-base">
+        {item.title}
+      </Body>
+      <Body tone="secondary" className="text-sm" numberOfLines={2}>
+        {item.content}
+      </Body>
     </TouchableOpacity>
   );
 });
@@ -197,7 +204,7 @@ export default function AnnouncementsListScreen() {
     return (
       <View className="py-4 items-center flex-row justify-center gap-3">
         <View className="h-px w-8 bg-primary" />
-        <Text className="text-txt-secondary text-[10px] font-semibold uppercase tracking-[0.2em]">loading more</Text>
+        <EyebrowTight tone="secondary" className="tracking-[0.2em]">loading more</EyebrowTight>
         <View className="h-px w-8 bg-primary" />
       </View>
     );
@@ -229,9 +236,17 @@ export default function AnnouncementsListScreen() {
       ) : error ? (
         <View className="flex-1 justify-center items-center px-5">
           <Ionicons name="alert-circle-outline" size={48} color="#E51400" />
-          <Text className="text-txt-primary text-center mt-2">{error}</Text>
-          <TouchableOpacity className="mt-4 bg-primary px-5 py-3" onPress={onRefresh} activeOpacity={0.85}>
-            <Text className="text-txt-inverse font-semibold uppercase tracking-[0.12em] text-xs">retry</Text>
+          <Body tone="primary" className="text-center mt-2">
+            {error}
+          </Body>
+          <TouchableOpacity
+            className="mt-4 bg-primary px-5 py-3"
+            onPress={onRefresh}
+            accessibilityRole="button"
+            accessibilityLabel="retry loading announcements"
+            activeOpacity={0.85}
+          >
+            <Label tone="inverse" className="text-xs">retry</Label>
           </TouchableOpacity>
         </View>
       ) : (

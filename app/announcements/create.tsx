@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Switch, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from "react-native";
+import { View, TextInput, TouchableOpacity, ScrollView, Switch, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -7,6 +7,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { Button } from "@/components/ui/Button";
 import { PageHeader, SectionLabel, IconChip } from "@/components/ui/Page";
+import { Body, Eyebrow, EyebrowTight, Hero } from "@/components/ui";
 import { createAnnouncement } from "@/services/announcements";
 import { fetchTeams } from "@/services/topscore";
 import { AnnouncementTargetType, AnnouncementType, Team } from "@/types";
@@ -184,10 +185,12 @@ export default function CreateAnnouncementScreen() {
     return (
       <SafeAreaView className="flex-1 bg-bg items-center justify-center px-6">
         <Ionicons name="lock-closed" size={48} color="#E51400" />
-        <Text className="text-txt-primary text-xl font-semibold uppercase tracking-[0.12em] mt-4 text-center">permission required</Text>
-        <Text className="text-txt-muted text-center mt-2">
+        <EyebrowTight tone="primary" className="text-xl mt-4 text-center">
+          permission required
+        </EyebrowTight>
+        <Body tone="muted" className="text-center mt-2">
           Only team captains and league admins can create announcements.
-        </Text>
+        </Body>
         <Button label="Go Back" variant="outline" onPress={() => router.back()} className="mt-6" />
       </SafeAreaView>
     );
@@ -223,30 +226,30 @@ export default function CreateAnnouncementScreen() {
         <ScrollView className="flex-1 px-5 pt-4" keyboardShouldPersistTaps="handled">
           {showPreview && (
             <View className="bg-primary p-4 mb-6">
-              <Text className="text-txt-inverse text-[10px] font-semibold uppercase tracking-[0.12em]">preview</Text>
-              <Text className="text-txt-inverse text-3xl font-light lowercase tracking-tight mt-1">
+              <EyebrowTight tone="inverse">preview</EyebrowTight>
+              <Hero tone="inverse" className="text-3xl mt-1">
                 {title || "Untitled"}
-              </Text>
-              <Text className="text-txt-inverse text-sm mt-2">
+              </Hero>
+              <Body tone="inverse" className="text-sm mt-2">
                 {content || "No content"}
-              </Text>
+              </Body>
               <View className="flex-row items-center gap-4 mt-3">
-                <Text className="text-txt-inverse text-[11px] font-semibold uppercase tracking-[0.12em]">
+                <EyebrowTight tone="inverse">
                   {targetType === "team" && selectedTeam ? selectedTeam.name : targetType === "division" ? "division-wide" : "league-wide"}
-                </Text>
-                <Text className="text-txt-inverse text-[11px] font-semibold uppercase tracking-[0.12em]">
+                </EyebrowTight>
+                <EyebrowTight tone="inverse">
                   {expirationHours === null ? "never expires" : `expires in ${expirationHours}h`}
-                </Text>
+                </EyebrowTight>
               </View>
             </View>
           )}
 
           <View className="mb-6">
             <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.12em]">Title</Text>
-              <Text className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${isTitleOverLimit ? "text-danger" : "text-txt-muted"}`}>
+              <Eyebrow tone="secondary">Title</Eyebrow>
+              <EyebrowTight tone={isTitleOverLimit ? "danger" : "muted"}>
                 {titleCharCount}/{TITLE_MAX_LENGTH}
-              </Text>
+              </EyebrowTight>
             </View>
             <TextInput
               className={`bg-surface-raised border text-txt-primary text-sm px-4 py-3 ${isTitleOverLimit ? "border-danger" : "border-surface-border"}`}
@@ -261,10 +264,10 @@ export default function CreateAnnouncementScreen() {
 
           <View className="mb-6">
             <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.12em]">Message</Text>
-              <Text className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${isContentOverLimit ? "text-danger" : "text-txt-muted"}`}>
+              <Eyebrow tone="secondary">Message</Eyebrow>
+              <EyebrowTight tone={isContentOverLimit ? "danger" : "muted"}>
                 {contentCharCount}/{CONTENT_MAX_LENGTH}
-              </Text>
+              </EyebrowTight>
             </View>
             <TextInput
               className={`bg-surface-raised border text-txt-primary text-sm px-4 py-3 min-h-[150px] ${isContentOverLimit ? "border-danger" : "border-surface-border"}`}
@@ -296,16 +299,22 @@ export default function CreateAnnouncementScreen() {
                   <IconChip name={option.icon} color={option.accent} background={`${option.accent}22`} />
                   <View className="flex-1 ml-3">
                     <View className="flex-row items-center gap-2">
-                      <Text className="text-sm font-semibold" style={isSelected ? { color: option.accent } : undefined}>
+                      <Body
+                        tone="primary"
+                        className="text-sm font-semibold"
+                        style={isSelected ? { color: option.accent } : undefined}
+                      >
                         {option.label}
-                      </Text>
+                      </Body>
                       {isDisabled && (
                         <View className="bg-surface-overlay border border-surface-border px-2 py-0.5">
-                          <Text className="text-txt-muted text-[10px] uppercase font-semibold tracking-[0.12em]">admin only</Text>
+                          <EyebrowTight tone="muted">admin only</EyebrowTight>
                         </View>
                       )}
                     </View>
-                    <Text className="text-txt-muted text-xs mt-1">{option.description}</Text>
+                    <Body tone="muted" className="text-xs mt-1">
+                      {option.description}
+                    </Body>
                   </View>
                   {isSelected && <Ionicons name="checkmark-circle" size={22} color={option.accent} />}
                 </TouchableOpacity>
@@ -323,13 +332,17 @@ export default function CreateAnnouncementScreen() {
                   className={`flex-row items-center p-4 border ${isSelected ? "border-primary bg-primary-50" : "border-surface-border bg-surface-raised"}`}
                   onPress={() => setTargetType(option.type)}
                   disabled={isSubmitting}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: isSelected }}
                   activeOpacity={0.85}
                 >
                   <View className="flex-1">
-                    <Text className={`text-sm font-semibold ${isSelected ? "text-primary" : "text-txt-primary"}`}>
+                    <Body tone={isSelected ? "primaryAccent" : "primary"} className="text-sm font-semibold">
                       {option.label}
-                    </Text>
-                    <Text className="text-txt-muted text-xs mt-1">{option.description}</Text>
+                    </Body>
+                    <Body tone="muted" className="text-xs mt-1">
+                      {option.description}
+                    </Body>
                   </View>
                   {isSelected && <Ionicons name="checkmark-circle" size={22} color="#00ABA9" />}
                 </TouchableOpacity>
@@ -343,13 +356,15 @@ export default function CreateAnnouncementScreen() {
               {isLoadingTeams ? (
                 <View className="items-center py-6 flex-row justify-center gap-3">
                   <View className="h-px w-8 bg-primary" />
-                  <Text className="text-txt-secondary text-[10px] font-semibold uppercase tracking-[0.2em]">loading teams</Text>
+                  <EyebrowTight tone="secondary" className="tracking-[0.2em]">loading teams</EyebrowTight>
                   <View className="h-px w-8 bg-primary" />
                 </View>
               ) : teams.length === 0 ? (
                 <View className="bg-surface border border-surface-border p-6 items-center">
                   <Ionicons name="people-outline" size={32} color="#8A8A8A" />
-                  <Text className="text-txt-muted text-sm mt-2">No teams available</Text>
+                  <Body tone="muted" className="text-sm mt-2">
+                    No teams available
+                  </Body>
                 </View>
               ) : (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -362,11 +377,13 @@ export default function CreateAnnouncementScreen() {
                           className={`px-4 py-3 border ${isSelected ? "bg-primary border-primary" : "bg-surface-raised border-surface-border"}`}
                           onPress={() => setTargetId(team.id)}
                           disabled={isSubmitting}
+                          accessibilityRole="radio"
+                          accessibilityState={{ selected: isSelected }}
                           activeOpacity={0.85}
                         >
-                    <Text className={`text-xs font-semibold uppercase tracking-[0.12em] ${isSelected ? "text-txt-inverse" : "text-txt-secondary"}`}>
-                      {team.name}
-                    </Text>
+                          <EyebrowTight tone={isSelected ? "inverse" : "secondary"}>
+                            {team.name}
+                          </EyebrowTight>
                         </TouchableOpacity>
                       );
                     })}
@@ -388,12 +405,15 @@ export default function CreateAnnouncementScreen() {
                   disabled={isSubmitting}
                   activeOpacity={0.85}
                 >
-                    <Text className={`text-xs font-semibold uppercase tracking-[0.12em] ${isSelected ? "text-txt-inverse" : "text-txt-primary"}`}>
+                    <EyebrowTight tone={isSelected ? "inverse" : "primary"}>
                       {option.label}
-                    </Text>
-                    <Text className={`text-[10px] font-semibold uppercase tracking-[0.12em] mt-1 ${isSelected ? "text-txt-inverse/85" : "text-txt-muted"}`}>
+                    </EyebrowTight>
+                    <EyebrowTight
+                      tone={isSelected ? "inverse" : "muted"}
+                      className="mt-1 opacity-85"
+                    >
                       {option.description}
-                    </Text>
+                    </EyebrowTight>
                 </TouchableOpacity>
               );
             })}
@@ -404,13 +424,13 @@ export default function CreateAnnouncementScreen() {
               <View className="flex-1 mr-4">
                 <View className="flex-row items-center gap-2">
                   <Ionicons name="warning" size={18} color={isUrgent ? "#E51400" : "#5C5C5C"} />
-                  <Text className={`text-sm font-semibold ${isUrgent ? "text-danger" : "text-txt-primary"}`}>
+                  <Body tone={isUrgent ? "danger" : "primary"} className="text-sm font-semibold">
                     mark as urgent
-                  </Text>
+                  </Body>
                 </View>
-                <Text className="text-txt-muted text-xs mt-1">
+                <Body tone="muted" className="text-xs mt-1">
                   Send immediate push notification. Use only for cancellations or emergencies.
-                </Text>
+                </Body>
               </View>
               <Switch
                 value={isUrgent}
@@ -418,6 +438,7 @@ export default function CreateAnnouncementScreen() {
                 trackColor={{ false: "#D8D8D8", true: "#E51400" }}
                 thumbColor="#FFFFFF"
                 disabled={isSubmitting}
+                accessibilityLabel="mark announcement as urgent"
               />
             </View>
           </View>

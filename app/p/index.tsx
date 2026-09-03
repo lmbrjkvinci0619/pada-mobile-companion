@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { ScrollView, View, Text, TouchableOpacity, RefreshControl } from "react-native";
+import { ScrollView, View, TouchableOpacity, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { PageHeader, SectionLabel } from "@/components/ui/Page";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoaderBar } from "@/components/ui/LoaderBar";
+import { Body, EyebrowTight, Subtitle } from "@/components/ui";
 import type { Article } from "@/types";
 
 function PageRow({ article }: { article: Article }) {
@@ -27,18 +28,18 @@ function PageRow({ article }: { article: Article }) {
         <View className="flex-row items-center gap-2 mb-1">
           {article.category && <Badge label={article.category} variant="primary" />}
           {article.publishedAt && (
-            <Text className="text-txt-secondary text-[10px] font-semibold uppercase tracking-[0.12em]">
+            <EyebrowTight tone="secondary">
               {format(parseISO(article.publishedAt), "MMM d, yyyy").toLowerCase()}
-            </Text>
+            </EyebrowTight>
           )}
         </View>
-        <Text className="text-txt-primary text-sm font-semibold leading-snug" numberOfLines={2}>
+        <Body tone="primary" className="text-sm font-semibold leading-snug" numberOfLines={2}>
           {article.title}
-        </Text>
+        </Body>
         {article.summary && (
-          <Text className="text-txt-secondary text-xs mt-1" numberOfLines={2}>
+          <Subtitle tone="secondary" className="mt-1" numberOfLines={2}>
             {article.summary}
-          </Text>
+          </Subtitle>
         )}
       </View>
       <Ionicons name="chevron-forward" size={18} color="#5C5C5C" />
