@@ -44,7 +44,7 @@ export default function PageDetailScreen() {
       <PageHeader title="article" subtitle={page.category ?? ""} back />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {page.imageUrl && (
-          <View className="h-48 bg-surface-overlay items-center justify-center border-b-2 border-surface-border">
+          <View className="h-48 bg-surface-overlay items-center justify-center border-b border-surface-border">
             <Ionicons name="image-outline" size={48} color="#8A8A8A" />
           </View>
         )}
@@ -69,7 +69,7 @@ export default function PageDetailScreen() {
             </Text>
           )}
 
-          <View className="bg-surface border-2 border-surface-border p-4">
+          <View className="bg-surface border border-surface-border p-4">
             <Text className="text-txt-primary text-sm leading-6">
               {page.content || page.summary || "No content available."}
             </Text>

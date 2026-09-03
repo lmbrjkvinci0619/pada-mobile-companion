@@ -50,8 +50,8 @@ const TimePickerModal = ({
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View className="flex-1 bg-black/60 justify-end">
-        <View className="bg-bg border-t-4 border-primary">
-          <View className="flex-row justify-between items-center px-4 py-4 border-b-2 border-surface-border">
+        <View className="bg-bg border-t border-primary">
+          <View className="flex-row justify-between items-center px-4 py-4 border-b border-surface-border">
             <TouchableOpacity onPress={onClose}>
               <Text className="text-txt-secondary text-xs font-semibold uppercase tracking-[0.12em]">cancel</Text>
             </TouchableOpacity>
@@ -64,7 +64,7 @@ const TimePickerModal = ({
             {TIME_OPTIONS.map((time, index) => (
               <TouchableOpacity
                 key={time}
-                className={`px-4 py-4 flex-row justify-between items-center border-b-2 border-surface-border ${
+                className={`px-4 py-4 flex-row justify-between items-center border-b border-surface-border ${
                   selectedIndex === index ? "bg-primary-50" : ""
                 }`}
                 onPress={() => setSelectedIndex(index)}
@@ -102,7 +102,7 @@ const ToggleRow = ({
   iconBackground: string;
   disabled?: boolean;
 }) => (
-  <View className={`flex-row items-center justify-between px-4 py-4 border-b-2 border-surface-border ${disabled ? "opacity-50" : ""}`}>
+  <View className={`flex-row items-center justify-between px-4 py-4 border-b border-surface-border ${disabled ? "opacity-50" : ""}`}>
     <View className="flex-row items-center gap-3 flex-1">
       <IconChip name={iconName} color={iconColor} background={iconBackground} />
       <View className="flex-1">
@@ -132,7 +132,7 @@ const QuietHoursButton = ({
   disabled?: boolean;
 }) => (
   <TouchableOpacity
-    className={`flex-1 px-4 py-4 flex-row items-center justify-between border-2 border-surface-border ${
+    className={`flex-1 px-4 py-4 flex-row items-center justify-between border border-surface-border ${
       disabled ? "bg-surface" : "bg-surface-raised"
     }`}
     onPress={onPress}
@@ -333,8 +333,8 @@ export default function NotificationSettingsScreen() {
       >
         <View className="px-5 py-4">
           <SectionLabel>general</SectionLabel>
-          <View className="bg-surface border-2 border-surface-border">
-            <View className="flex-row items-center justify-between px-4 py-4">
+          <View className="bg-surface border border-surface-border">
+            <View className="flex-row items-center justify-between px-4 py-4 border-b border-surface-border">
               <View className="flex-row items-center gap-3 flex-1">
                 <IconChip name="notifications" color="#00ABA9" background="#00ABA922" />
                 <View className="flex-1">
@@ -354,7 +354,7 @@ export default function NotificationSettingsScreen() {
 
         <View className="px-5 pb-4">
           <SectionLabel>announcements</SectionLabel>
-          <View className="bg-surface border-2 border-surface-border">
+          <View className="bg-surface border border-surface-border">
             <ToggleRow
               title="All Announcements"
               subtitle="Receive notifications for all announcements"
@@ -400,7 +400,7 @@ export default function NotificationSettingsScreen() {
 
         <View className="px-5 pb-4">
           <SectionLabel>games & scheduling</SectionLabel>
-          <View className="bg-surface border-2 border-surface-border">
+          <View className="bg-surface border border-surface-border">
             <ToggleRow
               title="Score Notifications"
               subtitle="Game score updates and results"
@@ -426,7 +426,7 @@ export default function NotificationSettingsScreen() {
 
         <View className="px-5 pb-4">
           <SectionLabel>quiet hours</SectionLabel>
-          <View className="bg-surface border-2 border-surface-border p-4 gap-3">
+          <View className="bg-surface border border-surface-border p-4 gap-3">
             <Text className="text-txt-secondary text-xs">Notifications will be silenced during these hours</Text>
             <View className="flex-row gap-3">
               <QuietHoursButton
@@ -460,7 +460,7 @@ export default function NotificationSettingsScreen() {
 
         <View className="px-5 pb-4">
           <SectionLabel>hidden announcements</SectionLabel>
-          <View className="bg-surface border-2 border-surface-border p-4 gap-3">
+          <View className="bg-surface border border-surface-border p-4 gap-3">
             {hiddenCount > 0 ? (
               <>
                 <View className="flex-row items-center gap-3">
@@ -471,7 +471,7 @@ export default function NotificationSettingsScreen() {
                   </View>
                 </View>
                 <TouchableOpacity
-                  className="items-center py-3 border-t-2 border-surface-border"
+                  className="items-center py-3 border-t border-surface-border"
                   onPress={handleClearHiddenAnnouncements}
                   activeOpacity={0.85}
                 >
@@ -490,7 +490,7 @@ export default function NotificationSettingsScreen() {
         <View className="px-5 pb-4">
           <SectionLabel>notification test</SectionLabel>
           <TouchableOpacity
-            className="bg-surface border-2 border-surface-border p-4 flex-row items-center justify-center gap-3"
+            className="bg-surface border border-surface-border p-4 flex-row items-center justify-center gap-3"
             onPress={handleTestNotification}
             activeOpacity={0.85}
           >

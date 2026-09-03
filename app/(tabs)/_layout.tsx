@@ -9,9 +9,9 @@ import { LoaderBar } from "@/components/ui/LoaderBar";
 const TabBarBadge = React.memo(function TabBarBadge({ count }: { count: number }) {
   if (count === 0) return null;
   return (
-      <View className="absolute -top-1 -right-1 min-w-4 h-4 bg-danger items-center justify-center px-1 border-2 border-bg">
-          <Text className="text-txt-inverse text-[10px] font-semibold">{count > 9 ? "9+" : count}</Text>
-        </View>
+    <View className="absolute -top-1 -right-1 min-w-4 h-4 bg-danger items-center justify-center px-1">
+      <Text className="text-txt-inverse text-[10px] font-semibold">{count > 9 ? "9+" : count}</Text>
+    </View>
   );
 });
 
@@ -54,7 +54,7 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: "#FFFFFF",
           borderTopColor: "#D8D8D8",
-          borderTopWidth: 2,
+          borderTopWidth: 1,
           height: 64,
           paddingBottom: 8,
           paddingTop: 8,

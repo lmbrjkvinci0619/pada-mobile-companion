@@ -50,7 +50,7 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="items-center mb-10">
-          <View className="w-20 h-20 bg-primary items-center justify-center mb-5 border-2 border-primary-700">
+          <View className="w-20 h-20 bg-primary items-center justify-center mb-5">
             <Text className="text-txt-inverse text-4xl font-black leading-none">p</Text>
           </View>
           <Text className="text-txt-primary text-[44px] font-light lowercase tracking-tight leading-none">
@@ -65,13 +65,13 @@ export default function LoginScreen() {
           </View>
         </View>
 
-        <View className="w-full bg-surface border-2 border-surface-border p-6 gap-5">
+        <View className="w-full bg-surface border border-surface-border p-6 gap-5">
           <Text className="text-txt-primary text-xl font-semibold uppercase tracking-[0.2em] text-center">
             sign in
           </Text>
 
           {(error || validationError) && (
-            <View className="flex-row items-start gap-3 bg-danger/10 border-2 border-danger px-4 py-3">
+            <View className="flex-row items-start gap-3 bg-surface border border-danger px-4 py-3">
               <Ionicons name="alert-circle" size={18} color="#E51400" />
               <Text className="text-danger text-sm font-semibold flex-1">{validationError || error}</Text>
             </View>
@@ -79,7 +79,7 @@ export default function LoginScreen() {
 
           <View className="gap-2">
             <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.18em]">email</Text>
-            <View className="flex-row items-center bg-surface border-2 border-surface-border px-4 py-3 gap-3">
+            <View className="flex-row items-center bg-surface-raised border border-surface-border px-4 py-3 gap-3">
               <Ionicons name="mail-outline" size={18} color="#5C5C5C" />
               <TextInput
                 className="flex-1 text-txt-primary text-sm"
@@ -97,7 +97,7 @@ export default function LoginScreen() {
 
           <View className="gap-2">
             <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.18em]">password</Text>
-            <View className="flex-row items-center bg-surface border-2 border-surface-border px-4 py-3 gap-3">
+            <View className="flex-row items-center bg-surface-raised border border-surface-border px-4 py-3 gap-3">
               <Ionicons name="lock-closed-outline" size={18} color="#5C5C5C" />
               <TextInput
                 className="flex-1 text-txt-primary text-sm"
@@ -121,7 +121,7 @@ export default function LoginScreen() {
             onPress={() => setRemember((v) => !v)}
           >
             <View
-              className={`w-5 h-5 border-2 items-center justify-center ${
+              className={`w-5 h-5 border items-center justify-center ${
                 rememberMe ? "bg-primary border-primary" : "border-surface-border"
               }`}
             >

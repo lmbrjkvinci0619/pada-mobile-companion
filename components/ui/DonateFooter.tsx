@@ -4,7 +4,7 @@ import { openUrl, openWithAppFallback, EXTERNAL_URLS } from "@/lib/urlUtils";
 
 export const DonateFooter = React.memo(function DonateFooter() {
   return (
-    <View className="items-center gap-1 py-4 bg-bg border-t-2 border-surface-border">
+    <View className="items-center gap-1 py-4 bg-bg border-t border-surface-border">
       <Text className="text-txt-secondary text-[10px] font-semibold uppercase tracking-[0.18em]">
         toss a coin to your developer
       </Text>
@@ -15,7 +15,7 @@ export const DonateFooter = React.memo(function DonateFooter() {
           accessibilityRole="link"
           accessibilityLabel="tip the developer on PayPal"
         >
-          <Text className="text-primary-700 text-[11px] font-semibold uppercase tracking-[0.12em] underline">
+          <Text className="text-primary-700 text-[11px] font-semibold uppercase tracking-[0.12em]">
             paypal
           </Text>
         </TouchableOpacity>
@@ -26,7 +26,7 @@ export const DonateFooter = React.memo(function DonateFooter() {
           accessibilityRole="link"
           accessibilityLabel="tip the developer on Venmo"
         >
-          <Text className="text-primary-700 text-[11px] font-semibold uppercase tracking-[0.12em] underline">
+          <Text className="text-primary-700 text-[11px] font-semibold uppercase tracking-[0.12em]">
             venmo
           </Text>
         </TouchableOpacity>

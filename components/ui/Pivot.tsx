@@ -24,7 +24,7 @@ export function Pivot<T extends string>({
   const active = value ?? internal;
 
   return (
-    <View className={cn("border-b-2 border-surface-border bg-bg", className)}>
+    <View className={cn("border-b border-surface-border bg-bg", className)}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -79,7 +79,7 @@ export function PivotPanorama({
   unread?: number;
 }) {
   return (
-    <View className="px-5 pt-4 pb-3 bg-bg border-b-2 border-surface-border">
+    <View className="px-5 pt-4 pb-3 bg-bg border-b border-surface-border">
       <View className="flex-row items-end justify-between">
         <View className="flex-1 pr-3">
           <View className="flex-row items-center gap-2">

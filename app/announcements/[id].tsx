@@ -107,7 +107,7 @@ export default function AnnouncementDetail() {
         </View>
 
         {isExpired && (
-          <View className="bg-danger/10 border-2 border-danger px-4 py-3 mb-4 flex-row items-center gap-2">
+          <View className="bg-surface border border-danger px-4 py-3 mb-4 flex-row items-center gap-2">
             <Ionicons name="alert-circle" size={18} color="#E51400" />
             <Text className="text-danger text-xs uppercase tracking-[0.12em] font-semibold">this announcement has expired</Text>
           </View>
@@ -118,7 +118,7 @@ export default function AnnouncementDetail() {
         </Text>
 
         <SectionLabel>details</SectionLabel>
-        <View className="bg-surface border-2 border-surface-border">
+        <View className="bg-surface border border-surface-border">
           <DetailRow label="Type" value={typeLabel} accent={accent} />
           <DetailRow
             label="Audience"
@@ -159,7 +159,7 @@ function DetailRow({
   last?: boolean;
 }) {
   return (
-    <View className={`flex-row items-center justify-between px-4 py-3 ${last ? "" : "border-b-2 border-surface-border"}`}>
+    <View className={`flex-row items-center justify-between px-4 py-3 ${last ? "" : "border-b border-surface-border"}`}>
       <Text className="text-txt-secondary text-xs font-semibold uppercase tracking-[0.12em]">{label}</Text>
       <Text className="text-txt-primary text-sm font-semibold" style={accent ? { color: accent } : undefined}>
         {value}

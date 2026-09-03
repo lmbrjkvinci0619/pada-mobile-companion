@@ -74,7 +74,7 @@ export default function UserSettingsScreen() {
     children?: React.ReactNode;
   }) => (
     <TouchableOpacity
-      className="flex-row items-center justify-between px-4 py-4 border-b-2 border-surface-border"
+      className="flex-row items-center justify-between px-4 py-4 border-b border-surface-border"
       onPress={onPress}
       disabled={!onPress}
       activeOpacity={onPress ? 0.7 : 1}
@@ -105,7 +105,7 @@ export default function UserSettingsScreen() {
       <PageHeader title="profile" subtitle="account & privacy" back={() => router.back()} />
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="px-5 py-6 items-center bg-surface border-b-2 border-surface-border">
+        <View className="px-5 py-6 items-center bg-surface border-b border-surface-border">
           <Avatar
             name={`${user?.firstName} ${user?.lastName}`}
             uri={user?.avatarUrl}
@@ -117,7 +117,7 @@ export default function UserSettingsScreen() {
           {isEditing ? (
             <View className="mt-4 w-full">
               <TextInput
-                className="bg-surface-raised border-2 border-surface-border text-txt-primary text-center text-base px-4 py-3"
+                className="bg-surface-raised border border-surface-border text-txt-primary text-center text-base px-4 py-3"
                 value={localDisplayName}
                 onChangeText={setLocalDisplayName}
                 placeholder="Enter display name"
@@ -141,7 +141,7 @@ export default function UserSettingsScreen() {
             </TouchableOpacity>
           )}
 
-          <View className="bg-primary-50 border-2 border-primary px-3 py-1 mt-3">
+          <View className="bg-surface-overlay border border-primary px-3 py-1 mt-3">
             <Text className="text-primary text-[10px] font-semibold uppercase tracking-[0.2em]">{user?.role}</Text>
           </View>
           <Text className="text-txt-secondary text-xs mt-2">{user?.email}</Text>
@@ -149,7 +149,7 @@ export default function UserSettingsScreen() {
 
         <View className="px-5 mt-5 pb-2">
           <SectionLabel>account</SectionLabel>
-          <View className="bg-surface border-2 border-surface-border">
+          <View className="bg-surface border border-surface-border">
             <SettingRow title="Email" subtitle={user?.email} showChevron={false}>
               <IconChip name="mail-outline" color="#1BA1E2" background="#1BA1E222" />
             </SettingRow>
@@ -161,7 +161,7 @@ export default function UserSettingsScreen() {
 
         <View className="px-5 mt-5 pb-2">
           <SectionLabel>preferences</SectionLabel>
-          <View className="bg-surface border-2 border-surface-border">
+          <View className="bg-surface border border-surface-border">
             <SettingRow title="Notifications" subtitle="Manage push and in-app notifications" onPress={() => router.push("/settings/notifications")}>
               <IconChip name="notifications-outline" color="#F09609" background="#F0960922" />
             </SettingRow>
@@ -176,7 +176,7 @@ export default function UserSettingsScreen() {
 
         <View className="px-5 mt-5 pb-2">
           <SectionLabel>support</SectionLabel>
-          <View className="bg-surface border-2 border-surface-border">
+          <View className="bg-surface border border-surface-border">
             <SettingRow title="Help Center" subtitle="FAQs and support articles" onPress={() => openUrl(EXTERNAL_URLS.help)}>
               <IconChip name="help-circle-outline" color="#F09609" background="#F0960922" />
             </SettingRow>

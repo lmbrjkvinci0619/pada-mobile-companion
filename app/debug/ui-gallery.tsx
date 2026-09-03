@@ -102,7 +102,7 @@ export default function UIGallery() {
           </CardSection>
 
           <CardSection title="avatars" className="mb-8">
-            <View className="flex-row items-end gap-4 bg-surface p-4 border-2 border-surface-border">
+            <View className="flex-row items-end gap-4 bg-surface p-4 border border-surface-border">
               {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
                 <View key={size} className="items-center gap-1">
                   <Avatar size={size} name="PADA" border={size !== "xs"} accent="#00ABA9" />
@@ -125,7 +125,7 @@ export default function UIGallery() {
           </CardSection>
 
           <CardSection title="pivot" className="mb-8">
-            <View className="bg-bg border-2 border-surface-border">
+            <View className="bg-bg border border-surface-border">
               <Pivot
                 items={[
                   { key: "roster", label: "roster" },

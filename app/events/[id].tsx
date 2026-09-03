@@ -122,14 +122,14 @@ export default function EventDetailScreen() {
       <PageHeader title="event" subtitle={event.teamName ?? ""} back={() => router.back()} />
 
       <ScrollView className="flex-1" contentContainerClassName="px-5 pt-4 pb-8" showsVerticalScrollIndicator={false}>
-        <View className="bg-primary p-5 border-2 border-primary-700">
-          <Text className="text-txt-inverse/85 text-[10px] font-semibold uppercase tracking-[0.2em]">
+        <View className="bg-primary p-5">
+          <Text className="text-txt-inverse text-[10px] font-semibold uppercase tracking-[0.2em]">
             {event.type}
           </Text>
           <Text className="text-txt-inverse text-2xl font-light lowercase tracking-tight mt-1">
             {event.title}
           </Text>
-          <Text className="text-txt-inverse/90 text-sm mt-2 font-normal">
+          <Text className="text-txt-inverse text-sm mt-2 font-normal">
             {event.startDate ? format(parseISO(event.startDate), "EEEE, MMMM d 'at' h:mm a") : "date tbd"}
           </Text>
         </View>
@@ -145,7 +145,7 @@ export default function EventDetailScreen() {
             )}
 
             {event.location?.latitude != null && event.location.longitude != null && (
-              <View className="mt-3 border-2 border-surface-border overflow-hidden">
+              <View className="mt-3 border border-surface-border overflow-hidden">
                 <MapView
                   style={{ height: 160, width: "100%" }}
                   initialRegion={{
@@ -170,7 +170,7 @@ export default function EventDetailScreen() {
 
             {event.location && (event.location.latitude != null || event.location.address) && (
               <TouchableOpacity
-                className="mt-3 flex-row items-center justify-center gap-2 bg-primary border-2 border-primary py-3"
+                className="mt-3 flex-row items-center justify-center gap-2 bg-primary py-3"
                 onPress={handleOpenDirections}
                 activeOpacity={0.85}
               >
@@ -222,7 +222,7 @@ export default function EventDetailScreen() {
         )}
 
         <TouchableOpacity
-          className="mt-4 bg-surface border-2 border-surface-border py-4 flex-row items-center justify-center gap-2"
+          className="mt-4 bg-surface border border-surface-border py-4 flex-row items-center justify-center gap-2"
           onPress={handleAddToCalendar}
           disabled={isOpeningCalendar}
           activeOpacity={0.85}

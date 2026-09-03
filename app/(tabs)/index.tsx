@@ -46,9 +46,9 @@ const AnnouncementRow = React.memo(function AnnouncementRow({
     <TouchableOpacity
       onPress={() => router.push(`/announcements/${ann.id}`)}
       activeOpacity={0.85}
-      className="flex-row items-start gap-3 py-4 border-b-2 border-surface-border"
+      className="flex-row items-start gap-3 py-4 border-b border-surface-border"
     >
-      <View className="w-9 h-9 items-center justify-center bg-surface-overlay border-2 border-surface-border">
+      <View className="w-9 h-9 items-center justify-center bg-surface-overlay border border-surface-border">
         <Ionicons name={iconName} size={18} color={accentColor} />
       </View>
       <View className="flex-1">
@@ -100,8 +100,8 @@ const ArticleTile = React.memo(function ArticleTile({ article }: { article: Arti
       activeOpacity={0.85}
       className="mr-3"
     >
-      <View style={{ width: 240 }} className="bg-surface-raised border-2 border-surface-border">
-        <View className="h-24 bg-primary-50 items-center justify-center border-b-2 border-surface-border">
+      <View style={{ width: 240 }} className="bg-surface-raised border border-surface-border">
+        <View className="h-24 bg-primary-50 items-center justify-center border-b border-surface-border">
           <Ionicons name="newspaper-outline" size={28} color="#00ABA9" />
         </View>
         <View className="p-3">
@@ -200,10 +200,10 @@ export default function HomeScreen() {
   const activePanelRef = useRef(0);
   activePanelRef.current = activePanel;
   const onHubScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const panelWidth = e.nativeEvent.layoutMeasurement.width - 32;
-    if (panelWidth <= 0) return;
-    const idx = Math.round(e.nativeEvent.contentOffset.x / panelWidth);
-    if (idx !== activePanelRef.current) setActivePanel(idx);
+    const offsetX = e.nativeEvent.contentOffset.x;
+    if (offsetX < 0) return;
+    const idx = Math.round(offsetX / (e.nativeEvent.layoutMeasurement.width - 20));
+    if (idx !== activePanelRef.current && idx >= 0) setActivePanel(idx);
   }, []);
 
   const greeting = isAuthenticated ? (user?.firstName ?? "player").toLowerCase() : "guest";
@@ -255,9 +255,6 @@ export default function HomeScreen() {
               <Text className="text-txt-primary text-[28px] font-light lowercase tracking-tight leading-tight">
                 hello, {greeting}.
               </Text>
-          <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.18em] mt-1">
-            {format(new Date(), "EEEE · MMMM d").toLowerCase()}
-          </Text>
             </View>
 
             {!isAuthenticated && (
@@ -391,7 +388,7 @@ export default function HomeScreen() {
                 accent="muted"
               />
             ) : (
-              <View className="border-t-2 border-surface-border">
+              <View className="border-t border-surface-border">
                 {announcements.slice(0, 6).map((ann) => (
                   <AnnouncementRow key={ann.id} ann={ann} />
                 ))}
@@ -446,7 +443,7 @@ export default function HomeScreen() {
             <TouchableOpacity
               onPress={() => openUrl(EXTERNAL_URLS.about)}
               activeOpacity={0.9}
-              className="bg-surface border-2 border-surface-border p-4 mb-5"
+              className="bg-surface border border-surface-border p-4 mb-5"
             >
               <View className="flex-row items-start gap-3">
                 <IconChip name="information-circle" color="#339933" background="#33993322" />
@@ -506,7 +503,7 @@ export default function HomeScreen() {
         </HubPanel>
       </Hub>
 
-      <View className="bg-bg border-t-2 border-surface-border">
+      <View className="bg-bg border-t border-surface-border">
         <PagerDots count={3} active={activePanel} />
       </View>
       <DonateFooter />

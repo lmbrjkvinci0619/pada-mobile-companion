@@ -20,12 +20,12 @@ interface ButtonProps extends TouchableOpacityProps {
 }
 
 const variantContainer: Record<Variant, string> = {
-  primary:   "bg-primary active:bg-primary-700 border-2 border-primary",
-  secondary: "bg-surface active:bg-surface-overlay border-2 border-surface-border",
-  ghost:     "bg-transparent active:bg-surface-overlay border-2 border-transparent",
-  danger:    "bg-danger active:opacity-90 border-2 border-danger",
-  success:   "bg-success active:opacity-90 border-2 border-success",
-  outline:   "bg-transparent active:bg-primary-50 border-2 border-primary",
+  primary:   "bg-primary active:bg-primary-700",
+  secondary: "bg-surface-raised active:bg-surface-overlay",
+  ghost:     "bg-transparent active:bg-surface-overlay",
+  danger:    "bg-danger active:opacity-90",
+  success:   "bg-success active:opacity-90",
+  outline:   "bg-transparent active:bg-primary-50 border border-primary",
 };
 
 const variantText: Record<Variant, string> = {

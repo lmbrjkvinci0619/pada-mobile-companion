@@ -57,7 +57,7 @@ export const Avatar = React.memo(function Avatar({
   const commonClasses = cn(
     container,
     "overflow-hidden",
-    border && "border-2 border-surface-border",
+    border && "border border-surface-border",
     className,
   );
 

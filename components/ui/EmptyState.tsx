@@ -27,8 +27,8 @@ export const EmptyState = React.memo(function EmptyState({
 }: EmptyStateProps) {
   const color = ACCENT_ICON[accent];
   return (
-    <View className={cn("bg-surface border-2 border-surface-border py-10 px-6 items-center gap-3", className)}>
-      <View className="w-12 h-12 items-center justify-center border-2 border-surface-border bg-surface-raised">
+    <View className={cn("bg-surface border border-surface-border py-10 px-6 items-center gap-3", className)}>
+      <View className="w-12 h-12 items-center justify-center border border-surface-border bg-surface-raised">
         <Ionicons name={icon} size={24} color={color} />
       </View>
       <Text className="text-txt-primary text-xs font-semibold uppercase tracking-[0.18em] text-center">

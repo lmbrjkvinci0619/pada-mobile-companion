@@ -25,7 +25,7 @@ const TeamCard = React.memo(function TeamCard({ team, onPress }: { team: Team; o
   const accent = team.color ?? teamAccent(team.id);
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.9} className="mb-4">
-      <View className="bg-surface-raised border-2 border-surface-border">
+      <View className="bg-surface-raised border border-surface-border">
         <View className="flex-row" style={{ backgroundColor: accent }}>
           <View className="flex-1 p-4">
             <Text className="text-txt-inverse text-[10px] font-semibold uppercase tracking-[0.2em]">
@@ -49,7 +49,7 @@ const TeamCard = React.memo(function TeamCard({ team, onPress }: { team: Team; o
             {team.division ?? "Division Not Set"}
           </Text>
 
-          <View className="flex-row items-center gap-4 mt-3 pt-3 border-t-2 border-surface-border">
+          <View className="flex-row items-center gap-4 mt-3 pt-3 border-t border-surface-border">
             <View className="flex-row items-center gap-1.5">
               <Ionicons name="people" size={14} color="#5C5C5C" />
               <Text className="text-txt-secondary text-xs font-semibold">

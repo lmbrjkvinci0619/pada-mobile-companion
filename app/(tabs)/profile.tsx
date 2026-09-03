@@ -44,7 +44,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="px-5 pt-6 pb-6 items-center bg-surface border-b-2 border-surface-border">
+        <View className="px-5 pt-6 pb-6 items-center bg-surface border-b border-surface-border">
           <TouchableOpacity onPress={() => router.push("/settings/profile")} activeOpacity={0.85}>
             <Avatar
               name={`${user?.firstName} ${user?.lastName}`}
@@ -65,7 +65,7 @@ export default function ProfileScreen() {
             </View>
           </TouchableOpacity>
 
-          <View className="bg-primary-50 border-2 border-primary px-4 py-1 mt-3">
+          <View className="bg-surface-overlay border border-primary px-4 py-1 mt-3">
             <Text className="text-primary text-[10px] font-semibold uppercase tracking-[0.2em]">{user?.role}</Text>
           </View>
         </View>
@@ -88,7 +88,7 @@ export default function ProfileScreen() {
 
         <View className="px-5 mt-6">
           <SectionLabel>quick links</SectionLabel>
-          <View className="bg-surface border-2 border-surface-border">
+          <View className="bg-surface border border-surface-border">
             <ProfileRow
               icon={<IconChip name="rocket" color="#1BA1E2" background="#1BA1E222" />}
               title="New to PADA?"
@@ -107,7 +107,7 @@ export default function ProfileScreen() {
 
         <View className="px-5 mt-6">
           <SectionLabel>settings</SectionLabel>
-          <View className="bg-surface border-2 border-surface-border">
+          <View className="bg-surface border border-surface-border">
             <ProfileRow
               icon={<IconChip name="person" color="#00ABA9" background="#00ABA922" />}
               title="Profile"
@@ -146,7 +146,7 @@ export default function ProfileScreen() {
 
         <View className="px-5 mt-6 mb-10">
           <SectionLabel>developer</SectionLabel>
-          <View className="bg-surface border-2 border-surface-border">
+          <View className="bg-surface border border-surface-border">
             <ProfileRow
               icon={<IconChip name="color-palette" color="#A200FF" background="#A200FF22" />}
               title="UI Gallery"
@@ -187,7 +187,7 @@ function ProfileRow({
       activeOpacity={0.85}
       accessibilityRole="button"
       accessibilityLabel={`${title}${subtitle ? `, ${subtitle}` : ""}`}
-      className={`flex-row items-center justify-between px-4 py-4 ${last ? "" : "border-b-2 border-surface-border"}`}
+      className={`flex-row items-center justify-between px-4 py-4 ${last ? "" : "border-b border-surface-border"}`}
     >
       <View className="flex-row items-center gap-3 flex-1">
         {icon}

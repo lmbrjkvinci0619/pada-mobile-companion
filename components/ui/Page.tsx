@@ -26,7 +26,7 @@ export function PageHeader({
     else router.back();
   };
   return (
-    <View className={cn("px-5 pt-3 pb-3 bg-bg border-b-2 border-surface-border", className)}>
+    <View className={cn("px-5 pt-3 pb-3 bg-bg border-b border-surface-border", className)}>
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center flex-1">
           {back && (
@@ -74,7 +74,7 @@ export function IconChip({
 }) {
   return (
     <View
-      className="w-9 h-9 items-center justify-center border-2 border-surface-border"
+      className="w-9 h-9 items-center justify-center border border-surface-border"
       style={background ? { backgroundColor: background } : undefined}
     >
       <Ionicons name={name} size={size} color={color} />

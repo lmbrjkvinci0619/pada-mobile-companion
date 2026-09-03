@@ -20,23 +20,13 @@ interface BadgeProps {
 }
 
 const containerVariant: Record<Variant, string> = {
-  default:   "bg-surface-overlay border-2 border-surface-border",
-  primary:   "bg-primary-50 border-2 border-primary",
-  secondary: "bg-secondary-50 border-2 border-secondary",
-  success:   "bg-success/10 border-2 border-success",
-  warning:   "bg-warning/10 border-2 border-warning",
-  danger:    "bg-danger/10 border-2 border-danger",
-  ghost:     "bg-transparent border-2 border-surface-border",
-};
-
-const textVariant: Record<Variant, string> = {
-  default:   "text-txt-secondary",
-  primary:   "text-primary-700",
-  secondary: "text-secondary-700",
-  success:   "text-success",
-  warning:   "text-warning",
-  danger:    "text-danger",
-  ghost:     "text-txt-secondary",
+  default:   "bg-surface-overlay border border-surface-border",
+  primary:   "bg-surface-overlay border border-primary text-primary",
+  secondary: "bg-surface-overlay border border-secondary text-secondary",
+  success:   "bg-surface-overlay border border-success text-success",
+  warning:   "bg-surface-overlay border border-warning text-warning",
+  danger:    "bg-surface-overlay border border-danger text-danger",
+  ghost:     "bg-transparent border border-surface-border",
 };
 
 export const Badge = React.memo(function Badge({
@@ -46,23 +36,24 @@ export const Badge = React.memo(function Badge({
   className,
   accent,
 }: BadgeProps) {
+  const isAccent = !!accent;
   return (
     <View
       className={cn(
         "items-center justify-center self-start",
         size === "sm" ? "px-2 py-0.5" : "px-3 py-1",
-        containerVariant[variant],
+        isAccent ? containerVariant.primary : containerVariant[variant],
         className,
       )}
-      style={accent ? { backgroundColor: `${accent}1A`, borderColor: accent } : undefined}
+      style={isAccent ? { borderColor: accent } : undefined}
     >
       <Text
         className={cn(
           "font-semibold uppercase tracking-[0.12em]",
           size === "sm" ? "text-[10px]" : "text-xs",
-          textVariant[variant],
+          isAccent ? "" : (variant === "default" || variant === "ghost" ? "text-txt-secondary" : ""),
         )}
-        style={accent ? { color: accent } : undefined}
+        style={isAccent ? { color: accent } : undefined}
       >
         {label}
       </Text>

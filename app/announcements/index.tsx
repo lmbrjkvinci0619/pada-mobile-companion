@@ -65,7 +65,7 @@ const AnnouncementItem = React.memo(function AnnouncementItem({
 
   return (
     <TouchableOpacity
-      className={`bg-surface border-2 border-surface-border p-4 gap-2 ${isExpired ? "opacity-50" : ""}`}
+      className={`bg-surface border border-surface-border p-4 gap-2 ${isExpired ? "opacity-50" : ""}`}
       onLongPress={handleLongPress}
       onPress={() => {
         if (showDismiss) setShowDismiss(false);

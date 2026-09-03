@@ -15,10 +15,9 @@ export const Hub = React.memo(function Hub({
   ...rest
 }: HubProps) {
   const { width } = useWindowDimensions();
-  const panelWidth = useMemo(() => width - 40, [width]);
+  const panelWidth = useMemo(() => width - 32, [width]);
 
   const items = React.Children.toArray(children);
-  const totalWidth = items.length * panelWidth + (items.length - 1) * gap;
 
   return (
     <ScrollView
@@ -27,27 +26,23 @@ export const Hub = React.memo(function Hub({
       decelerationRate="fast"
       snapToInterval={panelWidth + gap}
       snapToAlignment="start"
+      contentContainerStyle={{ paddingHorizontal: 16 }}
       className={className}
       onScroll={rest.onScroll}
       scrollEventThrottle={rest.onScroll ? 16 : undefined}
       {...rest}
     >
-      <View
-        style={{ width: totalWidth, paddingHorizontal: 20 }}
-        className="flex-row"
-      >
-        {items.map((child, i) => (
-          <View
-            key={i}
-            style={{
-              width: panelWidth,
-              marginRight: i === items.length - 1 ? 0 : gap,
-            }}
-          >
-            {child}
-          </View>
-        ))}
-      </View>
+      {items.map((child, i) => (
+        <View
+          key={i}
+          style={{
+            width: panelWidth,
+            marginRight: i === items.length - 1 ? 0 : gap,
+          }}
+        >
+          {child}
+        </View>
+      ))}
     </ScrollView>
   );
 });

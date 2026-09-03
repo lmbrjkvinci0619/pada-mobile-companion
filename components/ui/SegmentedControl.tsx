@@ -21,7 +21,7 @@ export function Segmented<T extends string>({
   className,
 }: SegmentedProps<T>) {
   return (
-    <View className={cn("flex-row border-2 border-surface-border", className)}>
+    <View className={cn("flex-row border border-surface-border", className)}>
       {options.map((opt, idx) => {
         const active = opt.key === value;
         return (
@@ -32,7 +32,7 @@ export function Segmented<T extends string>({
             className={cn(
               "flex-1 py-3 items-center justify-center",
               active ? "bg-primary" : "bg-surface",
-              idx < options.length - 1 && "border-r-2 border-surface-border",
+              idx < options.length - 1 && "border-r border-surface-border",
             )}
           >
             <Text

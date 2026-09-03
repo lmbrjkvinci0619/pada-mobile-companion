@@ -202,7 +202,7 @@ export default function CreateAnnouncementScreen() {
           back={() => router.back()}
           right={
             <View className="flex-row items-center gap-3">
-              <TouchableOpacity onPress={() => setShowPreview((p) => !p)} disabled={isSubmitting} className="w-10 h-10 items-center justify-center bg-surface border-2 border-surface-border">
+              <TouchableOpacity onPress={() => setShowPreview((p) => !p)} disabled={isSubmitting} className="w-10 h-10 items-center justify-center bg-surface border border-surface-border">
                 <Ionicons name={showPreview ? "eye-off" : "eye"} size={20} color="#000000" />
               </TouchableOpacity>
               {isSubmitting ? (
@@ -222,19 +222,19 @@ export default function CreateAnnouncementScreen() {
 
         <ScrollView className="flex-1 px-5 pt-4" keyboardShouldPersistTaps="handled">
           {showPreview && (
-            <View className="bg-primary border-2 border-primary-700 p-4 mb-6">
+            <View className="bg-primary p-4 mb-6">
               <Text className="text-txt-inverse text-[10px] font-semibold uppercase tracking-[0.12em]">preview</Text>
               <Text className="text-txt-inverse text-3xl font-light lowercase tracking-tight mt-1">
                 {title || "Untitled"}
               </Text>
-              <Text className="text-txt-inverse/85 text-sm mt-2">
+              <Text className="text-txt-inverse text-sm mt-2">
                 {content || "No content"}
               </Text>
               <View className="flex-row items-center gap-4 mt-3">
-                <Text className="text-txt-inverse/85 text-[11px] font-semibold uppercase tracking-[0.12em]">
+                <Text className="text-txt-inverse text-[11px] font-semibold uppercase tracking-[0.12em]">
                   {targetType === "team" && selectedTeam ? selectedTeam.name : targetType === "division" ? "division-wide" : "league-wide"}
                 </Text>
-                <Text className="text-txt-inverse/85 text-[11px] font-semibold uppercase tracking-[0.12em]">
+                <Text className="text-txt-inverse text-[11px] font-semibold uppercase tracking-[0.12em]">
                   {expirationHours === null ? "never expires" : `expires in ${expirationHours}h`}
                 </Text>
               </View>
@@ -249,7 +249,7 @@ export default function CreateAnnouncementScreen() {
               </Text>
             </View>
             <TextInput
-              className={`bg-surface-raised border-2 text-txt-primary text-sm px-4 py-3 ${isTitleOverLimit ? "border-danger" : "border-surface-border"}`}
+              className={`bg-surface-raised border text-txt-primary text-sm px-4 py-3 ${isTitleOverLimit ? "border-danger" : "border-surface-border"}`}
               placeholder="Enter announcement title..."
               placeholderTextColor="#8A8A8A"
               value={title}
@@ -267,7 +267,7 @@ export default function CreateAnnouncementScreen() {
               </Text>
             </View>
             <TextInput
-              className={`bg-surface-raised border-2 text-txt-primary text-sm px-4 py-3 min-h-[150px] ${isContentOverLimit ? "border-danger" : "border-surface-border"}`}
+              className={`bg-surface-raised border text-txt-primary text-sm px-4 py-3 min-h-[150px] ${isContentOverLimit ? "border-danger" : "border-surface-border"}`}
               placeholder="Write your announcement message..."
               placeholderTextColor="#8A8A8A"
               value={content}
@@ -287,8 +287,8 @@ export default function CreateAnnouncementScreen() {
               return (
                 <TouchableOpacity
                   key={option.type}
-                  className={`flex-row items-center p-4 border-2 ${isSelected ? `bg-[${option.accent}]/10` : "bg-surface-raised border-surface-border"} ${isDisabled ? "opacity-50" : ""}`}
-                  style={isSelected ? { backgroundColor: `${option.accent}1A`, borderColor: option.accent } : undefined}
+                  className={`flex-row items-center p-4 border ${isSelected ? "border-primary" : "border-surface-border"} ${isDisabled ? "opacity-50" : ""}`}
+                  style={isSelected ? { backgroundColor: `${option.accent}1A` } : undefined}
                   onPress={() => !isDisabled && setAnnouncementType(option.type)}
                   disabled={isSubmitting || isDisabled}
                   activeOpacity={0.85}
@@ -300,7 +300,7 @@ export default function CreateAnnouncementScreen() {
                         {option.label}
                       </Text>
                       {isDisabled && (
-                        <View className="bg-surface-overlay border-2 border-surface-border px-2 py-0.5">
+                        <View className="bg-surface-overlay border border-surface-border px-2 py-0.5">
                           <Text className="text-txt-muted text-[10px] uppercase font-semibold tracking-[0.12em]">admin only</Text>
                         </View>
                       )}
@@ -320,7 +320,7 @@ export default function CreateAnnouncementScreen() {
               return (
                 <TouchableOpacity
                   key={option.type}
-                  className={`flex-row items-center p-4 border-2 ${isSelected ? "bg-primary-50 border-primary" : "bg-surface-raised border-surface-border"}`}
+                  className={`flex-row items-center p-4 border ${isSelected ? "border-primary bg-primary-50" : "border-surface-border bg-surface-raised"}`}
                   onPress={() => setTargetType(option.type)}
                   disabled={isSubmitting}
                   activeOpacity={0.85}
@@ -347,7 +347,7 @@ export default function CreateAnnouncementScreen() {
                   <View className="h-px w-8 bg-primary" />
                 </View>
               ) : teams.length === 0 ? (
-                <View className="bg-surface border-2 border-surface-border p-6 items-center">
+                <View className="bg-surface border border-surface-border p-6 items-center">
                   <Ionicons name="people-outline" size={32} color="#8A8A8A" />
                   <Text className="text-txt-muted text-sm mt-2">No teams available</Text>
                 </View>
@@ -359,7 +359,7 @@ export default function CreateAnnouncementScreen() {
                       return (
                         <TouchableOpacity
                           key={team.id}
-                          className={`px-4 py-3 border-2 ${isSelected ? "bg-primary border-primary" : "bg-surface-raised border-surface-border"}`}
+                          className={`px-4 py-3 border ${isSelected ? "bg-primary border-primary" : "bg-surface-raised border-surface-border"}`}
                           onPress={() => setTargetId(team.id)}
                           disabled={isSubmitting}
                           activeOpacity={0.85}
@@ -383,7 +383,7 @@ export default function CreateAnnouncementScreen() {
               return (
                 <TouchableOpacity
                   key={option.label}
-                  className={`flex-1 min-w-[100px] p-3 border-2 items-center ${isSelected ? "bg-primary border-primary" : "bg-surface-raised border-surface-border"}`}
+                  className={`flex-1 min-w-[100px] p-3 border items-center ${isSelected ? "bg-primary border-primary" : "bg-surface-raised border-surface-border"}`}
                   onPress={() => setExpirationHours(option.hours)}
                   disabled={isSubmitting}
                   activeOpacity={0.85}
@@ -399,7 +399,7 @@ export default function CreateAnnouncementScreen() {
             })}
           </View>
 
-          <View className={`p-4 mb-8 border-2 ${isUrgent ? "bg-danger/10 border-danger" : "bg-surface border-surface-border"}`}>
+          <View className={`p-4 mb-8 border ${isUrgent ? "bg-surface border-danger" : "bg-surface border-surface-border"}`}>
             <View className="flex-row items-center justify-between">
               <View className="flex-1 mr-4">
                 <View className="flex-row items-center gap-2">

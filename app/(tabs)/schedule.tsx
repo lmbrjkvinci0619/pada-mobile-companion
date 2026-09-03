@@ -43,8 +43,8 @@ const EventCard = React.memo(function EventCard({ event, onPress }: { event: Eve
   const ampm = event.startDate ? format(parseISO(event.startDate), "a") : "";
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.85} className="mb-3">
-      <View className="flex-row bg-surface border-2 border-surface-border">
-        <View className="w-16 items-center justify-center bg-primary py-4 border-r-2 border-surface-border">
+      <View className="flex-row bg-surface border border-surface-border">
+        <View className="w-16 items-center justify-center bg-primary py-4 border-r border-surface-border">
           <Text className="text-txt-inverse font-semibold text-base">{start}</Text>
           <Text className="text-txt-inverse text-[10px] font-semibold uppercase tracking-[0.12em]">{ampm}</Text>
         </View>
@@ -144,7 +144,7 @@ export default function ScheduleScreen() {
       >
         {view === "day" ? (
           <>
-            <View className="mx-5 mt-3 border-2 border-surface-border bg-surface">
+            <View className="mx-5 mt-3 border border-surface-border bg-surface">
               <Calendar theme={CALENDAR_THEME} markedDates={markedDates} onDayPress={handleDayPress} />
             </View>
 

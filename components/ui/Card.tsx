@@ -25,7 +25,6 @@ function CardComponent({
     <View
       {...props}
       className={cn(
-        "border-2 border-surface-border",
         variant === "accent" && accent ? "" : fill,
         className,
       )}
@@ -55,7 +54,7 @@ function CardHeader({
   return (
     <Wrapper
       {...(onPress ? { onPress, activeOpacity: 0.85 } : {})}
-      className={cn("px-4 pt-4 pb-3 flex-row items-center justify-between border-b-2 border-surface-border", className)}
+      className={cn("px-4 pt-4 pb-3 flex-row items-center justify-between border-b border-surface-border", className)}
     >
       <View className="flex-1 flex-row items-center gap-3">
         {icon}
@@ -75,7 +74,7 @@ function CardContent({ className, children }: { className?: string; children: Re
 
 function CardFooter({ className, children }: { className?: string; children: React.ReactNode }) {
   return (
-    <View className={cn("px-4 py-3 border-t-2 border-surface-border flex-row items-center justify-end gap-2", className)}>
+    <View className={cn("px-4 py-3 border-t border-surface-border flex-row items-center justify-end gap-2", className)}>
       {children}
     </View>
   );

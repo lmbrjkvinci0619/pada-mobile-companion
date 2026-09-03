@@ -70,7 +70,7 @@ export const Tile = React.memo(function Tile({
       <View className="flex-row items-start justify-between">
         <View className="flex-1 pr-2">
           {eyebrow && (
-            <Text className="text-txt-inverse/85 text-[10px] font-semibold uppercase tracking-[0.18em]">
+            <Text className="text-txt-inverse text-[10px] font-semibold uppercase tracking-[0.18em]">
               {eyebrow}
             </Text>
           )}
@@ -97,7 +97,7 @@ export const Tile = React.memo(function Tile({
         {subtitle && (
           <Text
             numberOfLines={1}
-            className="text-txt-inverse/90 text-xs font-normal mt-1"
+            className="text-txt-inverse text-xs font-normal mt-1"
           >
             {subtitle}
           </Text>
@@ -105,7 +105,7 @@ export const Tile = React.memo(function Tile({
         {meta && (
           <Text
             numberOfLines={1}
-            className="text-txt-inverse/75 text-[10px] font-semibold uppercase tracking-[0.18em] mt-2"
+            className="text-txt-inverse text-[10px] font-semibold uppercase tracking-[0.18em] mt-2"
           >
             {meta}
           </Text>

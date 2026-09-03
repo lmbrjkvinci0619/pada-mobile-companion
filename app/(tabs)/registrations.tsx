@@ -53,7 +53,7 @@ const RegistrationCard = React.memo(function RegistrationCard({ reg }: { reg: Re
       activeOpacity={0.85}
       className="mb-3"
     >
-      <View className="flex-row items-start gap-3 bg-surface border-2 border-surface-border p-4">
+      <View className="flex-row items-start gap-3 bg-surface border border-surface-border p-4">
         <View
           className="w-10 h-10 items-center justify-center"
           style={{ backgroundColor: accent }}
@@ -73,7 +73,7 @@ const RegistrationCard = React.memo(function RegistrationCard({ reg }: { reg: Re
         {statusBadge(reg.status)}
         <Ionicons name="open-outline" size={18} color="#5C5C5C" />
       </View>
-      <View className="flex-row items-center gap-4 px-4 py-2 bg-surface-overlay border-t-2 border-surface-border">
+      <View className="flex-row items-center gap-4 px-4 py-2 bg-surface-overlay border-t border-surface-border">
         <View className="flex-row items-center gap-1.5">
           <Ionicons name="pricetag-outline" size={13} color="#5C5C5C" />
           <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.12em]">{reg.type}</Text>

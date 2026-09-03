@@ -16,10 +16,10 @@ function PageRow({ article }: { article: Article }) {
     <TouchableOpacity
       onPress={() => router.push(`/p/${article.slug || article.id}`)}
       activeOpacity={0.85}
-      className="flex-row items-center gap-3 py-4 border-b-2 border-surface-border"
+      className="flex-row items-center gap-3 py-4 border-b border-surface-border"
     >
       {article.imageUrl && (
-        <View className="w-16 h-16 bg-surface-overlay border-2 border-surface-border items-center justify-center">
+        <View className="w-16 h-16 bg-surface-overlay border border-surface-border items-center justify-center">
           <Ionicons name="image-outline" size={24} color="#5C5C5C" />
         </View>
       )}
@@ -99,7 +99,7 @@ export default function PagesScreen() {
         ) : (
           <>
             <SectionLabel>recent</SectionLabel>
-            <View className="border-t-2 border-surface-border">
+            <View className="border-t border-surface-border">
               {sortedArticles.map((article) => (
                 <PageRow key={article.id} article={article} />
               ))}

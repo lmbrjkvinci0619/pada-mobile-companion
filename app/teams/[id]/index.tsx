@@ -74,12 +74,12 @@ export default function TeamDetailScreen() {
         right={team.season ? <Badge label={team.season} variant="primary" /> : undefined}
       />
 
-      <View className="px-5 pt-4 pb-5 bg-primary border-b-2 border-primary-700">
+      <View className="px-5 pt-4 pb-5 bg-primary border-b border-primary-700">
         <Text className="text-txt-inverse text-3xl font-light lowercase tracking-tight">
           {team.name}
         </Text>
         <View className="flex-row items-center justify-between mt-1">
-          <Text className="text-txt-inverse/85 text-[11px] font-semibold uppercase tracking-[0.2em]">
+          <Text className="text-txt-inverse text-[11px] font-semibold uppercase tracking-[0.2em]">
             {team.division}
           </Text>
           {recordText && (
@@ -94,7 +94,7 @@ export default function TeamDetailScreen() {
 
       {nextEvent && (
         <TouchableOpacity
-          className="mx-5 mb-3 bg-danger border-2 border-danger p-4 flex-row items-center gap-4"
+          className="mx-5 mb-3 bg-danger p-4 flex-row items-center gap-4"
           onPress={() => router.push(`/events/${nextEvent.id}`)}
           activeOpacity={0.85}
         >
@@ -109,7 +109,7 @@ export default function TeamDetailScreen() {
               vs {nextEvent.opponentName || "TBD"}
             </Text>
             {nextEvent.score && (
-              <Text className="text-txt-inverse/90 text-xs font-semibold mt-0.5">
+              <Text className="text-txt-inverse text-xs font-semibold mt-0.5">
                 live: {nextEvent.score.homeScore} – {nextEvent.score.awayScore}
               </Text>
             )}
@@ -138,7 +138,7 @@ export default function TeamDetailScreen() {
             if (activeTab === "roster") {
               const member = item as TeamMember;
               return (
-                <View className="flex-row items-center bg-surface border-2 border-surface-border p-4 mb-3">
+                <View className="flex-row items-center bg-surface border border-surface-border p-4 mb-3">
                   <Avatar
                     name={`${member.firstName} ${member.lastName}`}
                     uri={member.avatarUrl}
@@ -149,12 +149,12 @@ export default function TeamDetailScreen() {
                     <Text className="text-txt-primary font-semibold text-sm">
                       {member.firstName} {member.lastName}
                     </Text>
-                    <View className="bg-primary-50 border-2 border-primary self-start mt-1 px-2 py-0.5">
+                    <View className="bg-surface-overlay border border-primary self-start mt-1 px-2 py-0.5">
                       <Text className="text-primary text-[10px] font-semibold uppercase tracking-[0.12em]">{member.role}</Text>
                     </View>
                   </View>
                   {member.jerseyNumber != null && (
-                    <View className="w-10 h-10 bg-surface-overlay items-center justify-center border-2 border-surface-border">
+                    <View className="w-10 h-10 bg-surface-overlay items-center justify-center border border-surface-border">
                       <Text className="text-txt-primary font-semibold">{member.jerseyNumber}</Text>
                     </View>
                   )}
@@ -164,7 +164,7 @@ export default function TeamDetailScreen() {
             const ev = item as Event;
             return (
               <TouchableOpacity
-                className="bg-surface border-2 border-surface-border p-4 mb-3"
+                className="bg-surface border border-surface-border p-4 mb-3"
                 onPress={() => router.push(`/events/${ev.id}`)}
                 activeOpacity={0.85}
               >
@@ -180,7 +180,7 @@ export default function TeamDetailScreen() {
                 <Text className="text-txt-secondary text-xs mb-3">{ev.title}</Text>
 
                 {ev.score && (
-                  <View className="bg-surface-overlay border-2 border-surface-border p-3 flex-row justify-between items-center">
+                  <View className="bg-surface-overlay border border-surface-border p-3 flex-row justify-between items-center">
                     <Text className="text-txt-primary font-semibold text-sm" numberOfLines={1}>
                       {ev.score.homeTeamName || "Home"}
                     </Text>

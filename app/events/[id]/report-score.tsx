@@ -24,21 +24,21 @@ function ScoreAdjuster({
   onChange: (s: number) => void;
 }) {
   return (
-    <View className="bg-surface border-2 border-surface-border p-5 items-center flex-1">
+    <View className="bg-surface border border-surface-border p-5 items-center flex-1">
       <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.12em] text-center h-10" numberOfLines={2}>
         {teamName}
       </Text>
       <Text className="text-txt-primary text-6xl font-light my-4">{score}</Text>
       <View className="flex-row gap-3">
         <TouchableOpacity
-          className="w-12 h-12 bg-surface-overlay border-2 border-surface-border items-center justify-center"
+          className="w-12 h-12 bg-surface-overlay border border-surface-border items-center justify-center"
           onPress={() => onChange(Math.max(0, score - 1))}
           activeOpacity={0.85}
         >
           <Ionicons name="remove" size={24} color="#000000" />
         </TouchableOpacity>
         <TouchableOpacity
-          className="w-12 h-12 bg-primary border-2 border-primary items-center justify-center"
+          className="w-12 h-12 bg-primary items-center justify-center"
           onPress={() => onChange(score + 1)}
           activeOpacity={0.85}
         >
@@ -194,7 +194,7 @@ export default function ReportScoreScreen() {
         </View>
 
         <SectionLabel>game status</SectionLabel>
-        <View className="bg-surface border-2 border-surface-border mb-8">
+        <View className="bg-surface border border-surface-border mb-8">
           <StatusOption label="In Progress" selected={status === "in_progress"} onPress={() => setStatus("in_progress")} />
           <StatusOption label="Completed (Final)" selected={status === "completed"} onPress={() => setStatus("completed")} />
           <StatusOption label="Cancelled" selected={status === "cancelled"} onPress={() => setStatus("cancelled")} last />
@@ -225,7 +225,7 @@ function StatusOption({
 }) {
   return (
     <TouchableOpacity
-      className={`px-5 py-4 flex-row items-center justify-between ${last ? "" : "border-b-2 border-surface-border"} ${selected ? "bg-primary-50" : ""}`}
+      className={`px-5 py-4 flex-row items-center justify-between ${last ? "" : "border-b border-surface-border"} ${selected ? "bg-primary-50" : ""}`}
       onPress={onPress}
       activeOpacity={0.85}
     >
