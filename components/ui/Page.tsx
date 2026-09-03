@@ -35,7 +35,7 @@ export function PageHeader({
           {back && (
             <TouchableOpacity
               onPress={handleBack}
-              activeOpacity={0.7}
+              activeOpacity={0.85}
               accessibilityRole="button"
               accessibilityLabel="back"
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -77,10 +77,11 @@ export function IconChip({
   size?: number;
 }) {
   const colors = useColors();
+  const bg = background ?? colors.surfaceOverlay;
   return (
     <View
       className="w-9 h-9 items-center justify-center border border-surface-border"
-      style={background ? { backgroundColor: background } : undefined}
+      style={{ backgroundColor: bg }}
     >
       <Ionicons name={name} size={size} color={color ?? colors.txtPrimary} />
     </View>

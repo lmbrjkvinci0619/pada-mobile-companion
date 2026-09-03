@@ -309,7 +309,7 @@ export default function CreateAnnouncementScreen() {
                 <TouchableOpacity
                   key={option.type}
                   className={isDisabled ? "opacity-50" : undefined}
-                  style={isSelected ? { backgroundColor: colors.primary + "1A" } : undefined}
+                  style={isSelected ? { backgroundColor: colors.primary50 } : undefined}
                   onPress={() => !isDisabled && setAnnouncementType(option.type)}
                   disabled={isSubmitting || isDisabled}
                   accessibilityRole="radio"
@@ -318,7 +318,7 @@ export default function CreateAnnouncementScreen() {
                 >
                   <Card variant="raised">
                     <View className="flex-row items-center p-4">
-                      <IconChip name={option.icon} color={accent} background={accent + "22"} />
+                      <IconChip name={option.icon} color={accent} />
                       <View className="flex-1 ml-3">
                         <View className="flex-row items-center gap-2">
                           <Body

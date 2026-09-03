@@ -85,7 +85,6 @@ export default function UserSettingsScreen() {
             name={`${user?.firstName} ${user?.lastName}`}
             uri={user?.avatarUrl}
             size="xl"
-            accent={colors.primary}
           />
 
           {isEditing ? (
@@ -136,12 +135,12 @@ export default function UserSettingsScreen() {
           <SectionLabel>account</SectionLabel>
           <Card variant="default">
             <ListRow
-              icon={<IconChip name="mail-outline" color={colors.secondary} background={`${colors.secondary}22`} />}
+              icon={<IconChip name="mail-outline" color={colors.secondary} />}
               title="Email"
               subtitle={user?.email}
             />
             <ListRow
-              icon={<IconChip name="call-outline" color={colors.success} background={`${colors.success}22`} />}
+              icon={<IconChip name="call-outline" color={colors.success} />}
               title="Phone"
               subtitle="Not set"
               last
@@ -153,18 +152,18 @@ export default function UserSettingsScreen() {
           <SectionLabel>preferences</SectionLabel>
           <Card variant="default">
             <ListRow
-              icon={<IconChip name="notifications-outline" color={colors.warning} background={`${colors.warning}22`} />}
+              icon={<IconChip name="notifications-outline" color={colors.warning} />}
               title="Notifications"
               subtitle="Manage push and in-app notifications"
               onPress={() => router.push("/settings/notifications")}
             />
             <ListRow
-              icon={<IconChip name="language-outline" color={colors.success} background={`${colors.success}22`} />}
+              icon={<IconChip name="language-outline" color={colors.success} />}
               title="Language"
               subtitle="English"
             />
             <ListRow
-              icon={<IconChip name="time-outline" color={colors.secondary} background={`${colors.secondary}22`} />}
+              icon={<IconChip name="time-outline" color={colors.secondary} />}
               title="Timezone"
               subtitle="Automatic"
               last
@@ -176,25 +175,25 @@ export default function UserSettingsScreen() {
           <SectionLabel>support</SectionLabel>
           <Card variant="default">
             <ListRow
-              icon={<IconChip name="help-circle-outline" color={colors.warning} background={`${colors.warning}22`} />}
+              icon={<IconChip name="help-circle-outline" color={colors.warning} />}
               title="Help Center"
               subtitle="FAQs and support articles"
               onPress={() => openUrl(EXTERNAL_URLS.help)}
             />
             <ListRow
-              icon={<IconChip name="chatbubbles-outline" color={colors.danger} background={`${colors.danger}22`} />}
+              icon={<IconChip name="chatbubbles-outline" color={colors.danger} />}
               title="Contact Support"
               subtitle="Get help from our team"
               onPress={() => openUrl(EXTERNAL_URLS.supportEmail)}
             />
             <ListRow
-              icon={<IconChip name="document-text-outline" color={colors.txtSecondary} background={`${colors.txtSecondary}22`} />}
+              icon={<IconChip name="document-text-outline" color={colors.txtSecondary} />}
               title="Terms of Service"
               subtitle="Read our terms"
               onPress={() => openUrl(EXTERNAL_URLS.terms)}
             />
             <ListRow
-              icon={<IconChip name="shield-outline" color={colors.txtSecondary} background={`${colors.txtSecondary}22`} />}
+              icon={<IconChip name="shield-outline" color={colors.txtSecondary} />}
               title="Privacy Policy"
               subtitle="How we handle your data"
               onPress={() => openUrl(EXTERNAL_URLS.privacy)}

@@ -365,7 +365,7 @@ export default function NotificationSettingsScreen() {
               onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, pushEnabled: val }))}
               iconName="notifications"
               iconColor={colors.primary}
-              iconBackground="#00ABA922"
+              iconBackground={colors.surfaceOverlay}
             />
           </Card>
         </View>
@@ -380,7 +380,7 @@ export default function NotificationSettingsScreen() {
               onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, announcementsEnabled: val }))}
               iconName="megaphone"
               iconColor={colors.warning}
-              iconBackground="#F0960922"
+              iconBackground={colors.surfaceOverlay}
               disabled={!localNotifications.pushEnabled}
             />
             <ToggleRow
@@ -390,7 +390,7 @@ export default function NotificationSettingsScreen() {
               onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, leagueAnnouncementsEnabled: val }))}
               iconName="trophy"
               iconColor={colors.secondary}
-              iconBackground="#1BA1E222"
+              iconBackground={colors.surfaceOverlay}
               disabled={!localNotifications.pushEnabled || !localNotifications.announcementsEnabled}
             />
             <ToggleRow
@@ -400,7 +400,7 @@ export default function NotificationSettingsScreen() {
               onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, gameAnnouncementsEnabled: val }))}
               iconName="calendar"
               iconColor={colors.warning}
-              iconBackground="#F0960922"
+              iconBackground={colors.surfaceOverlay}
               disabled={!localNotifications.pushEnabled || !localNotifications.announcementsEnabled}
             />
             <ToggleRow
@@ -410,7 +410,7 @@ export default function NotificationSettingsScreen() {
               onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, padaOrgAnnouncementsEnabled: val }))}
               iconName="business"
               iconColor={colors.purple}
-              iconBackground="#A200FF22"
+              iconBackground={colors.surfaceOverlay}
               disabled={!localNotifications.pushEnabled || !localNotifications.announcementsEnabled}
             />
           </Card>
@@ -426,7 +426,7 @@ export default function NotificationSettingsScreen() {
               onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, scoreNotificationsEnabled: val }))}
               iconName="ribbon"
               iconColor={colors.success}
-              iconBackground="#33993322"
+              iconBackground={colors.surfaceOverlay}
               disabled={!localNotifications.pushEnabled}
             />
             <ToggleRow
@@ -436,7 +436,7 @@ export default function NotificationSettingsScreen() {
               onValueChange={(val) => setLocalNotifications((prev) => ({ ...prev, scheduleRemindersEnabled: val }))}
               iconName="alarm"
               iconColor={colors.warning}
-              iconBackground="#F0960922"
+              iconBackground={colors.surfaceOverlay}
               disabled={!localNotifications.pushEnabled}
             />
           </Card>
@@ -489,7 +489,7 @@ export default function NotificationSettingsScreen() {
               {hiddenCount > 0 ? (
                 <>
                   <View className="flex-row items-center gap-3">
-                    <IconChip name="eye-off" color={colors.danger} background={`${colors.danger}22`} />
+                    <IconChip name="eye-off" color={colors.danger} />
                     <View className="flex-1">
                       <Body tone="primary" className="text-sm font-semibold">
                         {hiddenCount} hidden
@@ -511,7 +511,7 @@ export default function NotificationSettingsScreen() {
                 </>
               ) : (
                 <View className="flex-row items-center gap-3">
-                  <IconChip name="checkmark-circle" color={colors.success} background={`${colors.success}22`} />
+                  <IconChip name="checkmark-circle" color={colors.success} />
                   <Body tone="secondary" className="text-sm">
                     No hidden announcements
                   </Body>

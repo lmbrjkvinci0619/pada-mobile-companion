@@ -35,16 +35,16 @@ const TYPE_ICONS: Record<RegistrationType, keyof typeof Ionicons.glyphMap> = {
 
 function statusBadge(status: RegistrationStatus) {
   const map: Record<RegistrationStatus, { label: string; variant: "success" | "warning" | "danger" | "ghost" }> = {
-    accepted:    { label: "Active",      variant: "success" },
-    pending:    { label: "Pending",    variant: "warning" },
-    waitlisted: { label: "Waitlisted", variant: "warning" },
-    incomplete: { label: "Incomplete", variant: "danger" },
-    inactive:   { label: "Inactive",  variant: "ghost" },
-    interested: { label: "Interested", variant: "ghost" },
-    active:     { label: "Active",     variant: "success" },
-    paid:       { label: "Paid",       variant: "success" },
-    refunded:   { label: "Refunded",   variant: "danger" },
-    partial:    { label: "Partial",   variant: "warning" },
+    accepted:    { label: "Accepted",    variant: "success" },
+    pending:     { label: "Pending",     variant: "warning" },
+    waitlisted:  { label: "Waitlisted",  variant: "warning" },
+    incomplete:  { label: "Incomplete",  variant: "danger" },
+    inactive:    { label: "Inactive",    variant: "ghost" },
+    interested:  { label: "Interested",  variant: "ghost" },
+    active:      { label: "Active",      variant: "success" },
+    paid:        { label: "Paid",        variant: "success" },
+    refunded:    { label: "Refunded",    variant: "danger" },
+    partial:     { label: "Partial",     variant: "warning" },
   };
   const { label, variant } = map[status];
   return <Badge label={label} variant={variant} />;

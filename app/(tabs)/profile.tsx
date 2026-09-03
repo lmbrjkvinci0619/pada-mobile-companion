@@ -20,6 +20,7 @@ export default function ProfileScreen() {
   const { notifications, loadPreferences } = useSettingsStore();
   const router = useRouter();
   const lastLoadedUserId = useRef<string | null>(null);
+  const colors = useColors();
 
   useEffect(() => {
     const userId = user?.id;
@@ -45,7 +46,6 @@ export default function ProfileScreen() {
   };
 
   const fullName = `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() || "player";
-  const colors = useColors();
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
@@ -56,7 +56,6 @@ export default function ProfileScreen() {
               name={fullName}
               uri={user?.avatarUrl}
               size="xl"
-              accent={colors.primary}
             />
           </TouchableOpacity>
 
@@ -101,13 +100,13 @@ export default function ProfileScreen() {
           <SectionLabel>quick links</SectionLabel>
           <View className="bg-surface border border-surface-border">
             <ListRow
-              icon={<IconChip name="rocket" color={colors.secondary} background={`${colors.secondary}22`} />}
+              icon={<IconChip name="rocket" color={colors.secondary} />}
               title="New to PADA?"
               onPress={() => openUrl(EXTERNAL_URLS.newToPada)}
               external
             />
             <ListRow
-              icon={<IconChip name="happy" color={colors.warning} background={`${colors.warning}22`} />}
+              icon={<IconChip name="happy" color={colors.warning} />}
               title="Youth Programs"
               onPress={() => openUrl(EXTERNAL_URLS.youth)}
               external
@@ -120,7 +119,7 @@ export default function ProfileScreen() {
           <SectionLabel>settings</SectionLabel>
           <View className="bg-surface border border-surface-border">
             <ListRow
-              icon={<IconChip name="person" color={colors.primary} background={`${colors.primary}22`} />}
+              icon={<IconChip name="person" color={colors.primary} />}
               title="Profile"
               subtitle="Manage your account"
               onPress={() => router.push("/settings/profile")}
@@ -130,7 +129,6 @@ export default function ProfileScreen() {
                 <IconChip
                   name="notifications"
                   color={notifications.pushEnabled ? colors.warning : colors.txtMuted}
-                  background={notifications.pushEnabled ? `${colors.warning}22` : `${colors.txtMuted}22`}
                 />
               }
               title="Notifications"
@@ -138,14 +136,14 @@ export default function ProfileScreen() {
               onPress={() => router.push("/settings/notifications")}
             />
             <ListRow
-              icon={<IconChip name="shield-checkmark" color={colors.success} background={`${colors.success}22`} />}
+              icon={<IconChip name="shield-checkmark" color={colors.success} />}
               title="Privacy"
               subtitle="Data and security"
               onPress={() => openUrl(EXTERNAL_URLS.privacy)}
               external
             />
             <ListRow
-              icon={<IconChip name="help-circle" color={colors.danger} background={`${colors.danger}22`} />}
+              icon={<IconChip name="help-circle" color={colors.danger} />}
               title="Support"
               subtitle="Help and feedback"
               onPress={() => openUrl(EXTERNAL_URLS.supportEmail)}
@@ -159,7 +157,7 @@ export default function ProfileScreen() {
           <SectionLabel>developer</SectionLabel>
           <View className="bg-surface border border-surface-border">
             <ListRow
-              icon={<IconChip name="color-palette" color={colors.purple} background={`${colors.purple}22`} />}
+              icon={<IconChip name="color-palette" color={colors.purple} />}
               title="UI Gallery"
               subtitle="Design system preview"
               onPress={() => router.push("/debug/ui-gallery")}

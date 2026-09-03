@@ -28,23 +28,21 @@ function teamAccentKey(id: string): AccentKey {
 const TeamCard = React.memo(function TeamCard({ team, onPress }: { team: Team; onPress: () => void }) {
   const colors = useColors();
   const accent = team.color ?? colors[teamAccentKey(team.id)];
-  const isLightAccent = accent.toLowerCase() === colors.white.toLowerCase();
-  const badgeBg = isLightAccent ? colors.bg : colors.bg;
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.85} className="mb-4">
       <Card variant="raised" className="overflow-hidden">
         <View style={{ backgroundColor: accent }}>
           <View className="p-4 flex-row items-start justify-between">
             <View className="flex-1">
-              <Eyebrow style={{ color: colors.txtInverse }} className="text-[10px] tracking-[0.2em]">
+              <EyebrowTight style={{ color: colors.txtInverse }} className="tracking-[0.2em]">
                 {team.sport ?? "Ultimate"}
-              </Eyebrow>
+              </EyebrowTight>
               <TeamName style={{ color: colors.txtInverse }} numberOfLines={1}>
                 {team.name.toLowerCase()}
               </TeamName>
             </View>
             {team.season && (
-              <View className="px-3 py-0.5" style={{ backgroundColor: badgeBg }}>
+              <View className="px-3 py-0.5" style={{ backgroundColor: colors.surfaceRaised }}>
                 <EyebrowTight style={{ color: colors.primary }}>{team.season}</EyebrowTight>
               </View>
             )}

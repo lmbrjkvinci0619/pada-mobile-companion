@@ -92,9 +92,7 @@ export function PivotPanorama({
                 accessibilityLabel={`${unread} unread`}
               />
             ) : null}
-            <Title numberOfLines={1} className="text-[34px]">
-              {title}
-            </Title>
+            <Title numberOfLines={1}>{title}</Title>
           </View>
           {subtitle && (
             <Eyebrow tone="secondary" className="mt-2">

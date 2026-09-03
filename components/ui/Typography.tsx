@@ -44,9 +44,9 @@ type Size = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
 
 const VARIANT_CLASS: Record<Variant, string> = {
   hero:          "text-[44px] font-light lowercase tracking-[-0.01em] leading-[1.02]",
-  title:         "text-[34px] font-light lowercase tracking-[-0.01em] leading-[1.05]",
-  section:       "text-[24px] font-light lowercase tracking-tight leading-tight",
-  greeting:      "text-[26px] font-light lowercase tracking-tight leading-tight",
+  title:         "text-[40px] font-light lowercase tracking-[-0.01em] leading-[1.05]",
+  section:       "text-[28px] font-light lowercase tracking-tight leading-tight",
+  greeting:      "text-[28px] font-light lowercase tracking-tight leading-tight",
   team:          "text-[22px] font-light lowercase tracking-tight leading-tight",
   tile:          "text-[18px] font-light lowercase tracking-tight leading-tight",
   body:          "text-[15px] font-normal leading-[1.4]",
@@ -66,19 +66,19 @@ const VARIANT_SIZE: Partial<Record<Variant, Partial<Record<Size, string>>>> = {
     md:  "text-3xl",
     lg:  "text-[44px]",
     xl:  "text-5xl",
-    "2xl": "text-6xl",
+    "2xl": "text-[72px]",
     "3xl": "text-7xl",
     "4xl": "text-[88px]",
   },
   title: {
     sm:  "text-2xl",
     md:  "text-3xl",
-    lg:  "text-[44px]",
+    lg:  "text-[40px]",
   },
   section: {
     sm:  "text-xl",
-    md:  "text-2xl",
-    lg:  "text-3xl",
+    md:  "text-[28px]",
+    lg:  "text-[32px]",
   },
 };
 

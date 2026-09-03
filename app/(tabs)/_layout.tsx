@@ -6,7 +6,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useAnnouncements } from "@/hooks/useApi";
 import { useColors } from "@/lib/tokens";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Body, EyebrowTight } from "@/components/ui";
+import { EyebrowTight } from "@/components/ui";
 
 const TabBarBadge = React.memo(function TabBarBadge({ count }: { count: number }) {
   const colors = useColors();
@@ -18,9 +18,9 @@ const TabBarBadge = React.memo(function TabBarBadge({ count }: { count: number }
       accessibilityLabel={`${count} unread`}
       accessibilityLiveRegion="polite"
     >
-      <Body style={{ color: colors.txtInverse }} className="text-[10px] font-semibold">
+      <EyebrowTight style={{ color: colors.txtInverse }} className="text-[9px] tracking-[0.04em]">
         {count > 9 ? "9+" : count}
-      </Body>
+      </EyebrowTight>
     </View>
   );
 });

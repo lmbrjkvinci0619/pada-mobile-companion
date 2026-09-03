@@ -507,7 +507,7 @@ export default function HomeScreen() {
             >
               <Card variant="default">
                 <View className="p-4 flex-row items-start gap-3">
-                  <IconChip name="information-circle" color={colors.success} background={`${colors.success}22`} />
+                  <IconChip name="information-circle" color={colors.success} />
                   <View className="flex-1">
                     <Label tone="primary" className="tracking-[0.12em]">About PADA</Label>
                     <Subtitle tone="secondary" className="mt-1" numberOfLines={3}>

@@ -66,8 +66,6 @@ module.exports = {
         sans:  ["Inter_400Regular", "Segoe UI", "System"],
         mid:   ["Inter_500Medium",  "Segoe UI", "System"],
         semi:  ["Inter_600SemiBold","Segoe UI", "System"],
-        bold:  ["Inter_700Bold",    "Segoe UI", "System"],
-        black: ["Inter_900Black",   "Segoe UI", "System"],
         light: ["Inter_300Light",   "Segoe UI", "System"],
       },
       borderRadius: {

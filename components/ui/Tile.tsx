@@ -83,9 +83,9 @@ export const Tile = React.memo(function Tile({
       <View className="flex-row items-start justify-between">
         <View className="flex-1 pr-2">
           {eyebrow && (
-            <Eyebrow tone="inverse" className="text-[10px] tracking-[0.18em]">
+            <EyebrowTight tone="inverse" className="tracking-[0.18em]">
               {eyebrow}
-            </Eyebrow>
+            </EyebrowTight>
           )}
           {icon ? <View className="mt-1">{icon}</View> : null}
         </View>

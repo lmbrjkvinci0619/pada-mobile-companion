@@ -57,13 +57,13 @@
     --danger: #FF3322;
     --refresh: #26C6C4;
     --indicator: #FFFFFF;
-    --tile-primary: #006D6B;
-    --tile-secondary: #0D5F8B;
-    --tile-success: #1A591A;
-    --tile-warning: #B87000;
-    --tile-danger: #A51000;
-    --tile-magenta: #A30058;
-    --tile-purple: #7A00BF;
+    --tile-primary: #26C6C4;
+    --tile-secondary: #2AADE8;
+    --tile-success: #60A960;
+    --tile-warning: #FAAA24;
+    --tile-danger: #FF3322;
+    --tile-magenta: #FF3399;
+    --tile-purple: #C155FF;
     --tile-black: #000000;
   }
 }
