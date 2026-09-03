@@ -74,7 +74,7 @@ export default function TeamDetailScreen() {
         right={team.season ? <Badge label={team.season} variant="primary" /> : undefined}
       />
 
-      <View className="px-5 pt-4 pb-5 bg-primary border-b border-primary-700">
+      <View className="px-5 pt-4 pb-5 bg-primary border-b border-primary">
         <Text className="text-txt-inverse text-3xl font-light lowercase tracking-tight">
           {team.name}
         </Text>

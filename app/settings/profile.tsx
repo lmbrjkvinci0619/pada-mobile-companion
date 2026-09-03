@@ -8,6 +8,7 @@ import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useSettingsStore } from "@/store/settingsStore";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { ListRow } from "@/components/ui/ListRow";
 import { PageHeader, SectionLabel, IconChip } from "@/components/ui/Page";
 import { EXTERNAL_URLS, openUrl } from "@/lib/urlUtils";
 
@@ -58,38 +59,6 @@ export default function UserSettingsScreen() {
     );
   };
 
-  const SettingRow = ({
-    title,
-    subtitle,
-    onPress,
-    showChevron = true,
-    danger = false,
-    children,
-  }: {
-    title: string;
-    subtitle?: string;
-    onPress?: () => void;
-    showChevron?: boolean;
-    danger?: boolean;
-    children?: React.ReactNode;
-  }) => (
-    <TouchableOpacity
-      className="flex-row items-center justify-between px-4 py-4 border-b border-surface-border"
-      onPress={onPress}
-      disabled={!onPress}
-      activeOpacity={onPress ? 0.7 : 1}
-    >
-      <View className="flex-row items-center gap-3 flex-1">
-        {children}
-        <View className="flex-1">
-          <Text className={`text-sm font-semibold ${danger ? "text-danger" : "text-txt-primary"}`}>{title}</Text>
-          {subtitle && <Text className="text-txt-secondary text-xs mt-0.5">{subtitle}</Text>}
-        </View>
-      </View>
-      {showChevron && onPress && <Ionicons name="chevron-forward" size={18} color="#5C5C5C" />}
-    </TouchableOpacity>
-  );
-
   if (!isAuthenticated) {
     return (
       <SafeAreaView className="flex-1 bg-bg items-center justify-center">
@@ -102,7 +71,7 @@ export default function UserSettingsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={["top", "bottom"]}>
-      <PageHeader title="profile" subtitle="account & privacy" back={() => router.back()} />
+      <PageHeader title="profile" subtitle="your account" back={() => router.back()} />
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-5 py-6 items-center bg-surface border-b border-surface-border">
@@ -135,7 +104,7 @@ export default function UserSettingsScreen() {
                 {localDisplayName || `${user?.firstName} ${user?.lastName}`}
               </Text>
                 <View className="flex-row items-center justify-center gap-1 mt-1">
-                  <Text className="text-primary-700 text-[11px] font-semibold uppercase tracking-[0.18em]">edit profile</Text>
+                  <Text className="text-primary text-[11px] font-semibold uppercase tracking-[0.18em]">edit profile</Text>
                   <Ionicons name="pencil" size={12} color="#00ABA9" />
                 </View>
             </TouchableOpacity>
@@ -150,45 +119,71 @@ export default function UserSettingsScreen() {
         <View className="px-5 mt-5 pb-2">
           <SectionLabel>account</SectionLabel>
           <View className="bg-surface border border-surface-border">
-            <SettingRow title="Email" subtitle={user?.email} showChevron={false}>
-              <IconChip name="mail-outline" color="#1BA1E2" background="#1BA1E222" />
-            </SettingRow>
-            <SettingRow title="Phone" subtitle="Not set" showChevron={false}>
-              <IconChip name="call-outline" color="#339933" background="#33993322" />
-            </SettingRow>
+            <ListRow
+              icon={<IconChip name="mail-outline" color="#1BA1E2" background="#1BA1E222" />}
+              title="Email"
+              subtitle={user?.email}
+            />
+            <ListRow
+              icon={<IconChip name="call-outline" color="#339933" background="#33993322" />}
+              title="Phone"
+              subtitle="Not set"
+              last
+            />
           </View>
         </View>
 
         <View className="px-5 mt-5 pb-2">
           <SectionLabel>preferences</SectionLabel>
           <View className="bg-surface border border-surface-border">
-            <SettingRow title="Notifications" subtitle="Manage push and in-app notifications" onPress={() => router.push("/settings/notifications")}>
-              <IconChip name="notifications-outline" color="#F09609" background="#F0960922" />
-            </SettingRow>
-            <SettingRow title="Language" subtitle="English" showChevron={false}>
-              <IconChip name="language-outline" color="#339933" background="#33993322" />
-            </SettingRow>
-            <SettingRow title="Timezone" subtitle="Automatic" showChevron={false}>
-              <IconChip name="time-outline" color="#1BA1E2" background="#1BA1E222" />
-            </SettingRow>
+            <ListRow
+              icon={<IconChip name="notifications-outline" color="#F09609" background="#F0960922" />}
+              title="Notifications"
+              subtitle="Manage push and in-app notifications"
+              onPress={() => router.push("/settings/notifications")}
+            />
+            <ListRow
+              icon={<IconChip name="language-outline" color="#339933" background="#33993322" />}
+              title="Language"
+              subtitle="English"
+            />
+            <ListRow
+              icon={<IconChip name="time-outline" color="#1BA1E2" background="#1BA1E222" />}
+              title="Timezone"
+              subtitle="Automatic"
+              last
+            />
           </View>
         </View>
 
         <View className="px-5 mt-5 pb-2">
           <SectionLabel>support</SectionLabel>
           <View className="bg-surface border border-surface-border">
-            <SettingRow title="Help Center" subtitle="FAQs and support articles" onPress={() => openUrl(EXTERNAL_URLS.help)}>
-              <IconChip name="help-circle-outline" color="#F09609" background="#F0960922" />
-            </SettingRow>
-            <SettingRow title="Contact Support" subtitle="Get help from our team" onPress={() => openUrl(EXTERNAL_URLS.supportEmail)}>
-              <IconChip name="chatbubbles-outline" color="#E51400" background="#E5140022" />
-            </SettingRow>
-            <SettingRow title="Terms of Service" subtitle="Read our terms" onPress={() => openUrl(EXTERNAL_URLS.terms)}>
-              <IconChip name="document-text-outline" color="#5C5C5C" background="#5C5C5C22" />
-            </SettingRow>
-            <SettingRow title="Privacy Policy" subtitle="How we handle your data" onPress={() => openUrl(EXTERNAL_URLS.privacy)}>
-              <IconChip name="shield-outline" color="#5C5C5C" background="#5C5C5C22" />
-            </SettingRow>
+            <ListRow
+              icon={<IconChip name="help-circle-outline" color="#F09609" background="#F0960922" />}
+              title="Help Center"
+              subtitle="FAQs and support articles"
+              onPress={() => openUrl(EXTERNAL_URLS.help)}
+            />
+            <ListRow
+              icon={<IconChip name="chatbubbles-outline" color="#E51400" background="#E5140022" />}
+              title="Contact Support"
+              subtitle="Get help from our team"
+              onPress={() => openUrl(EXTERNAL_URLS.supportEmail)}
+            />
+            <ListRow
+              icon={<IconChip name="document-text-outline" color="#5C5C5C" background="#5C5C5C22" />}
+              title="Terms of Service"
+              subtitle="Read our terms"
+              onPress={() => openUrl(EXTERNAL_URLS.terms)}
+            />
+            <ListRow
+              icon={<IconChip name="shield-outline" color="#5C5C5C" background="#5C5C5C22" />}
+              title="Privacy Policy"
+              subtitle="How we handle your data"
+              onPress={() => openUrl(EXTERNAL_URLS.privacy)}
+              last
+            />
           </View>
         </View>
 

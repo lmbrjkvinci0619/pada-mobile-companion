@@ -51,7 +51,7 @@ export default function LoginScreen() {
       >
         <View className="items-center mb-10">
           <View className="w-20 h-20 bg-primary items-center justify-center mb-5">
-            <Text className="text-txt-inverse text-4xl font-black leading-none">p</Text>
+            <Text className="text-txt-inverse text-4xl font-light leading-none lowercase">p</Text>
           </View>
           <Text className="text-txt-primary text-[44px] font-light lowercase tracking-tight leading-none">
             {APP_NAME}
@@ -90,6 +90,8 @@ export default function LoginScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
+                autoCorrect={false}
+                spellCheck={false}
                 returnKeyType="next"
               />
             </View>
@@ -107,6 +109,9 @@ export default function LoginScreen() {
                 onChangeText={(text) => { setPassword(text); setValidationError(null); }}
                 secureTextEntry={!showPass}
                 autoCapitalize="none"
+                autoCorrect={false}
+                spellCheck={false}
+                autoComplete="current-password"
                 returnKeyType="done"
                 onSubmitEditing={handleLogin}
               />
@@ -144,7 +149,7 @@ export default function LoginScreen() {
             className="items-center"
             onPress={() => openUrl("https://pada.usetopscore.com/password_resets/new")}
           >
-            <Text className="text-primary-700 text-[11px] font-semibold uppercase tracking-[0.2em]">
+            <Text className="text-primary text-[11px] font-semibold uppercase tracking-[0.2em]">
               forgot password?
             </Text>
           </TouchableOpacity>

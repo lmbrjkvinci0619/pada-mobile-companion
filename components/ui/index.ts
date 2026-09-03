@@ -4,6 +4,7 @@ export { Button } from "./Button";
 export { Card, CardSection } from "./Card";
 export { EmptyState } from "./EmptyState";
 export { Hub, HubPanel } from "./Hub";
+export { ListRow } from "./ListRow";
 export { LoaderBar } from "./LoaderBar";
 export { PagerDots } from "./PagerDots";
 export { PageHeader, Divider, IconChip, SectionLabel } from "./Page";

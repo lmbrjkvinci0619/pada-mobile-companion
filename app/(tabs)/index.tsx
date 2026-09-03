@@ -252,8 +252,12 @@ export default function HomeScreen() {
         <HubPanel title="home">
           <ScrollView showsVerticalScrollIndicator={false} className="flex-1" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00ABA9" />}>
             <View className="mb-5">
-              <Text className="text-txt-primary text-[28px] font-light lowercase tracking-tight leading-tight">
-                hello, {greeting}.
+              <Text
+                numberOfLines={1}
+                style={{ textTransform: "lowercase" }}
+                className="text-txt-primary text-[28px] font-light tracking-tight leading-tight"
+              >
+                hello, {greeting}
               </Text>
             </View>
 
@@ -340,7 +344,7 @@ export default function HomeScreen() {
             <SectionLabel
               action={
                 <TouchableOpacity onPress={() => router.push("/(tabs)/schedule")}>
-                  <Text className="text-primary-700 text-[11px] font-semibold uppercase tracking-[0.18em]">all</Text>
+                  <Text className="text-primary text-[11px] font-semibold uppercase tracking-[0.18em]">all</Text>
                 </TouchableOpacity>
               }
             >
@@ -373,7 +377,7 @@ export default function HomeScreen() {
             <SectionLabel
               action={
                 <TouchableOpacity onPress={() => router.push("/announcements")}>
-                  <Text className="text-primary-700 text-[11px] font-semibold uppercase tracking-[0.18em]">all</Text>
+                  <Text className="text-primary text-[11px] font-semibold uppercase tracking-[0.18em]">all</Text>
                 </TouchableOpacity>
               }
             >
@@ -482,7 +486,7 @@ export default function HomeScreen() {
                 <SectionLabel
                   action={
                     <TouchableOpacity onPress={() => router.push("/p")}>
-                      <Text className="text-primary-700 text-[11px] font-semibold uppercase tracking-[0.18em]">all</Text>
+                      <Text className="text-primary text-[11px] font-semibold uppercase tracking-[0.18em]">all</Text>
                     </TouchableOpacity>
                   }
                 >

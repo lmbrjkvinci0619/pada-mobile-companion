@@ -7,6 +7,7 @@ import { Card, CardSection } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ListRow } from '@/components/ui/ListRow';
 import { LoaderBar } from '@/components/ui/LoaderBar';
 import { PagerDots } from '@/components/ui/PagerDots';
 import { ReadOnlyBanner } from '@/components/ui/ReadOnlyBanner';
@@ -155,12 +156,37 @@ export default function UIGallery() {
           </CardSection>
 
           <CardSection title="section labels" className="mb-8">
-            <SectionLabel action={<Text className="text-primary-700 text-[11px] font-semibold uppercase tracking-[0.18em]">all</Text>}>
+            <SectionLabel action={<Text className="text-primary text-[11px] font-semibold uppercase tracking-[0.18em]">all</Text>}>
               announcements
             </SectionLabel>
             <Text className="text-txt-secondary text-sm">
               Section labels are uppercase, tracked, secondary tone. They may carry an inline action.
             </Text>
+          </CardSection>
+
+          <CardSection title="list rows" className="mb-8">
+            <View className="bg-surface border border-surface-border">
+              <ListRow
+                icon={<IconChip name="person" color="#00ABA9" background="#00ABA922" />}
+                title="Profile"
+                subtitle="Manage your account"
+                onPress={() => {}}
+              />
+              <ListRow
+                icon={<IconChip name="notifications" color="#F09609" background="#F0960922" />}
+                title="Notifications"
+                subtitle="All enabled"
+                onPress={() => {}}
+              />
+              <ListRow
+                icon={<IconChip name="help-circle" color="#E51400" background="#E5140022" />}
+                title="Support"
+                subtitle="External link"
+                external
+                onPress={() => {}}
+                last
+              />
+            </View>
           </CardSection>
 
           <CardSection title="banners" className="mb-8">

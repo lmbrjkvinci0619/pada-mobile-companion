@@ -57,7 +57,7 @@ const TimePickerModal = ({
             </TouchableOpacity>
             <Text className="text-txt-primary font-semibold text-sm uppercase tracking-[0.12em]">select time</Text>
             <TouchableOpacity onPress={handleDone}>
-              <Text className="text-primary-700 text-xs font-semibold uppercase tracking-[0.12em]">done</Text>
+              <Text className="text-primary text-xs font-semibold uppercase tracking-[0.12em]">done</Text>
             </TouchableOpacity>
           </View>
           <ScrollView className="max-h-[300px]" showsVerticalScrollIndicator={false}>
@@ -315,10 +315,10 @@ export default function NotificationSettingsScreen() {
               </TouchableOpacity>
             )}
             {isSyncing ? (
-              <Text className="text-primary-700 text-xs font-semibold uppercase tracking-[0.18em]">saving…</Text>
+              <Text className="text-primary text-xs font-semibold uppercase tracking-[0.18em]">saving…</Text>
             ) : (
               <TouchableOpacity onPress={handleSave} disabled={!hasChanges}>
-                <Text className={`font-semibold text-xs uppercase tracking-[0.12em] ${hasChanges ? "text-primary-700" : "text-txt-muted"}`}>
+                <Text className={`font-semibold text-xs uppercase tracking-[0.12em] ${hasChanges ? "text-primary" : "text-txt-muted"}`}>
                   save
                 </Text>
               </TouchableOpacity>
@@ -475,7 +475,7 @@ export default function NotificationSettingsScreen() {
                   onPress={handleClearHiddenAnnouncements}
                   activeOpacity={0.85}
                 >
-                  <Text className="text-primary-700 text-xs font-semibold uppercase tracking-[0.12em]">show all announcements</Text>
+                  <Text className="text-primary text-xs font-semibold uppercase tracking-[0.12em]">show all announcements</Text>
                 </TouchableOpacity>
               </>
             ) : (
@@ -495,7 +495,7 @@ export default function NotificationSettingsScreen() {
             activeOpacity={0.85}
           >
             <Ionicons name="notifications" size={20} color="#00ABA9" />
-            <Text className="text-primary-700 text-xs font-semibold uppercase tracking-[0.12em]">send test notification</Text>
+            <Text className="text-primary text-xs font-semibold uppercase tracking-[0.12em]">send test notification</Text>
           </TouchableOpacity>
         </View>
 

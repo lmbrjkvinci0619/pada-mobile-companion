@@ -100,7 +100,7 @@ export default function RegistrationDetailScreen() {
             <Button label="Open Again" onPress={() => openUrl(targetUrl)} className="mt-2" />
           )}
           <TouchableOpacity className="px-5 py-3" onPress={goBackSafe} activeOpacity={0.85}>
-            <Text className="text-primary-700 text-xs font-semibold uppercase tracking-[0.12em]">
+            <Text className="text-primary text-xs font-semibold uppercase tracking-[0.12em]">
               back to registrations
             </Text>
           </TouchableOpacity>

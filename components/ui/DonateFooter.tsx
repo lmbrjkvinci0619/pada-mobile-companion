@@ -15,7 +15,7 @@ export const DonateFooter = React.memo(function DonateFooter() {
           accessibilityRole="link"
           accessibilityLabel="tip the developer on PayPal"
         >
-          <Text className="text-primary-700 text-[11px] font-semibold uppercase tracking-[0.12em]">
+          <Text className="text-primary text-[11px] font-semibold uppercase tracking-[0.12em]">
             paypal
           </Text>
         </TouchableOpacity>
@@ -26,7 +26,7 @@ export const DonateFooter = React.memo(function DonateFooter() {
           accessibilityRole="link"
           accessibilityLabel="tip the developer on Venmo"
         >
-          <Text className="text-primary-700 text-[11px] font-semibold uppercase tracking-[0.12em]">
+          <Text className="text-primary text-[11px] font-semibold uppercase tracking-[0.12em]">
             venmo
           </Text>
         </TouchableOpacity>

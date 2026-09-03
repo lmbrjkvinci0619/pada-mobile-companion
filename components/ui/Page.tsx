@@ -30,22 +30,27 @@ export function PageHeader({
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center flex-1">
           {back && (
-            <TouchableOpacity onPress={handleBack} activeOpacity={0.7} className="mr-3 w-10 h-10 items-center justify-center">
+            <TouchableOpacity onPress={handleBack} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="back" hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="mr-3 w-10 h-10 items-center justify-center">
               <Ionicons name="chevron-back" size={26} color="#000000" />
             </TouchableOpacity>
           )}
           <View className="flex-1">
             <Text
               numberOfLines={1}
+              style={{ textTransform: "lowercase" }}
               className={cn(
-                "text-txt-primary font-light lowercase tracking-tight leading-tight",
+                "text-txt-primary font-light tracking-tight leading-tight",
                 large ? "text-[40px]" : "text-[28px]",
               )}
             >
               {title}
             </Text>
             {subtitle && (
-              <Text className="text-txt-secondary text-[11px] font-semibold uppercase tracking-[0.2em] mt-1">
+              <Text
+                numberOfLines={1}
+                style={{ textTransform: "uppercase" }}
+                className="text-txt-secondary text-[11px] font-semibold tracking-[0.2em] mt-1"
+              >
                 {subtitle}
               </Text>
             )}

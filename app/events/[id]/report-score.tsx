@@ -178,10 +178,10 @@ export default function ReportScoreScreen() {
         back={() => router.back()}
         right={
           isSubmitting ? (
-            <Text className="text-primary-700 text-xs font-semibold uppercase tracking-[0.12em]">saving…</Text>
+            <Text className="text-primary text-xs font-semibold uppercase tracking-[0.12em]">saving…</Text>
           ) : (
             <TouchableOpacity onPress={handleSubmit} disabled={isSubmitting}>
-              <Text className="text-primary-700 text-xs font-semibold uppercase tracking-[0.12em]">save</Text>
+              <Text className="text-primary text-xs font-semibold uppercase tracking-[0.12em]">save</Text>
             </TouchableOpacity>
           )
         }
