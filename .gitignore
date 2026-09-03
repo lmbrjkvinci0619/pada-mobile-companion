@@ -42,3 +42,11 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# agent runtime
+.agents/
+.codex/
+opencode.json
+skills-lock.json
+*.bun-build
+~/
