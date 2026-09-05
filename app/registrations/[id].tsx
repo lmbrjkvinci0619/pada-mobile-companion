@@ -10,7 +10,7 @@ import { useColors } from "@/lib/tokens";
 import { PageHeader } from "@/components/ui/Page";
 import { Button } from "@/components/ui/Button";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Body, EyebrowTight, Title } from "@/components/ui";
+import { Body, EyebrowTight, Title, TileTitle } from "@/components/ui";
 import type { Registration } from "@/types";
 
 function resolveUrlForRegistration(reg: Registration): string {
@@ -75,7 +75,7 @@ export default function RegistrationDetailScreen() {
       ) : error ? (
         <View className="flex-1 items-center justify-center px-6 gap-3">
           <Ionicons name="alert-circle-outline" size={48} color={colors.danger} />
-          <Body tone="danger" className="text-base font-semibold text-center">
+          <Body tone="danger" className="text-base text-center">
             {error}
           </Body>
           <Body tone="muted" className="text-sm text-center">
@@ -92,9 +92,9 @@ export default function RegistrationDetailScreen() {
             <Ionicons name="open-outline" size={32} color={colors.txtInverse} />
           </View>
           {registration && (
-            <Body tone="primary" className="text-base font-semibold text-center" numberOfLines={2}>
+            <TileTitle tone="primary" className="text-center" numberOfLines={2}>
               {registration.organizationName}
-            </Body>
+            </TileTitle>
           )}
           <Title tone="primary" size="sm" className="text-center">
             continue on pada.org

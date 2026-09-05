@@ -12,7 +12,7 @@ import { PageHeader, SectionLabel } from "@/components/ui/Page";
 import { Segmented } from "@/components/ui/SegmentedControl";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Body, EyebrowTight } from "@/components/ui";
+import { Body, EyebrowTight, TileTitle } from "@/components/ui";
 import { cn } from "@/utils/cn";
 
 function isSameDayLocal(eventDateStr: string | undefined, selectedDateStr: string): boolean {
@@ -30,15 +30,13 @@ const EventCard = React.memo(function EventCard({ event, onPress }: { event: Eve
     <TouchableOpacity onPress={onPress} activeOpacity={0.85} className="mb-3">
       <View className="flex-row bg-surface border border-surface-border">
         <View className="w-16 items-center justify-center py-4 border-r border-surface-border" style={{ backgroundColor: colors.primary }}>
-          <Body style={{ color: colors.txtInverse }} className="font-semibold text-base">
-            {start}
-          </Body>
+          <EyebrowTight style={{ color: colors.txtInverse }} className="text-base">{start}</EyebrowTight>
           <EyebrowTight style={{ color: colors.txtInverse }}>{ampm}</EyebrowTight>
         </View>
         <View className="flex-1 p-4">
-          <Body tone="primary" className="font-semibold text-base" numberOfLines={1}>
-            {event.title}
-          </Body>
+          <TileTitle tone="primary" numberOfLines={1}>
+            {event.title.toLowerCase()}
+          </TileTitle>
           <EyebrowTight tone="secondary" className="mt-1">
             {event.teamName ?? "team tbd"}
           </EyebrowTight>

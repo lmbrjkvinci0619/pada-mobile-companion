@@ -15,7 +15,7 @@ import { ReadOnlyBanner } from "@/components/ui/ReadOnlyBanner";
 import { PageHeader, SectionLabel } from "@/components/ui/Page";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Body, EyebrowTight, MetaSentence, Subtitle } from "@/components/ui";
+import { Body, EyebrowTight, MetaSentence, Subtitle, TileTitle } from "@/components/ui";
 import { openRegistrationInBrowser } from "@/lib/urlUtils";
 import type { Registration, RegistrationStatus, RegistrationType } from "@/types";
 
@@ -72,9 +72,9 @@ const RegistrationCard = React.memo(function RegistrationCard({ reg }: { reg: Re
             <Ionicons name={iconName} size={20} color={colors.txtInverse} />
           </View>
           <View className="flex-1">
-            <Body tone="primary" className="font-semibold text-base" numberOfLines={1}>
+            <TileTitle tone="primary" numberOfLines={1}>
               {reg.organizationName}
-            </Body>
+            </TileTitle>
             {reg.seasonName && (
               <Subtitle tone="secondary" className="mt-0.5">
                 {reg.seasonName}

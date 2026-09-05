@@ -13,7 +13,7 @@ import * as Notifications from "expo-notifications";
 import { PageHeader, SectionLabel, IconChip } from "@/components/ui/Page";
 import { Card } from "@/components/ui/Card";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Body, EyebrowTight, Subtitle, Label } from "@/components/ui";
+import { Body, EyebrowTight, Subtitle, Label, TileTitle } from "@/components/ui";
 import type { NotificationPreferences } from "@/types";
 
 const TIME_OPTIONS = [
@@ -122,9 +122,9 @@ const ToggleRow = ({
         <View className="flex-row items-center gap-3 flex-1">
           <IconChip name={iconName} color={iconColor} background={iconBackground} />
           <View className="flex-1">
-            <Body tone={disabled ? "muted" : "primary"} className="text-sm font-semibold">
+            <TileTitle tone={disabled ? "muted" : "primary"} className="text-sm">
               {title}
-            </Body>
+            </TileTitle>
             {subtitle && <Subtitle tone="secondary" className="mt-0.5">{subtitle}</Subtitle>}
           </View>
         </View>
@@ -165,9 +165,9 @@ const QuietHoursButton = ({
       >
         <EyebrowTight tone={disabled ? "muted" : "primary"}>{label}</EyebrowTight>
         <View className="flex-row items-center gap-2">
-          <Body tone={disabled ? "muted" : "secondary"} className="text-xs">
+          <EyebrowTight tone={disabled ? "muted" : "secondary"} className="text-xs">
             {time || "Not set"}
-          </Body>
+          </EyebrowTight>
           <Ionicons name="time-outline" size={18} color={disabled ? colors.txtMuted : colors.txtSecondary} />
         </View>
       </TouchableOpacity>
@@ -491,9 +491,9 @@ export default function NotificationSettingsScreen() {
                   <View className="flex-row items-center gap-3">
                     <IconChip name="eye-off" color={colors.danger} />
                     <View className="flex-1">
-                      <Body tone="primary" className="text-sm font-semibold">
+                      <TileTitle tone="primary" className="text-sm">
                         {hiddenCount} hidden
-                      </Body>
+                      </TileTitle>
                       <Subtitle tone="secondary" className="mt-0.5">
                         announcements dismissed from feed
                       </Subtitle>

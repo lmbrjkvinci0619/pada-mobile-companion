@@ -82,7 +82,7 @@ export default function LoginScreen() {
               accessibilityRole="alert"
             >
               <Ionicons name="alert-circle" size={18} color={colors.danger} />
-              <Body tone="danger" className="text-sm font-semibold flex-1">
+              <Body tone="danger" className="text-sm flex-1">
                 {validationError || error}
               </Body>
             </View>

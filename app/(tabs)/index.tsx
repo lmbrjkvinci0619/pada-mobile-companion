@@ -70,7 +70,7 @@ const AnnouncementRow = React.memo(function AnnouncementRow({
         </View>
         <Body
           tone={ann.isRead ? "secondary" : "primary"}
-          className="text-sm font-semibold leading-snug"
+          className="text-sm leading-snug"
           numberOfLines={1}
         >
           {ann.title}
@@ -117,7 +117,7 @@ const ArticleTile = React.memo(function ArticleTile({ article }: { article: Arti
         </View>
         <View className="p-3">
           {article.category && <Badge label={article.category} variant="primary" className="mb-2" />}
-          <Body tone="primary" className="text-sm font-semibold leading-snug" numberOfLines={2}>
+          <Body tone="primary" className="text-sm leading-snug" numberOfLines={2}>
             {article.title}
           </Body>
           {article.publishedAt && (

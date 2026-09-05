@@ -15,7 +15,7 @@ import { ListRow } from "@/components/ui/ListRow";
 import { PageHeader } from "@/components/ui/Page";
 import { LoaderBar } from "@/components/ui/LoaderBar";
 import { Pivot, PivotContent } from "@/components/ui/Pivot";
-import { TeamName, Score, Title, Eyebrow, EyebrowTight, Body } from "@/components/ui";
+import { TeamName, Score, Title, Eyebrow, EyebrowTight, Body, TileTitle, Numeric } from "@/components/ui";
 import { format, parseISO } from "date-fns";
 import { RefreshControl } from "react-native";
 
@@ -111,13 +111,13 @@ export default function TeamDetailScreen() {
             <Eyebrow style={{ color: colors.txtInverse }} className="text-[10px] tracking-[0.2em]">
               {nextEvent.status === "in_progress" ? "live now" : "next match"}
             </Eyebrow>
-            <Body style={{ color: colors.txtInverse }} className="text-base font-semibold mt-0.5" numberOfLines={1}>
+            <TileTitle style={{ color: colors.txtInverse }} className="mt-0.5" numberOfLines={1}>
               vs {nextEvent.opponentName || "TBD"}
-            </Body>
+            </TileTitle>
             {nextEvent.score && (
-              <Body style={{ color: colors.txtInverse }} className="text-xs font-semibold mt-0.5">
+              <EyebrowTight style={{ color: colors.txtInverse }} className="mt-0.5">
                 live: {nextEvent.score.homeScore} – {nextEvent.score.awayScore}
-              </Body>
+              </EyebrowTight>
             )}
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.txtInverse} />
@@ -162,7 +162,7 @@ export default function TeamDetailScreen() {
                           className="w-11 h-11 items-center justify-center border border-surface-border"
                           style={{ backgroundColor: colors.surfaceOverlay }}
                         >
-                          <Body tone="primary" className="font-semibold">{member.jerseyNumber}</Body>
+                          <Numeric tone="primary">{member.jerseyNumber}</Numeric>
                         </View>
                       ) : undefined
                     }
@@ -185,9 +185,9 @@ export default function TeamDetailScreen() {
                         {ev.startDate ? format(parseISO(ev.startDate), "h:mm a") : ""}
                       </EyebrowTight>
                     </View>
-                    <Body tone="primary" className="font-semibold text-base mb-1">
+                    <TileTitle tone="primary" className="mb-1">
                       vs {ev.opponentName || "TBD"}
-                    </Body>
+                    </TileTitle>
                     <Body tone="secondary" className="text-sm mb-3">
                       {ev.title}
                     </Body>
@@ -197,17 +197,17 @@ export default function TeamDetailScreen() {
                         className="border border-surface-border p-3 flex-row justify-between items-center"
                         style={{ backgroundColor: colors.surfaceOverlay }}
                       >
-                        <Body tone="primary" className="font-semibold text-sm" numberOfLines={1}>
+                        <TileTitle tone="primary" className="text-sm" numberOfLines={1}>
                           {ev.score.homeTeamName || "Home"}
-                        </Body>
+                        </TileTitle>
                         <View className="flex-row items-center gap-3">
                           <Score tone="primary" size="sm">{ev.score.homeScore}</Score>
                           <Body tone="muted">—</Body>
                           <Score tone="primary" size="sm">{ev.score.awayScore}</Score>
                         </View>
-                        <Body tone="secondary" className="text-xs font-semibold" numberOfLines={1}>
+                        <TileTitle tone="secondary" className="text-xs" numberOfLines={1}>
                           {ev.score.awayTeamName || "Away"}
-                        </Body>
+                        </TileTitle>
                       </View>
                     )}
                   </View>

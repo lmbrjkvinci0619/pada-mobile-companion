@@ -1,7 +1,7 @@
 import React from "react";
 import { View, TouchableOpacity, type ViewProps } from "react-native";
 import { cn } from "@/utils/cn";
-import { Body, Subtitle, Eyebrow } from "./Typography";
+import { Section, Subtitle, Eyebrow } from "./Typography";
 
 interface CardProps extends ViewProps {
   variant?: "default" | "raised" | "accent";
@@ -26,6 +26,7 @@ function CardComponent({
     <View
       {...props}
       className={cn(
+        "border-t border-surface-border",
         variant === "accent" && accent ? "" : fill,
         className,
       )}
@@ -56,7 +57,7 @@ function CardHeader({
     <Wrapper
       {...(onPress ? { onPress, activeOpacity: 0.85 } : {})}
       className={cn(
-        "px-4 pt-4 pb-3 flex-row items-center justify-between border-b border-surface-border",
+        "px-4 pt-4 pb-3 flex-row items-center justify-between",
         className,
       )}
     >
@@ -64,9 +65,7 @@ function CardHeader({
         {icon}
         <View className="flex-1">
           {title && (
-            <Body tone="primary" className="font-semibold">
-              {title}
-            </Body>
+            <Section numberOfLines={1}>{title}</Section>
           )}
           {subtitle && (
             <Subtitle tone="secondary" className="mt-0.5">
@@ -88,7 +87,7 @@ function CardFooter({ className, children }: { className?: string; children: Rea
   return (
     <View
       className={cn(
-        "px-4 py-3 border-t border-surface-border flex-row items-center justify-end gap-2",
+        "px-4 py-3 flex-row items-center justify-end gap-2",
         className,
       )}
     >

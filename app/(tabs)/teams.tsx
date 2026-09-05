@@ -57,7 +57,7 @@ const TeamCard = React.memo(function TeamCard({ team, onPress }: { team: Team; o
           <View className="flex-row items-center gap-4 mt-3 pt-3 border-t border-surface-border">
             <View className="flex-row items-center gap-1.5">
               <Ionicons name="people" size={14} color={colors.txtSecondary} />
-              <Subtitle tone="secondary" className="font-semibold">
+              <Subtitle tone="secondary">
                 {team.roster?.length || 0} members
               </Subtitle>
             </View>

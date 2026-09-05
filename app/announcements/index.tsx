@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Body, EyebrowTight, Label } from "@/components/ui";
+import { Body, EyebrowTight, Label, TileTitle } from "@/components/ui";
 import { useAuthStore } from "@/store/authStore";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { fetchAnnouncements, hideAnnouncement } from "@/services/announcements";
@@ -110,9 +110,9 @@ const AnnouncementItem = React.memo(function AnnouncementItem({
               {item.expiresAt && (
                 <View className="flex-row items-center gap-1">
                   <Ionicons name="time-outline" size={12} color={colors.txtSecondary} />
-                  <Body tone="secondary" className="text-[10px] font-semibold tracking-[0.12em]">
+                  <EyebrowTight tone="secondary">
                     {isExpired ? "Expired" : `Expires ${formatDistanceToNow(new Date(item.expiresAt), { addSuffix: true })}`}
-                  </Body>
+                  </EyebrowTight>
                 </View>
               )}
               {showDismiss && (
@@ -129,9 +129,9 @@ const AnnouncementItem = React.memo(function AnnouncementItem({
               )}
             </View>
           </View>
-          <Body tone="primary" className="font-semibold text-base">
+          <TileTitle tone="primary">
             {item.title}
-          </Body>
+          </TileTitle>
           <Body tone="secondary" className="text-sm" numberOfLines={2}>
             {item.content}
           </Body>

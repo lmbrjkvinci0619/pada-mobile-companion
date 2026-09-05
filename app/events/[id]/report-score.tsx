@@ -219,7 +219,7 @@ export default function ReportScoreScreen() {
             accessibilityLiveRegion="polite"
           >
             <Ionicons name="checkmark-circle" size={20} color={colors.success} />
-            <Body tone="success" className="text-sm font-semibold flex-1">
+            <Body tone="success" className="text-sm flex-1">
               score submitted
             </Body>
             <TouchableOpacity onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="back to event">

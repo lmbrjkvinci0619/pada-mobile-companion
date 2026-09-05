@@ -14,7 +14,7 @@ import { PageHeader, SectionLabel, IconChip } from "@/components/ui/Page";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Title, EyebrowTight, Body, MetaSentence } from "@/components/ui";
+import { Title, EyebrowTight, Body, MetaSentence, TileTitle } from "@/components/ui";
 import type { Announcement, AnnouncementType } from "@/types";
 
 const TYPE_LABEL: Record<AnnouncementType, string> = {
@@ -175,13 +175,12 @@ function DetailRow({
   return (
     <View className={`flex-row items-center justify-between px-4 py-3 ${last ? "" : "border-b border-surface-border"}`}>
       <EyebrowTight tone="secondary">{label}</EyebrowTight>
-      <Body
+      <TileTitle
         tone="primary"
-        className="text-sm font-semibold"
         style={accent ? { color: accent } : undefined}
       >
         {value}
-      </Body>
+      </TileTitle>
     </View>
   );
 }

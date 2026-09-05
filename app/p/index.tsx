@@ -11,7 +11,7 @@ import { Card } from "@/components/ui/Card";
 import { PageHeader, SectionLabel } from "@/components/ui/Page";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Body, EyebrowTight, Subtitle } from "@/components/ui";
+import { Body, EyebrowTight, Subtitle, TileTitle } from "@/components/ui";
 import type { Article } from "@/types";
 
 function PageRow({ article }: { article: Article }) {
@@ -39,9 +39,9 @@ function PageRow({ article }: { article: Article }) {
             </EyebrowTight>
           )}
         </View>
-        <Body tone="primary" className="text-sm font-semibold leading-snug" numberOfLines={2}>
+        <TileTitle tone="primary" className="text-sm leading-snug" numberOfLines={2}>
           {article.title}
-        </Body>
+        </TileTitle>
         {article.summary && (
           <Subtitle tone="secondary" className="mt-1" numberOfLines={2}>
             {article.summary}

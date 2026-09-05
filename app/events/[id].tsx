@@ -21,7 +21,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { PageHeader, SectionLabel } from "@/components/ui/Page";
 import { LoaderBar } from "@/components/ui/LoaderBar";
-import { Title, Eyebrow, Body, EyebrowTight, Subtitle, Score } from "@/components/ui";
+import { Title, Eyebrow, Body, EyebrowTight, Subtitle, Score, TileTitle } from "@/components/ui";
 import { openUrl } from "@/lib/urlUtils";
 import { format, parseISO } from "date-fns";
 import type { ScheduleExport } from "@/types";
@@ -141,9 +141,9 @@ export default function EventDetailScreen() {
         <SectionLabel>location</SectionLabel>
           <Card>
           <Card.Content>
-            <Body tone="primary" className="text-base font-semibold">
+            <TileTitle tone="primary">
               {event.location?.name ?? "tbd"}
-            </Body>
+            </TileTitle>
             {event.location?.address && (
               <Subtitle tone="secondary" className="mt-1">
                 {event.location.address}
@@ -265,9 +265,9 @@ function ScoreRow({ name, score, accent }: { name: string; score: number; accent
   const colors = useColors();
   return (
     <View className="flex-row items-center justify-between">
-      <Body tone="primary" className="text-base font-semibold flex-1">
+      <TileTitle tone="primary" className="flex-1">
         {name}
-      </Body>
+      </TileTitle>
       <Score tone={accent ? "primaryAccent" : "primary"} style={accent ? { color: colors.primary } : undefined}>
         {score}
       </Score>

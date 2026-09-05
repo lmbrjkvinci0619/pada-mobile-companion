@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ChipGroup } from "@/components/ui/ChipGroup";
 import { PageHeader, SectionLabel, IconChip } from "@/components/ui/Page";
-import { Body, Eyebrow, EyebrowTight, Title } from "@/components/ui";
+import { Body, Eyebrow, EyebrowTight, Title, TileTitle } from "@/components/ui";
 import { createAnnouncement } from "@/services/announcements";
 import { fetchTeams } from "@/services/topscore";
 import { AnnouncementTargetType, AnnouncementType, Team } from "@/types";
@@ -321,13 +321,13 @@ export default function CreateAnnouncementScreen() {
                       <IconChip name={option.icon} color={accent} />
                       <View className="flex-1 ml-3">
                         <View className="flex-row items-center gap-2">
-                          <Body
+                          <TileTitle
                             tone="primary"
-                            className="text-sm font-semibold"
+                            className="text-sm"
                             style={isSelected ? { color: accent } : undefined}
                           >
                             {option.label}
-                          </Body>
+                          </TileTitle>
                           {isDisabled && (
                             <View className="bg-surface-overlay border border-surface-border px-2 py-0.5">
                               <EyebrowTight tone="muted">admin only</EyebrowTight>
@@ -362,9 +362,9 @@ export default function CreateAnnouncementScreen() {
                   <Card variant={isSelected ? "default" : "raised"} className={isSelected ? "bg-primary-50" : undefined}>
                     <View className="flex-row items-center p-4">
                       <View className="flex-1">
-                        <Body tone={isSelected ? "primaryAccent" : "primary"} className="text-sm font-semibold">
+                        <TileTitle tone={isSelected ? "primaryAccent" : "primary"} className="text-sm">
                           {option.label}
-                        </Body>
+                        </TileTitle>
                         <Body tone="muted" className="text-xs mt-1">
                           {option.description}
                         </Body>
@@ -428,9 +428,9 @@ export default function CreateAnnouncementScreen() {
               <View className="flex-1 mr-4">
                 <View className="flex-row items-center gap-2">
                   <Ionicons name="warning" size={18} color={isUrgent ? colors.danger : colors.txtSecondary} />
-                  <Body tone={isUrgent ? "danger" : "primary"} className="text-sm font-semibold">
+                  <TileTitle tone={isUrgent ? "danger" : "primary"} className="text-sm">
                     mark as urgent
-                  </Body>
+                  </TileTitle>
                 </View>
                 <Body tone="muted" className="text-xs mt-1">
                   Send immediate push notification. Use only for cancellations or emergencies.
