@@ -292,7 +292,7 @@ export default function AnnouncementsListScreen() {
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
           ListFooterComponent={renderFooter}
-          ListHeaderComponent={refreshing ? <LoaderBar visible /> : null}
+          ListHeaderComponent={refreshing ? <LoaderBar visible /> : undefined}
           ListEmptyComponent={
             <View className="mt-8 px-5">
               <EmptyState

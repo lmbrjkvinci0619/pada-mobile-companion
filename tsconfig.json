@@ -8,8 +8,9 @@
       ]
     },
     "types": [
-      "nativewind/types",
-      "jest"
+      "react-native-css/types",
+      "jest",
+      "node"
     ],
     "skipLibCheck": true
   },

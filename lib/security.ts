@@ -26,12 +26,12 @@ export function randomSessionId(length: number = 64): string {
 }
 
 export class SecureBuffer {
-  private data: Uint8Array | null = null;
+  private data: Uint8Array<ArrayBuffer> | null = null;
 
   set(value: string): void {
     this.clear();
     const encoder = new TextEncoder();
-    this.data = encoder.encode(value);
+    this.data = new Uint8Array(encoder.encode(value));
   }
 
   get(): string {

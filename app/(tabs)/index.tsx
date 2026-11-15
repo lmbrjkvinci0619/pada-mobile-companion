@@ -6,6 +6,7 @@ import {
   RefreshControl,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  type ScrollViewInstance,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -211,7 +212,7 @@ export default function HomeScreen() {
   const activePanelRef = useRef(0);
   activePanelRef.current = activePanel;
   const { stride, panelWidth } = useHubMetrics();
-  const hubRef = useRef<ScrollView | null>(null);
+  const hubRef = useRef<ScrollViewInstance | null>(null);
   const hasPannedRef = useRef(false);
   const onHubScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {

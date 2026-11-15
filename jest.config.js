@@ -1,5 +1,22 @@
 module.exports = {
   preset: 'jest-expo',
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '<rootDir>/~/',
+    '<rootDir>/.agents/',
+    '<rootDir>/.codex/',
+    '<rootDir>/.impeccable/',
+    '<rootDir>/.kilo/',
+    '<rootDir>/scratch/',
+    '<rootDir>/e2e/',
+  ],
+  modulePathIgnorePatterns: [
+    '<rootDir>/~/',
+    '<rootDir>/.agents/',
+    '<rootDir>/.codex/',
+    '<rootDir>/.impeccable/',
+    '<rootDir>/.kilo/',
+  ],
   transformIgnorePatterns: [
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|nativewind|tailwindcss|react-native-reanimated|react-native-worklets-core|react-native-worklets)',
   ],

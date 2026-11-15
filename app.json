@@ -6,13 +6,7 @@
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "scheme": "padahub",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FFFFFF"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "org.pada.padahub",
@@ -24,13 +18,21 @@
         "backgroundColor": "#FFFFFF"
       },
       "package": "org.pada.padahub",
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": true,
       "versionCode": 1
     },
     "plugins": [
       "expo-router",
       "expo-secure-store",
+      "@react-native-async-storage/expo-with-async-storage",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#FFFFFF"
+        }
+      ],
       [
         "expo-notifications",
         {

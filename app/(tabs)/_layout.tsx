@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from "react";
 import { Tabs, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { View } from "react-native";
+import { View, type ColorValue, type NativeColorValue } from "react-native";
 import { useAuthStore } from "@/store/authStore";
 import { useAnnouncements } from "@/hooks/useApi";
 import { useColors } from "@/lib/tokens";
@@ -36,6 +36,11 @@ function TabsLoading() {
   );
 }
 
+function iconColor(color: ColorValue): string | NativeColorValue | undefined {
+  if (typeof color === "number") return String(color);
+  return color ?? undefined;
+}
+
 export default function TabsLayout() {
   const { isAuthenticated, isLoading, user } = useAuthStore();
   const { data: announcements = [] } = useAnnouncements(user?.id || "");
@@ -49,9 +54,9 @@ export default function TabsLayout() {
   if (!isAuthenticated) return <Redirect href="/(auth)/login" />;
 
   const renderHomeIcon = useCallback(
-    ({ color, size }: { color: string; size: number }) => (
+    ({ color, size }: { color: ColorValue; size: number }) => (
       <View>
-        <Ionicons name="home" size={size} color={color} />
+        <Ionicons name="home" size={size} color={iconColor(color)} />
         <TabBarBadge count={unreadCount} />
       </View>
     ),
@@ -96,7 +101,7 @@ export default function TabsLayout() {
           title: "My Registrations",
           tabBarAccessibilityLabel: "my registrations",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="document-text" size={size} color={color} />
+            <Ionicons name="document-text" size={size} color={iconColor(color)} />
           ),
         }}
       />
@@ -106,7 +111,7 @@ export default function TabsLayout() {
           title: "Teams",
           tabBarAccessibilityLabel: "my teams",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people" size={size} color={color} />
+            <Ionicons name="people" size={size} color={iconColor(color)} />
           ),
         }}
       />
@@ -116,7 +121,7 @@ export default function TabsLayout() {
           title: "Schedule",
           tabBarAccessibilityLabel: "schedule",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar" size={size} color={color} />
+            <Ionicons name="calendar" size={size} color={iconColor(color)} />
           ),
         }}
       />
@@ -126,7 +131,7 @@ export default function TabsLayout() {
           title: "Profile",
           tabBarAccessibilityLabel: "profile",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-circle" size={size} color={color} />
+            <Ionicons name="person-circle" size={size} color={iconColor(color)} />
           ),
         }}
       />

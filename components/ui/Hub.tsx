@@ -1,5 +1,5 @@
 import React from "react";
-import { View, ScrollView, useWindowDimensions, type ScrollViewProps } from "react-native";
+import { View, ScrollView, useWindowDimensions, type ScrollViewProps, type ScrollViewInstance } from "react-native";
 import { cn } from "@/utils/cn";
 import { Section } from "./Typography";
 
@@ -20,7 +20,7 @@ export function useHubMetrics(gap: number = HUB_GAP_DEFAULT) {
   return { width, panelWidth, stride };
 }
 
-export const Hub = React.forwardRef<ScrollView, HubProps>(function Hub(
+export const Hub = React.forwardRef<ScrollViewInstance, HubProps>(function Hub(
   { children, gap = HUB_GAP_DEFAULT, className, panelWidth: panelWidthProp, ...rest },
   ref,
 ) {
